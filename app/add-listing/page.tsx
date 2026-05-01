@@ -1,10 +1,14 @@
 "use client";
 
+import type { User } from "@supabase/supabase-js";
+import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import {
   CATEGORY_GROUPS,
   compositeCategoryKey
 } from "@/lib/categories";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
+import { hasSupabaseConfig } from "@/lib/supabase";
 import {
   TURKEY_PROVINCE_COUNT,
   TURKEY_PROVINCES
@@ -15,6 +19,30 @@ export default function AddListingPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [groupSlug, setGroupSlug] = useState("");
   const [detailCategoryKey, setDetailCategoryKey] = useState("");
+  const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    if (!hasSupabaseConfig) {
+      setAuthReady(true);
+      return;
+    }
+    const sb = getSupabaseBrowser();
+    if (!sb) {
+      setAuthReady(true);
+      return;
+    }
+    void sb.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+      setAuthReady(true);
+    });
+    const {
+      data: { subscription }
+    } = sb.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -43,6 +71,36 @@ export default function AddListingPage() {
   };
 
   const selectedGroup = CATEGORY_GROUPS.find((g) => g.slug === groupSlug);
+
+  if (!authReady) {
+    return (
+      <main className="container">
+        <p className="meta">Yükleniyor…</p>
+      </main>
+    );
+  }
+
+  if (hasSupabaseConfig && !user) {
+    return (
+      <main className="container">
+        <h1 className="section-title">İlan ver</h1>
+        <section className="panel auth-wall">
+          <p>
+            İlan verebilmek için üye olmalı ve giriş yapmalısın. Böylece güvenli
+            bir ilan platformu tutabiliriz.
+          </p>
+          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link className="btn btn-primary" href="/login?next=/add-listing">
+              Giriş yap
+            </Link>
+            <Link className="btn btn-outline" href="/register">
+              Üye ol
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="container">
