@@ -7,6 +7,7 @@ import {
   compositeCategoryKey
 } from "@/lib/categories";
 import { listings } from "@/lib/mock-data";
+import { TURKEY_PROVINCES } from "@/lib/turkish-provinces";
 
 export default function ListingsPage() {
   const [q, setQ] = useState("");
@@ -34,10 +35,11 @@ export default function ListingsPage() {
           />
           <select value={city} onChange={(event) => setCity(event.target.value)}>
             <option value="">Tüm şehirler</option>
-            <option value="İstanbul">İstanbul</option>
-            <option value="Ankara">Ankara</option>
-            <option value="İzmir">İzmir</option>
-            <option value="Bursa">Bursa</option>
+            {TURKEY_PROVINCES.map((il) => (
+              <option key={il} value={il}>
+                {il}
+              </option>
+            ))}
           </select>
           <select
             value={category}

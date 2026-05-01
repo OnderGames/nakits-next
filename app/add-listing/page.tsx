@@ -5,6 +5,7 @@ import {
   CATEGORY_GROUPS,
   compositeCategoryKey
 } from "@/lib/categories";
+import { TURKEY_PROVINCES } from "@/lib/turkish-provinces";
 
 export default function AddListingPage() {
   const [notice, setNotice] = useState("");
@@ -104,10 +105,11 @@ export default function AddListingPage() {
               <label>Şehir</label>
               <select required>
                 <option value="">Seçiniz</option>
-                <option>İstanbul</option>
-                <option>Ankara</option>
-                <option>İzmir</option>
-                <option>Bursa</option>
+                {TURKEY_PROVINCES.map((il) => (
+                  <option key={il} value={il}>
+                    {il}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
