@@ -126,16 +126,19 @@ export function compositeCategoryKey(groupSlug: string, subSlug: string): string
   return `${groupSlug}.${subSlug}`;
 }
 
+/** Grup slug'ında tire olabilir; ayırıcı olarak grup.slug + "." ile en uzun eşleşmeyi kullan. */
 export function parseCategoryKey(key: string): ParsedCategorySlug | null {
-  const dot = key.indexOf(".");
-  if (dot < 1) return null;
-  const groupSlug = key.slice(0, dot);
-  const subSlug = key.slice(dot + 1);
-  const group = CATEGORY_GROUPS.find((g) => g.slug === groupSlug);
-  if (!group) return null;
-  const sub = group.subs.find((s) => s.slug === subSlug);
-  if (!sub) return null;
-  return { group, sub };
+  const ordered = [...CATEGORY_GROUPS].sort(
+    (a, b) => b.slug.length - a.slug.length
+  );
+  for (const group of ordered) {
+    const prefix = `${group.slug}.`;
+    if (!key.startsWith(prefix)) continue;
+    const subSlug = key.slice(prefix.length);
+    const sub = group.subs.find((s) => s.slug === subSlug);
+    if (sub) return { group, sub };
+  }
+  return null;
 }
 
 /** Kart / detayda gösterilecek satır örn: "📱 Elektronik › Telefon" */
@@ -153,9 +156,9 @@ export function formatListingCategoryLineCity(city: string, categoryKey: string)
 }
 
 export function sqlCategorySlugFromKey(categoryKey: string): string {
-  const dot = categoryKey.indexOf(".");
-  if (dot < 1) return categoryKey;
-  return `${categoryKey.slice(0, dot)}_${categoryKey.slice(dot + 1)}`;
+  const parsed = parseCategoryKey(categoryKey);
+  if (!parsed) return categoryKey.replace(/\./g, "_");
+  return `${parsed.group.slug}_${parsed.sub.slug}`;
 }
 
 export function sqlCategorySlugToKey(sqlSlug: string): string | null {
