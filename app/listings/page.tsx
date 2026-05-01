@@ -20,7 +20,7 @@ export default function ListingsPage() {
 
   return (
     <main className="container">
-      <h1 className="section-title">Tum Ilanlar</h1>
+      <h1 className="section-title">Tüm İlanlar</h1>
       <section className="panel">
         <div className="search-grid">
           <input
@@ -29,21 +29,21 @@ export default function ListingsPage() {
             placeholder="Arama..."
           />
           <select value={city} onChange={(event) => setCity(event.target.value)}>
-            <option value="">Tum sehirler</option>
-            <option value="Istanbul">Istanbul</option>
+            <option value="">Tüm şehirler</option>
+            <option value="İstanbul">İstanbul</option>
             <option value="Ankara">Ankara</option>
-            <option value="Izmir">Izmir</option>
+            <option value="İzmir">İzmir</option>
             <option value="Bursa">Bursa</option>
           </select>
           <select
             value={category}
             onChange={(event) => setCategory(event.target.value)}
           >
-            <option value="">Tum kategoriler</option>
+            <option value="">Tüm kategoriler</option>
             <option value="Elektronik">Elektronik</option>
-            <option value="Ev ve Yasam">Ev ve Yasam</option>
+            <option value="Ev ve Yaşam">Ev ve Yaşam</option>
             <option value="Moda">Moda</option>
-            <option value="Vasita">Vasita</option>
+            <option value="Vasıta">Vasıta</option>
           </select>
           <button className="btn btn-primary" onClick={() => undefined}>
             Filtrele
@@ -56,7 +56,7 @@ export default function ListingsPage() {
           <ListingCard key={listing.id} listing={listing} />
         ))}
       </section>
-      <p className="footer">Nakits MVP - Listeleme Ekrani</p>
+      <p className="footer">Nakits MVP — Listeleme ekranı</p>
     </main>
   );
 }

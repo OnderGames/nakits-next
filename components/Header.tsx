@@ -8,8 +8,8 @@ export default function Header() {
           naki<span>ts</span>
         </Link>
         <nav className="menu">
-          <Link href="/listings">Ilanlar</Link>
-          <Link href="/add-listing">Ilan Ver</Link>
+          <Link href="/listings">İlanlar</Link>
+          <Link href="/add-listing">İlan Ver</Link>
           <Link href="/profile">Profil</Link>
         </nav>
       </div>

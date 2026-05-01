@@ -16,7 +16,7 @@ export default async function ListingDetailPage({ params }: Props) {
 
   return (
     <main className="container">
-      <h1 className="section-title">Ilan Detayi</h1>
+      <h1 className="section-title">İlan detayı</h1>
       <section className="grid-2">
         <div className="panel">
           <Image src={listing.image} alt={listing.title} width={900} height={500} />
@@ -25,19 +25,19 @@ export default async function ListingDetailPage({ params }: Props) {
           <p>
             {listing.city} - {listing.category}
           </p>
-          <p className="meta">Ilan tarihi: {listing.createdAt}</p>
-          <p className="meta">Satici: {listing.seller}</p>
+          <p className="meta">İlan tarihi: {listing.createdAt}</p>
+          <p className="meta">Satıcı: {listing.seller}</p>
         </div>
         <aside className="panel">
-          <h3>Satici ile iletisime gec</h3>
-          <p className="meta">Mesajlasma MVP&#39;de demo durumunda.</p>
-          <textarea rows={6} placeholder="Mesajinizi yazin" />
+          <h3>Satıcı ile iletişime geç</h3>
+          <p className="meta">Mesajlaşma MVP&apos;de demo durumunda.</p>
+          <textarea rows={6} placeholder="Mesajınızı yazın" />
           <button className="btn btn-primary" style={{ marginTop: 10 }}>
-            Mesaj Gonder
+            Mesaj Gönder
           </button>
         </aside>
       </section>
-      <p className="footer">Nakits MVP - Ilan Detay</p>
+      <p className="footer">Nakits MVP — İlan detayı</p>
     </main>
   );
 }

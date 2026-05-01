@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Nakits",
-  description: "Nakits ilan platformu MVP"
+  description: "Nakits — ilan platformu (MVP)."
 };
 
 export default function RootLayout({
