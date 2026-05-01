@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 import ListingCard from "@/components/ListingCard";
+import {
+  CATEGORY_GROUPS,
+  compositeCategoryKey
+} from "@/lib/categories";
 import { listings } from "@/lib/mock-data";
 
 export default function ListingsPage() {
@@ -13,7 +17,7 @@ export default function ListingsPage() {
     return listings.filter((item) => {
       const matchQ = item.title.toLowerCase().includes(q.toLowerCase());
       const matchCity = !city || item.city === city;
-      const matchCategory = !category || item.category === category;
+      const matchCategory = !category || item.categoryKey === category;
       return matchQ && matchCity && matchCategory;
     });
   }, [q, city, category]);
@@ -40,10 +44,18 @@ export default function ListingsPage() {
             onChange={(event) => setCategory(event.target.value)}
           >
             <option value="">Tüm kategoriler</option>
-            <option value="Elektronik">Elektronik</option>
-            <option value="Ev ve Yaşam">Ev ve Yaşam</option>
-            <option value="Moda">Moda</option>
-            <option value="Vasıta">Vasıta</option>
+            {CATEGORY_GROUPS.map((group) => (
+              <optgroup key={group.slug} label={`${group.emoji} ${group.name}`}>
+                {group.subs.map((sub) => (
+                  <option
+                    key={sub.slug}
+                    value={compositeCategoryKey(group.slug, sub.slug)}
+                  >
+                    {sub.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
           </select>
           <button className="btn btn-primary" onClick={() => undefined}>
             Filtrele

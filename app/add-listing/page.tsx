@@ -1,10 +1,16 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import {
+  CATEGORY_GROUPS,
+  compositeCategoryKey
+} from "@/lib/categories";
 
 export default function AddListingPage() {
   const [notice, setNotice] = useState("");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [groupSlug, setGroupSlug] = useState("");
+  const [detailCategoryKey, setDetailCategoryKey] = useState("");
 
   useEffect(() => {
     return () => {
@@ -27,8 +33,12 @@ export default function AddListingPage() {
       if (prev) URL.revokeObjectURL(prev);
       return null;
     });
+    setGroupSlug("");
+    setDetailCategoryKey("");
     event.currentTarget.reset();
   };
+
+  const selectedGroup = CATEGORY_GROUPS.find((g) => g.slug === groupSlug);
 
   return (
     <main className="container">
@@ -48,15 +58,48 @@ export default function AddListingPage() {
 
           <div className="row" style={{ marginTop: 10 }}>
             <div>
-              <label>Kategori</label>
-              <select required>
+              <label>Ana kategori</label>
+              <select
+                required
+                value={groupSlug}
+                onChange={(event) => {
+                  setGroupSlug(event.target.value);
+                  setDetailCategoryKey("");
+                }}
+              >
                 <option value="">Seçiniz</option>
-                <option>Elektronik</option>
-                <option>Ev ve Yaşam</option>
-                <option>Moda</option>
-                <option>Vasıta</option>
+                {CATEGORY_GROUPS.map((group) => (
+                  <option key={group.slug} value={group.slug}>
+                    {group.emoji} {group.name}
+                  </option>
+                ))}
               </select>
             </div>
+            <div>
+              <label>Alt kategori</label>
+              <select
+                required
+                disabled={!groupSlug}
+                value={detailCategoryKey}
+                onChange={(event) => setDetailCategoryKey(event.target.value)}
+              >
+                <option value="">Seçiniz</option>
+                {(selectedGroup?.subs ?? []).map((sub) => (
+                  <option
+                    key={sub.slug}
+                    value={compositeCategoryKey(
+                      selectedGroup!.slug,
+                      sub.slug
+                    )}
+                  >
+                    {sub.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="row" style={{ marginTop: 10 }}>
             <div>
               <label>Şehir</label>
               <select required>

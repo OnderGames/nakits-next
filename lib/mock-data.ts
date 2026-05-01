@@ -4,7 +4,7 @@ export const listings: Listing[] = [
   {
     id: "l1",
     title: "iPhone 13 128 GB",
-    category: "Elektronik",
+    categoryKey: "elektronik.telefon",
     city: "İstanbul",
     price: 27999,
     image:
@@ -15,7 +15,7 @@ export const listings: Listing[] = [
   {
     id: "l2",
     title: "Ikea Çalışma Masası",
-    category: "Ev ve Yaşam",
+    categoryKey: "ev-yasam.mobilya",
     city: "Ankara",
     price: 3400,
     image:
@@ -26,7 +26,7 @@ export const listings: Listing[] = [
   {
     id: "l3",
     title: "Temiz Honda Civic 2018",
-    category: "Vasıta",
+    categoryKey: "tasitlar.otomobil",
     city: "İzmir",
     price: 845000,
     image:
@@ -37,7 +37,7 @@ export const listings: Listing[] = [
   {
     id: "l4",
     title: "Erkek Deri Ceket",
-    category: "Moda",
+    categoryKey: "moda-kisisel.giyim",
     city: "Bursa",
     price: 1850,
     image:

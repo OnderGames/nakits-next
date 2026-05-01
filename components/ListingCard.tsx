@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { formatListingCategoryLineCity } from "@/lib/categories";
 import { formatPrice } from "@/lib/mock-data";
 import type { Listing } from "@/lib/types";
 
@@ -16,7 +17,7 @@ export default function ListingCard({ listing }: Props) {
           <h3>{listing.title}</h3>
           <p className="price">{formatPrice(listing.price)}</p>
           <p className="meta">
-            {listing.city} - {listing.category}
+            {formatListingCategoryLineCity(listing.city, listing.categoryKey)}
           </p>
           <p className="meta">{listing.createdAt}</p>
         </div>

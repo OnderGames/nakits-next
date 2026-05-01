@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { formatCategoryDisplay } from "@/lib/categories";
 import { formatPrice, listings } from "@/lib/mock-data";
 
 type Props = {
@@ -22,9 +23,8 @@ export default async function ListingDetailPage({ params }: Props) {
           <Image src={listing.image} alt={listing.title} width={900} height={500} />
           <h2>{listing.title}</h2>
           <p className="price">{formatPrice(listing.price)}</p>
-          <p>
-            {listing.city} - {listing.category}
-          </p>
+          <p>{listing.city}</p>
+          <p className="meta">{formatCategoryDisplay(listing.categoryKey)}</p>
           <p className="meta">İlan tarihi: {listing.createdAt}</p>
           <p className="meta">Satıcı: {listing.seller}</p>
         </div>
