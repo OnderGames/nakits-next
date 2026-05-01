@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <main className="container">
       <section className="hero">
-        <h1>Turkiye'nin hizli ilan platformu</h1>
+        <h1>Turkiye&#39;nin hizli ilan platformu</h1>
         <p>
           Elektronikten vasitaya, ihtiyacin olan urunu bul veya saniyeler icinde
           ilan ver.

@@ -30,7 +30,7 @@ export default async function ListingDetailPage({ params }: Props) {
         </div>
         <aside className="panel">
           <h3>Satici ile iletisime gec</h3>
-          <p className="meta">Mesajlasma MVP'de demo durumunda.</p>
+          <p className="meta">Mesajlasma MVP&#39;de demo durumunda.</p>
           <textarea rows={6} placeholder="Mesajinizi yazin" />
           <button className="btn btn-primary" style={{ marginTop: 10 }}>
             Mesaj Gonder

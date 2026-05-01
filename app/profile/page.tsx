@@ -7,7 +7,7 @@ export default function ProfilePage() {
       <h1 className="section-title">Profilim</h1>
       <section className="panel">
         <h3>Onur Demir</h3>
-        <p className="meta">Istanbul - 2026'dan beri uye</p>
+        <p className="meta">Istanbul - 2026&#39;dan beri uye</p>
       </section>
 
       <h2 className="section-title">Yayindaki Ilanlarim</h2>
