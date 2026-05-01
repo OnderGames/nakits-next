@@ -5,7 +5,10 @@ import {
   CATEGORY_GROUPS,
   compositeCategoryKey
 } from "@/lib/categories";
-import { TURKEY_PROVINCES } from "@/lib/turkish-provinces";
+import {
+  TURKEY_PROVINCE_COUNT,
+  TURKEY_PROVINCES
+} from "@/lib/turkish-provinces";
 
 export default function AddListingPage() {
   const [notice, setNotice] = useState("");
@@ -102,8 +105,13 @@ export default function AddListingPage() {
 
           <div className="row" style={{ marginTop: 10 }}>
             <div>
-              <label>Şehir</label>
-              <select required>
+              <label htmlFor="listing-city">
+                Şehir{" "}
+                <span className="meta" style={{ fontWeight: 400 }}>
+                  ({TURKEY_PROVINCE_COUNT} il)
+                </span>
+              </label>
+              <select id="listing-city" name="city" required>
                 <option value="">Seçiniz</option>
                 {TURKEY_PROVINCES.map((il) => (
                   <option key={il} value={il}>

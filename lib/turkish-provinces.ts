@@ -83,6 +83,14 @@ const PLATE_ORDER: string[] = [
   "Düzce"
 ];
 
+export const TURKEY_PROVINCE_COUNT = 81;
+
+if (PLATE_ORDER.length !== TURKEY_PROVINCE_COUNT) {
+  throw new Error(
+    `İl listesi ${TURKEY_PROVINCE_COUNT} olmalı, şu an: ${PLATE_ORDER.length}`
+  );
+}
+
 export const TURKEY_PROVINCES = [...PLATE_ORDER].sort((a, b) =>
   a.localeCompare(b, "tr", { sensitivity: "base" })
 );
