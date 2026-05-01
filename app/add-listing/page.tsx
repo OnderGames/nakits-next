@@ -1,19 +1,38 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 export default function AddListingPage() {
   const [notice, setNotice] = useState("");
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    };
+  }, [photoPreview]);
+
+  const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setPhotoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return file ? URL.createObjectURL(file) : null;
+    });
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setNotice("İlanınız alındı. Moderasyon sonrası yayınlanacak.");
+    setPhotoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
     event.currentTarget.reset();
   };
 
   return (
     <main className="container">
-      <h1 className="section-title">İlan Ver</h1>
+      <h1 className="section-title">İlan ver</h1>
       <section className="panel">
         <form onSubmit={handleSubmit}>
           <div className="row">
@@ -56,8 +75,25 @@ export default function AddListingPage() {
           </div>
 
           <div style={{ marginTop: 10 }}>
-            <label>Foto URL (MVP demo)</label>
-            <input type="url" placeholder="https://..." />
+            <label htmlFor="listing-photo">Fotoğraf</label>
+            <input
+              id="listing-photo"
+              name="photo"
+              type="file"
+              accept="image/*"
+              required
+              onChange={handlePhotoChange}
+            />
+            {photoPreview && (
+              <div style={{ marginTop: 10 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- blob preview */}
+                <img
+                  src={photoPreview}
+                  alt="Seçilen fotoğraf önizlemesi"
+                  style={{ maxWidth: "100%", maxHeight: 220, borderRadius: 10 }}
+                />
+              </div>
+            )}
           </div>
 
           <button className="btn btn-primary" style={{ marginTop: 12 }} type="submit">
