@@ -1,7 +1,11 @@
 import {
   getServiceRoleClient,
+  getServiceRoleMissingMessage,
   verifyAdminFromRequest
 } from "@/lib/admin-auth";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type Body = {
   status?: string;
@@ -18,13 +22,7 @@ export async function PATCH(
 
   const adminSb = getServiceRoleClient();
   if (!adminSb) {
-    return Response.json(
-      {
-        error:
-          "SUPABASE_SERVICE_ROLE_KEY tanımlı değil. Vercel ortam değişkenlerini kontrol edin."
-      },
-      { status: 503 }
-    );
+    return Response.json({ error: getServiceRoleMissingMessage() }, { status: 503 });
   }
 
   const { id } = await context.params;

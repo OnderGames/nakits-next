@@ -104,7 +104,7 @@ const listSelect = `
   status,
   description,
   categories ( slug ),
-  profiles ( full_name ),
+  profiles!seller_id ( full_name ),
   listing_images ( image_url, sort_order )
 `;
 

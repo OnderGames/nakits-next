@@ -47,11 +47,40 @@ export async function verifyAdminFromRequest(
   return { ok: true, userId: user.id, email };
 }
 
+/**
+ * Build zamanında `undefined` ile sabitlenmesin diye köşeli parantez + runtime okuma.
+ * (Vercel'de service_role bazen dot-notasyonla görünmez kalabiliyor.)
+ */
+function envStr(name: string): string | undefined {
+  const raw = process.env[name];
+  if (typeof raw !== "string") return undefined;
+  const t = raw.trim();
+  return t.length ? t : undefined;
+}
+
+/** service_role JWT veya sb_secret_... */
+export function getServiceRoleKey(): string | undefined {
+  return (
+    envStr("SUPABASE_SERVICE_ROLE_KEY") ?? envStr("SUPABASE_SERVICE_ROLE")
+  );
+}
+
 export function getServiceRoleClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = getServiceRoleKey();
   if (!url || !key) return null;
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false }
   });
+}
+
+/** API route 503 gvdeleri (Vercel env teşhisi) */
+export function getServiceRoleMissingMessage(): string {
+  return [
+    "Sunucu service_role anahtarını okuyamıyor.",
+    "Kontrol: Vercel → Proje → Settings → Environment Variables → isim TAM: SUPABASE_SERVICE_ROLE_KEY (veya alternatif: SUPABASE_SERVICE_ROLE).",
+    "Değer: Supabase → Project Settings → API → service_role (veya Secret key) — Publishable/anon değil.",
+    "Ortam: mutlaka Production (www.nakits.com bu ortamdır); kaydet sonrası Deployments → Redeploy.",
+    "Not: .env.local sadece bilgisayarında; canlı için Vercel şart."
+  ].join(" ");
 }

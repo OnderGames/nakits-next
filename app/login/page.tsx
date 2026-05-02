@@ -7,10 +7,19 @@ import { mapAuthErrorToTurkish } from "@/lib/auth-errors";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
+/** Open redirect / Next.js "Invalid path" önleme: yalnızca site içi path */
+function safeInternalPath(raw: string | null): string {
+  if (!raw) return "/";
+  const s = raw.trim();
+  if (!s.startsWith("/") || s.startsWith("//")) return "/";
+  if (s.includes("://")) return "/";
+  return s;
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next") ?? "/";
+  const next = safeInternalPath(searchParams.get("next"));
   const registered = searchParams.get("registered");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

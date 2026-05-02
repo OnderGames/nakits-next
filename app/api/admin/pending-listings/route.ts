@@ -1,8 +1,12 @@
 import {
   getServiceRoleClient,
+  getServiceRoleMissingMessage,
   verifyAdminFromRequest
 } from "@/lib/admin-auth";
 import { sqlCategorySlugToKey } from "@/lib/categories";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const select = `
   id,
@@ -13,7 +17,7 @@ const select = `
   created_at,
   status,
   categories ( slug ),
-  profiles ( full_name, email ),
+  profiles!seller_id ( full_name, email ),
   listing_images ( image_url, sort_order )
 `;
 
@@ -25,13 +29,7 @@ export async function GET(request: Request) {
 
   const adminSb = getServiceRoleClient();
   if (!adminSb) {
-    return Response.json(
-      {
-        error:
-          "SUPABASE_SERVICE_ROLE_KEY tanımlı değil. Vercel ortam değişkenlerini kontrol edin."
-      },
-      { status: 503 }
-    );
+    return Response.json({ error: getServiceRoleMissingMessage() }, { status: 503 });
   }
 
   const { data, error } = await adminSb
