@@ -23,18 +23,44 @@ export default async function ListingDetailPage({ params }: Props) {
     notFound();
   }
 
+  const gallery =
+    listing.imageUrls && listing.imageUrls.length > 0
+      ? listing.imageUrls
+      : [listing.image];
+
   return (
     <main className="container">
       <h1 className="section-title">İlan detayı</h1>
       <section className="grid-2">
         <div className="panel">
-          <Image
-            src={listing.image}
-            alt={listing.title}
-            width={900}
-            height={500}
-            style={{ width: "100%", height: "auto" }}
-          />
+          <div
+            style={{
+              display: "grid",
+              gap: 10,
+              gridTemplateColumns:
+                gallery.length > 1 ? "repeat(auto-fill, minmax(160px, 1fr))" : "1fr"
+            }}
+          >
+            {gallery.map((src, i) => (
+              <Image
+                key={`${listing.id}-${i}-${src.slice(-24)}`}
+                src={src}
+                alt={
+                  gallery.length > 1
+                    ? `${listing.title} — fotoğraf ${i + 1}`
+                    : listing.title
+                }
+                width={900}
+                height={500}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  borderRadius: 12,
+                  border: "1px solid var(--border)"
+                }}
+              />
+            ))}
+          </div>
           <h2>{listing.title}</h2>
           <p className="price">{formatPrice(listing.price)}</p>
           <p>

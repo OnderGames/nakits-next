@@ -2,10 +2,18 @@
 
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 import {
   CATEGORY_GROUPS,
   compositeCategoryKey,
+  formatPriceInputDisplay,
+  parsePriceInput,
   sqlCategorySlugFromKey
 } from "@/lib/categories";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
@@ -48,11 +56,47 @@ function fileExtension(file: File): string {
   return "jpg";
 }
 
+/** Bazı tarayıcılar JPEG’i application/octet-stream veya boş MIME ile verir; yalnızca image/* filtrelemek fotoğrafları eler. */
+const IMAGE_NAME_PATTERN =
+  /\.(jpe?g|png|webp|gif|heic|heif|avif|bmp|tif|tiff)$/i;
+
+function isLikelyImageFile(f: File): boolean {
+  const mime = (f.type || "").toLowerCase();
+  if (mime.startsWith("image/")) return true;
+  return IMAGE_NAME_PATTERN.test(f.name);
+}
+
+function uploadContentType(file: File): string {
+  const mime = (file.type || "").trim().toLowerCase();
+  if (mime.startsWith("image/")) return mime;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const map: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    gif: "image/gif",
+    heic: "image/heic",
+    heif: "image/heif",
+    avif: "image/avif",
+    bmp: "image/bmp",
+    tif: "image/tiff",
+    tiff: "image/tiff"
+  };
+  return map[ext] ?? "image/jpeg";
+}
+
+const MAX_LISTING_PHOTOS = 8;
+
+type PhotoPick = { file: File; url: string };
+
 export default function AddListingPage() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<PhotoPick[]>([]);
+  const photosRef = useRef<PhotoPick[]>([]);
+  photosRef.current = photos;
   const [groupSlug, setGroupSlug] = useState("");
   const [detailCategoryKey, setDetailCategoryKey] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -61,6 +105,7 @@ export default function AddListingPage() {
   const [showPhoneOnListing, setShowPhoneOnListing] = useState(true);
   const [listingCity, setListingCity] = useState("");
   const [listingDistrict, setListingDistrict] = useState("");
+  const [priceText, setPriceText] = useState("");
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -105,17 +150,44 @@ export default function AddListingPage() {
 
   useEffect(() => {
     return () => {
-      if (photoPreview) URL.revokeObjectURL(photoPreview);
+      photosRef.current.forEach((p) => URL.revokeObjectURL(p.url));
     };
-  }, [photoPreview]);
+  }, []);
 
-  const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    setPhotoPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return file ? URL.createObjectURL(file) : null;
+  const handlePhotosChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const raw = Array.from(event.target.files ?? []);
+    const incoming = raw.filter(isLikelyImageFile);
+    if (incoming.length === 0) {
+      if (raw.length > 0) {
+        setError(
+          "Seçilen dosyalar görsel olarak tanınmadı. JPG, PNG veya WEBP deneyin."
+        );
+      }
+      event.target.value = "";
+      return;
+    }
+    setError("");
+    setPhotos((prev) => {
+      prev.forEach((p) => URL.revokeObjectURL(p.url));
+      const merged = [...prev.map((p) => p.file), ...incoming].slice(
+        0,
+        MAX_LISTING_PHOTOS
+      );
+      return merged.map((file) => ({
+        file,
+        url: URL.createObjectURL(file)
+      }));
     });
+    event.target.value = "";
   };
+
+  function removePhotoAt(index: number) {
+    setPhotos((prev) => {
+      const target = prev[index];
+      if (target) URL.revokeObjectURL(target.url);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -136,9 +208,7 @@ export default function AddListingPage() {
     const description = String(fd.get("description") ?? "").trim();
     const city = listingCity.trim();
     const districtTrim = listingDistrict.trim();
-    const priceRaw = String(fd.get("price") ?? "").trim();
-    const price = parseFloat(priceRaw.replace(",", "."));
-    const photo = fd.get("photo");
+    const price = parsePriceInput(priceText);
 
     if (!title || !description || !city) {
       setError("Başlık, açıklama ve şehir zorunludur.");
@@ -148,8 +218,8 @@ export default function AddListingPage() {
       setError("Geçerli bir fiyat girin.");
       return;
     }
-    if (!(photo instanceof File) || photo.size === 0) {
-      setError("Bir fotoğraf seçin.");
+    if (photos.length === 0) {
+      setError("En az bir fotoğraf seçin (en fazla 8).");
       return;
     }
 
@@ -200,56 +270,81 @@ export default function AddListingPage() {
     }
 
     const listingId = inserted.id as string;
-    const ext = fileExtension(photo);
-    const storagePath = `${user.id}/${listingId}/0.${ext}`;
+    const uploadedPaths: string[] = [];
+    const imageRows: {
+      listing_id: string;
+      image_url: string;
+      sort_order: number;
+    }[] = [];
 
-    const { error: upErr } = await sb.storage
-      .from("listing-images")
-      .upload(storagePath, photo, {
-        contentType: photo.type || "image/jpeg",
-        upsert: false
+    for (let i = 0; i < photos.length; i++) {
+      const file = photos[i].file;
+      const ext = fileExtension(file);
+      const storagePath = `${user.id}/${listingId}/${i}.${ext}`;
+
+      const { error: upErr } = await sb.storage
+        .from("listing-images")
+        .upload(storagePath, file, {
+          contentType: uploadContentType(file),
+          upsert: false
+        });
+
+      if (upErr) {
+        if (uploadedPaths.length) {
+          await sb.storage.from("listing-images").remove(uploadedPaths);
+        }
+        await sb.from("listings").delete().eq("id", listingId);
+        setSubmitting(false);
+        setError(
+          `Fotoğraf yüklenemedi (${i + 1}. dosya): ${upErr.message}. Depolama izni veya kotayı kontrol edin.`
+        );
+        return;
+      }
+
+      uploadedPaths.push(storagePath);
+      const {
+        data: { publicUrl }
+      } = sb.storage.from("listing-images").getPublicUrl(storagePath);
+      imageRows.push({
+        listing_id: listingId,
+        image_url: publicUrl,
+        sort_order: i
       });
+    }
 
-    if (upErr) {
+    let imgErr: { message: string } | null = null;
+    for (const row of imageRows) {
+      const { error: rowErr } = await sb.from("listing_images").insert(row);
+      if (rowErr) {
+        imgErr = rowErr;
+        break;
+      }
+    }
+
+    if (imgErr) {
+      await sb.storage.from("listing-images").remove(uploadedPaths);
       await sb.from("listings").delete().eq("id", listingId);
       setSubmitting(false);
       setError(
-        "Fotoğraf yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin."
+        `Görsel kaydı başarısız: ${imgErr.message}. Oturum ve veritabanı (listing_images) izinlerini kontrol edin.`
       );
-      return;
-    }
-
-    const {
-      data: { publicUrl }
-    } = sb.storage.from("listing-images").getPublicUrl(storagePath);
-
-    const { error: imgErr } = await sb.from("listing_images").insert({
-      listing_id: listingId,
-      image_url: publicUrl,
-      sort_order: 0
-    });
-
-    if (imgErr) {
-      await sb.storage.from("listing-images").remove([storagePath]);
-      await sb.from("listings").delete().eq("id", listingId);
-      setSubmitting(false);
-      setError("İlan görseli kaydedilemedi. Lütfen tekrar deneyin.");
       return;
     }
 
     setSubmitting(false);
     setNotice(
-      "İlanınız alındı. Moderasyon sonrası yayınlanacak; onaylanınca herkes görebilir."
+      `İlanınız alındı (${photos.length} fotoğraf). Moderasyon sonrası yayınlanacak; onaylanınca herkes görebilir.`
     );
-    setPhotoPreview((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return null;
+    setPhotos((prev) => {
+      prev.forEach((p) => URL.revokeObjectURL(p.url));
+      return [];
     });
     setGroupSlug("");
     setDetailCategoryKey("");
     setShowPhoneOnListing(true);
     setListingCity("");
     setListingDistrict("");
+    setPriceText("");
     event.currentTarget.reset();
   };
 
@@ -314,15 +409,22 @@ export default function AddListingPage() {
               />
             </div>
             <div>
-              <label htmlFor="listing-price">Fiyat</label>
+              <label htmlFor="listing-price">Fiyat (TL)</label>
               <input
                 id="listing-price"
-                name="price"
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
                 required
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0"
+                value={priceText}
+                onChange={(e) => setPriceText(e.target.value)}
+                onBlur={() => {
+                  const n = parsePriceInput(priceText);
+                  if (Number.isFinite(n) && n >= 0) {
+                    setPriceText(formatPriceInputDisplay(n));
+                  }
+                }}
+                placeholder="Örn: 875 veya 1.500 veya 250.000"
                 disabled={submitting}
               />
             </div>
@@ -431,24 +533,104 @@ export default function AddListingPage() {
           </div>
 
           <div style={{ marginTop: 10 }}>
-            <label htmlFor="listing-photo">Fotoğraf</label>
+            <label htmlFor="listing-photo">
+              Fotoğraflar{" "}
+              <span className="meta" style={{ fontWeight: 400 }}>
+                (en az 1, en fazla {MAX_LISTING_PHOTOS})
+              </span>
+            </label>
             <input
               id="listing-photo"
-              name="photo"
               type="file"
               accept="image/*"
-              required
-              disabled={submitting}
-              onChange={handlePhotoChange}
+              multiple
+              disabled={submitting || photos.length >= MAX_LISTING_PHOTOS}
+              onChange={handlePhotosChange}
             />
-            {photoPreview && (
-              <div style={{ marginTop: 10 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- blob preview */}
-                <img
-                  src={photoPreview}
-                  alt="Seçilen fotoğraf önizlemesi"
-                  style={{ maxWidth: "100%", maxHeight: 220, borderRadius: 10 }}
-                />
+            <p className="meta" style={{ marginTop: 6 }}>
+              Birden fazla seçebilir veya tekrar ekleyerek tamamlayabilirsiniz.
+              {photos.length > 0 && (
+                <>
+                  {" "}
+                  Şu an: {photos.length}/{MAX_LISTING_PHOTOS}
+                </>
+              )}
+            </p>
+            {photos.length > 0 && (
+              <div
+                style={{
+                  marginTop: 12,
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+                  gap: 10,
+                  maxWidth: "100%"
+                }}
+              >
+                {photos.map((p, index) => (
+                  <div
+                    key={p.url}
+                    style={{
+                      position: "relative",
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      border: "1px solid var(--border)",
+                      aspectRatio: "1"
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- blob preview */}
+                    <img
+                      src={p.url}
+                      alt={`Önizleme ${index + 1}`}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block"
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => removePhotoAt(index)}
+                      style={{
+                        position: "absolute",
+                        top: 6,
+                        right: 6,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 999,
+                        border: "none",
+                        background: "rgba(0,0,0,0.55)",
+                        color: "#fff",
+                        cursor: submitting ? "default" : "pointer",
+                        fontSize: 16,
+                        lineHeight: 1
+                      }}
+                      aria-label="Bu fotoğrafı kaldır"
+                    >
+                      ×
+                    </button>
+                    {index === 0 && (
+                      <span
+                        className="meta"
+                        style={{
+                          position: "absolute",
+                          bottom: 6,
+                          left: 6,
+                          right: 6,
+                          textAlign: "center",
+                          background: "rgba(0,0,0,0.5)",
+                          color: "#fff",
+                          fontSize: 11,
+                          padding: "2px 6px",
+                          borderRadius: 6
+                        }}
+                      >
+                        Kapak
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>

@@ -185,5 +185,36 @@ export function sqlCategorySlugToKey(sqlSlug: string): string | null {
 
 /** Türkçe TL biçimi (tüm ilan ekranları) */
 export function formatPrice(value: number) {
-  return `${new Intl.NumberFormat("tr-TR").format(value)} TL`;
+  return `${new Intl.NumberFormat("tr-TR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  }).format(value)} TL`;
+}
+
+/**
+ * Form alanı: sayıyı binlik nokta (ve gerekirse ondalık virgül) ile gösterir.
+ * Örn. 1500 → "1.500", 750000 → "750.000", 99,5 → "99,5"
+ */
+export function formatPriceInputDisplay(value: number): string {
+  if (!Number.isFinite(value) || value < 0) return "";
+  return new Intl.NumberFormat("tr-TR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
+/**
+ * Fiyat alanı metnini sayıya çevirir. Binlik ayırıcı nokta, ondalık virgül.
+ * "1.500" / "750.000" / "1.500,50" / "1500" desteklenir.
+ */
+export function parsePriceInput(raw: string): number {
+  const s = raw.trim().replace(/\s/g, "");
+  if (!s) return Number.NaN;
+  if (s.includes(",")) {
+    return parseFloat(s.replace(/\./g, "").replace(",", "."));
+  }
+  if (/^\d+\.\d{1,2}$/.test(s)) {
+    return parseFloat(s);
+  }
+  return parseFloat(s.replace(/\./g, ""));
 }

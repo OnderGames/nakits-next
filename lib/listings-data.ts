@@ -90,7 +90,10 @@ function mapRowToListing(row: ListingRow): Listing {
   const images = [...(row.listing_images ?? [])].sort(
     (a, b) => a.sort_order - b.sort_order
   );
-  const image = images[0]?.image_url ?? FALLBACK_IMAGE;
+  const urls = images
+    .map((x) => x.image_url?.trim())
+    .filter((u): u is string => Boolean(u));
+  const image = urls[0] ?? FALLBACK_IMAGE;
   const price =
     typeof row.price === "string" ? parseFloat(row.price) : row.price;
   const status = row.status as Listing["status"] | undefined;
@@ -103,6 +106,7 @@ function mapRowToListing(row: ListingRow): Listing {
     district: row.district ?? null,
     price: Number.isFinite(price) ? price : 0,
     image,
+    imageUrls: urls.length > 0 ? urls : undefined,
     seller: row.profiles?.full_name?.trim() || "Satıcı",
     createdAt: formatRelativeTimeTr(row.created_at),
     status,

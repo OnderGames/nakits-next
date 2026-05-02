@@ -6,13 +6,31 @@ import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
-type PendingRow = {
+type ListingFilter = "all" | "pending" | "active" | "sold" | "rejected";
+
+const FILTER_LABEL: Record<ListingFilter, string> = {
+  all: "Tümü",
+  pending: "Onay bekleyen",
+  active: "Yayında",
+  sold: "Satıldı",
+  rejected: "Reddedilen"
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Onay bekliyor",
+  active: "Yayında",
+  sold: "Satıldı",
+  rejected: "Yayınlanmadı"
+};
+
+type AdminListingRow = {
   id: string;
   title: string;
   description: string | null;
   city: string;
   price: number;
   created_at: string;
+  status: string;
   categoryKey: string;
   imageUrl: string | null;
   sellerName: string;
@@ -23,7 +41,8 @@ export default function AdminModerationPage() {
   const [ready, setReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkedAdmin, setCheckedAdmin] = useState(false);
-  const [rows, setRows] = useState<PendingRow[]>([]);
+  const [filter, setFilter] = useState<ListingFilter>("all");
+  const [rows, setRows] = useState<AdminListingRow[]>([]);
   const [loadError, setLoadError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -36,25 +55,31 @@ export default function AdminModerationPage() {
     return { Authorization: `Bearer ${token}` };
   }, []);
 
-  const loadPending = useCallback(async () => {
-    setLoadError("");
-    const h = await authHeaders();
-    if (!h) {
-      setRows([]);
-      return;
-    }
-    const res = await fetch("/api/admin/pending-listings", { headers: h });
-    const json = (await res.json()) as {
-      listings?: PendingRow[];
-      error?: string;
-    };
-    if (!res.ok) {
-      setLoadError(json.error ?? "Liste alınamadı.");
-      setRows([]);
-      return;
-    }
-    setRows(json.listings ?? []);
-  }, [authHeaders]);
+  const loadListings = useCallback(
+    async (status: ListingFilter) => {
+      setLoadError("");
+      const h = await authHeaders();
+      if (!h) {
+        setRows([]);
+        return;
+      }
+      const res = await fetch(
+        `/api/admin/listings?status=${encodeURIComponent(status)}`,
+        { headers: h }
+      );
+      const json = (await res.json()) as {
+        listings?: AdminListingRow[];
+        error?: string;
+      };
+      if (!res.ok) {
+        setLoadError(json.error ?? "Liste alınamadı.");
+        setRows([]);
+        return;
+      }
+      setRows(json.listings ?? []);
+    },
+    [authHeaders]
+  );
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -84,14 +109,18 @@ export default function AdminModerationPage() {
         .then((j: { admin?: boolean }) => {
           setIsAdmin(Boolean(j.admin));
           setCheckedAdmin(true);
-          if (j.admin) void loadPending();
         })
         .catch(() => {
           setIsAdmin(false);
           setCheckedAdmin(true);
         });
     });
-  }, [loadPending]);
+  }, []);
+
+  useEffect(() => {
+    if (!isAdmin || !checkedAdmin) return;
+    void loadListings(filter);
+  }, [filter, isAdmin, checkedAdmin, loadListings]);
 
   async function setStatus(id: string, status: "active" | "rejected") {
     setBusyId(id);
@@ -110,6 +139,34 @@ export default function AdminModerationPage() {
     setBusyId(null);
     if (!res.ok) {
       setLoadError(json.error ?? "Güncellenemedi.");
+      return;
+    }
+    setRows((prev) => prev.filter((r) => r.id !== id));
+  }
+
+  async function deleteListing(id: string, title: string) {
+    if (
+      !window.confirm(
+        `«${title.slice(0, 80)}${title.length > 80 ? "…" : ""}» ilanını kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`
+      )
+    ) {
+      return;
+    }
+    setBusyId(id);
+    setLoadError("");
+    const h = await authHeaders();
+    if (!h) {
+      setBusyId(null);
+      return;
+    }
+    const res = await fetch(`/api/admin/listings/${id}`, {
+      method: "DELETE",
+      headers: h
+    });
+    const json = (await res.json()) as { error?: string };
+    setBusyId(null);
+    if (!res.ok) {
+      setLoadError(json.error ?? "Silinemedi.");
       return;
     }
     setRows((prev) => prev.filter((r) => r.id !== id));
@@ -143,7 +200,11 @@ export default function AdminModerationPage() {
             <code style={{ fontSize: 13 }}>ADMIN_EMAILS</code> içinde e-posta
             adresin tanımlı olmalı ve giriş yapmış olmalısın.
           </p>
-          <Link className="btn btn-primary" style={{ display: "inline-block", marginTop: 14 }} href="/login?next=/admin/moderasyon">
+          <Link
+            className="btn btn-primary"
+            style={{ display: "inline-block", marginTop: 14 }}
+            href="/login?next=/admin/moderasyon"
+          >
             Giriş yap
           </Link>
         </section>
@@ -155,29 +216,62 @@ export default function AdminModerationPage() {
     <main className="container" style={{ padding: "24px 0 48px" }}>
       <h1 className="section-title">İlan moderasyonu</h1>
       <p className="meta" style={{ marginBottom: 16 }}>
-        Onaylanan ilanlar herkese açılır; reddedilenler yayınlanmaz.
+        Tüm ilanları filtreleyebilir, onay bekleyenleri yayına alabilir veya
+        reddedebilir, istediğiniz ilanı kalıcı olarak silebilirsiniz.
       </p>
 
       {loadError && (
-        <p className="notice" style={{ marginBottom: 14, background: "#fee2e2", borderColor: "#fecaca", color: "#7f1d1d" }}>
+        <p
+          className="notice"
+          style={{
+            marginBottom: 14,
+            background: "#fee2e2",
+            borderColor: "#fecaca",
+            color: "#7f1d1d"
+          }}
+        >
           {loadError}
         </p>
       )}
 
-      <p style={{ marginBottom: 12 }}>
+      <div
+        style={{
+          marginBottom: 16,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          alignItems: "center"
+        }}
+      >
+        {(Object.keys(FILTER_LABEL) as ListingFilter[]).map((key) => (
+          <button
+            key={key}
+            type="button"
+            className={filter === key ? "btn btn-primary" : "btn btn-outline"}
+            disabled={busyId !== null}
+            onClick={() => setFilter(key)}
+          >
+            {FILTER_LABEL[key]}
+          </button>
+        ))}
         <button
           type="button"
           className="btn btn-outline"
-          onClick={() => void loadPending()}
+          onClick={() => void loadListings(filter)}
           disabled={busyId !== null}
         >
           Listeyi yenile
         </button>
+      </div>
+
+      <p className="meta" style={{ marginBottom: 12 }}>
+        {rows.length} ilan
+        {filter !== "all" ? ` (${FILTER_LABEL[filter]})` : ""}
       </p>
 
       {rows.length === 0 ? (
         <section className="panel">
-          <p>Onay bekleyen ilan yok.</p>
+          <p>Bu filtrede ilan yok.</p>
         </section>
       ) : (
         <div style={{ display: "grid", gap: 16 }}>
@@ -220,7 +314,31 @@ export default function AdminModerationPage() {
                   )}
                 </div>
                 <div>
-                  <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>{row.title}</h2>
+                  <p style={{ margin: "0 0 6px" }}>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "2px 10px",
+                        borderRadius: 999,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background:
+                          row.status === "active"
+                            ? "#dcfce7"
+                            : row.status === "pending"
+                              ? "#fef9c3"
+                              : row.status === "rejected"
+                                ? "#fee2e2"
+                                : "#e5e7eb",
+                        color: "#111"
+                      }}
+                    >
+                      {STATUS_LABEL[row.status] ?? row.status}
+                    </span>
+                  </p>
+                  <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>
+                    {row.title}
+                  </h2>
                   <p className="price" style={{ margin: "4px 0" }}>
                     {formatPrice(row.price)}
                   </p>
@@ -247,25 +365,53 @@ export default function AdminModerationPage() {
                       marginTop: 14,
                       display: "flex",
                       flexWrap: "wrap",
-                      gap: 10
+                      gap: 10,
+                      alignItems: "center"
                     }}
                   >
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      disabled={busyId !== null}
-                      onClick={() => void setStatus(row.id, "active")}
-                    >
-                      {busyId === row.id ? "…" : "Yayına al"}
-                    </button>
+                    {row.status === "active" && (
+                      <Link
+                        className="btn btn-outline"
+                        href={`/listings/${row.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Sitede aç
+                      </Link>
+                    )}
+                    {row.status === "pending" && (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          disabled={busyId !== null}
+                          onClick={() => void setStatus(row.id, "active")}
+                        >
+                          {busyId === row.id ? "…" : "Yayına al"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          disabled={busyId !== null}
+                          onClick={() => void setStatus(row.id, "rejected")}
+                          style={{ borderColor: "#b91c1c", color: "#b91c1c" }}
+                        >
+                          Reddet
+                        </button>
+                      </>
+                    )}
                     <button
                       type="button"
                       className="btn btn-outline"
                       disabled={busyId !== null}
-                      onClick={() => void setStatus(row.id, "rejected")}
-                      style={{ borderColor: "#b91c1c", color: "#b91c1c" }}
+                      onClick={() => void deleteListing(row.id, row.title)}
+                      style={{
+                        borderColor: "#991b1b",
+                        color: "#991b1b",
+                        fontWeight: 600
+                      }}
                     >
-                      Reddet
+                      {busyId === row.id ? "…" : "İlanı sil"}
                     </button>
                   </div>
                 </div>

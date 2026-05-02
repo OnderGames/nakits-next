@@ -30,7 +30,26 @@ export default function ListingCard({ listing, ownerToolbar }: Props) {
   return (
     <article className="card">
       <Link href={`/listings/${listing.id}`}>
-        <Image src={listing.image} alt={listing.title} width={500} height={280} />
+        <div style={{ position: "relative" }}>
+          <Image src={listing.image} alt={listing.title} width={500} height={280} />
+          {(listing.imageUrls?.length ?? 0) > 1 && (
+            <span
+              style={{
+                position: "absolute",
+                bottom: 8,
+                right: 8,
+                padding: "4px 8px",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                background: "rgba(0,0,0,0.65)",
+                color: "#fff"
+              }}
+            >
+              {listing.imageUrls!.length} fotoğraf
+            </span>
+          )}
+        </div>
         <div className="card-body">
           <h3>{listing.title}</h3>
           <p className="price">{formatPrice(listing.price)}</p>

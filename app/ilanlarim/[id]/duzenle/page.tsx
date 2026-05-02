@@ -8,7 +8,9 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import {
   CATEGORY_GROUPS,
   compositeCategoryKey,
+  formatPriceInputDisplay,
   parseCategoryKey,
+  parsePriceInput,
   sqlCategorySlugFromKey
 } from "@/lib/categories";
 import {
@@ -87,6 +89,7 @@ export default function EditListingPage() {
   const [error, setError] = useState("");
   const [editCity, setEditCity] = useState("");
   const [editDistrict, setEditDistrict] = useState("");
+  const [editPriceText, setEditPriceText] = useState("");
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -156,6 +159,7 @@ export default function EditListingPage() {
       setShowPhoneOnListing(row.showPhoneOnListing);
       setEditCity(row.city);
       setEditDistrict(row.district ?? "");
+      setEditPriceText(formatPriceInputDisplay(row.price));
       setListingFetchDone(true);
     })();
     return () => {
@@ -192,8 +196,7 @@ export default function EditListingPage() {
     const description = String(fd.get("description") ?? "").trim();
     const city = editCity.trim();
     const districtVal = editDistrict.trim();
-    const priceRaw = String(fd.get("price") ?? "").trim();
-    const price = parseFloat(priceRaw.replace(",", "."));
+    const price = parsePriceInput(editPriceText);
     const photo = fd.get("photo");
 
     if (!title || !description || !city) {
@@ -292,6 +295,7 @@ export default function EditListingPage() {
 
     setSubmitting(false);
     setNotice("İlanın güncellendi.");
+    setEditPriceText(formatPriceInputDisplay(price));
     setPhotoPreview((prev) => {
       if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
       return null;
@@ -402,15 +406,22 @@ export default function EditListingPage() {
               />
             </div>
             <div>
-              <label htmlFor="edit-price">Fiyat</label>
+              <label htmlFor="edit-price">Fiyat (TL)</label>
               <input
                 id="edit-price"
-                name="price"
                 required
-                type="number"
-                min="0"
-                step="0.01"
-                defaultValue={listing.price}
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                value={editPriceText}
+                onChange={(e) => setEditPriceText(e.target.value)}
+                onBlur={() => {
+                  const n = parsePriceInput(editPriceText);
+                  if (Number.isFinite(n) && n >= 0) {
+                    setEditPriceText(formatPriceInputDisplay(n));
+                  }
+                }}
+                placeholder="Örn: 875 veya 1.500 veya 750.000"
                 disabled={submitting}
               />
             </div>

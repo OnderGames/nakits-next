@@ -7,7 +7,10 @@ export type Listing = {
   /** İlçe (veritabanı / formlar; eski ilanlarda boş olabilir) */
   district?: string | null;
   price: number;
+  /** Kapak görseli (liste kartları) */
   image: string;
+  /** Tüm ilan görselleri, sıralı (kapak = [0]); tek fotoğrafta yalnızca bir öğe */
+  imageUrls?: string[];
   seller: string;
   createdAt: string;
   /** İlanlarım vb.: moderasyon / yayın durumu */
