@@ -48,6 +48,25 @@ export default function MessagesInboxPage() {
       .finally(() => setLoading(false));
   }, [userId]);
 
+  useEffect(() => {
+    if (!hasSupabaseConfig || !userId) return;
+    const sb = getSupabaseBrowser();
+    if (!sb) return;
+
+    const refresh = () => {
+      if (document.visibilityState !== "visible") return;
+      void fetchMyConversations(sb, userId).then(setItems);
+    };
+
+    const intervalMs = 25000;
+    const tick = window.setInterval(refresh, intervalMs);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearInterval(tick);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [userId]);
+
   if (!ready) {
     return (
       <main className="container">

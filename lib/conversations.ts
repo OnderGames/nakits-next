@@ -146,6 +146,7 @@ export async function sendMessage(
   if (typeof window !== "undefined") {
     const res = await fetch("/api/messages/send", {
       method: "POST",
+      credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`

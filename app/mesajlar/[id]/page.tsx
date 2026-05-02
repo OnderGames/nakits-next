@@ -114,6 +114,27 @@ export default function ConversationPage() {
     };
   }, [authReady, conversationId, userId]);
 
+  /** Realtime kapalı / yayın yoksa bile karşı taraf mesajları görsün diye yedek yenileme */
+  useEffect(() => {
+    if (!allowed || !conversationId) return;
+    const sb = getSupabaseBrowser();
+    if (!sb) return;
+
+    const refresh = () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible")
+        return;
+      void fetchMessages(sb, conversationId).then(setMessages);
+    };
+
+    const intervalMs = 12000;
+    const tick = window.setInterval(refresh, intervalMs);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearInterval(tick);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [allowed, conversationId]);
+
   useEffect(() => {
     if (!allowed || !conversationId) return;
     const sb = getSupabaseBrowser();

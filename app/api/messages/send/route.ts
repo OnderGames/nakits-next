@@ -86,7 +86,12 @@ export async function POST(req: NextRequest) {
   }
 
   const sb = createClient(url, anon, {
-    global: { headers: { Authorization: `Bearer ${token}` } }
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    }
   });
 
   const {
