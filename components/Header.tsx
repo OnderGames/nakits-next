@@ -105,6 +105,39 @@ export default function Header() {
         </Link>
         <nav className="menu">
           <Link href="/listings">İlanlar</Link>
+          <Link
+            href="/mesajlar"
+            title="Mesajların — gelen kutusu ve tüm yazışmalar"
+            style={{
+              position: "relative",
+              paddingRight:
+                loggedIn && unreadMessages > 0 ? 14 : 0
+            }}
+          >
+            Mesajlarım
+            {loggedIn && unreadMessages > 0 && (
+              <span
+                aria-label={`Okunmamış ${unreadMessages} mesaj`}
+                style={{
+                  position: "absolute",
+                  top: -7,
+                  right: -2,
+                  minWidth: 18,
+                  height: 18,
+                  padding: "0 5px",
+                  borderRadius: 999,
+                  background: "#dc2626",
+                  color: "#fff",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  lineHeight: "18px",
+                  textAlign: "center"
+                }}
+              >
+                {unreadMessages > 99 ? "99+" : unreadMessages}
+              </span>
+            )}
+          </Link>
           <Link className="nav-cta" href="/add-listing">
             + İlan ver
           </Link>
@@ -118,34 +151,6 @@ export default function Header() {
                   <Link href="/admin/moderasyon">Moderasyon</Link>
                 )}
                 <Link href="/profile">Profilim</Link>
-                <Link
-                  href="/mesajlar"
-                  style={{ position: "relative", paddingRight: unreadMessages > 0 ? 14 : 0 }}
-                >
-                  Mesajlar
-                  {unreadMessages > 0 && (
-                    <span
-                      aria-label={`Okunmamış ${unreadMessages} mesaj`}
-                      style={{
-                        position: "absolute",
-                        top: -7,
-                        right: -2,
-                        minWidth: 18,
-                        height: 18,
-                        padding: "0 5px",
-                        borderRadius: 999,
-                        background: "#dc2626",
-                        color: "#fff",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        lineHeight: "18px",
-                        textAlign: "center"
-                      }}
-                    >
-                      {unreadMessages > 99 ? "99+" : unreadMessages}
-                    </span>
-                  )}
-                </Link>
                 <Link href="/ilanlarim">İlanlarım</Link>
                 <button
                   type="button"

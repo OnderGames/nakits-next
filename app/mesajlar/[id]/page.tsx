@@ -34,6 +34,7 @@ export default function ConversationPage() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
+  const [sendOk, setSendOk] = useState(false);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -151,6 +152,7 @@ export default function ConversationPage() {
   async function handleSend(event: FormEvent) {
     event.preventDefault();
     setSendError("");
+    setSendOk(false);
     const sb = getSupabaseBrowser();
     if (!sb || !conversationId) return;
     const text = draft.trim();
@@ -163,6 +165,8 @@ export default function ConversationPage() {
       return;
     }
     setDraft("");
+    setSendOk(true);
+    window.setTimeout(() => setSendOk(false), 5000);
     notifyUnreadRefresh();
     const next = await fetchMessages(sb, conversationId);
     setMessages(next);
@@ -338,11 +342,27 @@ export default function ConversationPage() {
             type="submit"
             className="btn btn-primary"
             disabled={sending || !draft.trim()}
+            aria-busy={sending}
           >
-            {sending ? "…" : "Gönder"}
+            {sending ? "Gönderiliyor…" : "Gönder"}
           </button>
         </form>
       </section>
+      {sendOk && (
+        <p
+          className="notice"
+          role="status"
+          aria-live="polite"
+          style={{
+            marginTop: 12,
+            background: "#dcfce7",
+            borderColor: "#bbf7d0",
+            color: "#14532d"
+          }}
+        >
+          Mesajınız gönderildi.
+        </p>
+      )}
       {sendError && (
         <p className="notice" style={{ marginTop: 12 }}>
           {sendError}

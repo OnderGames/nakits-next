@@ -2,7 +2,10 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { notifyRecipientByEmail } from "@/lib/message-notify-email";
 
-/** Eski istemciler / yedek: mesajı sunucu üzerinden ekler. Asıl yol: istemci doğrudan insert. */
+/**
+ * İstemci doğrudan mesajı DB'ye yazdıktan sonra isteğe bağlı e-posta bildirimi.
+ * Katılımcı doğrulaması yapılır (mesaj içeriği sunucuda tekrar kontrol edilmez).
+ */
 export async function POST(req: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -44,25 +47,29 @@ export async function POST(req: NextRequest) {
   }
 
   const conversationId = (json as { conversationId?: string }).conversationId;
-  const rawBody = (json as { body?: string }).body;
-  const text = String(rawBody ?? "").trim();
+  const preview = String((json as { preview?: string }).preview ?? "").trim();
 
-  if (!conversationId || !text) {
-    return NextResponse.json({ error: "Mesaj veya konuşma eksik." }, { status: 400 });
+  if (!conversationId || !preview) {
+    return NextResponse.json({ error: "Eksik parametre." }, { status: 400 });
   }
 
-  const { error: insErr } = await sb.from("messages").insert({
-    conversation_id: conversationId,
-    sender_id: user.id,
-    body: text
-  });
+  const { data: conv, error: cErr } = await sb
+    .from("conversations")
+    .select("buyer_id, seller_id")
+    .eq("id", conversationId)
+    .maybeSingle();
 
-  if (insErr) {
-    return NextResponse.json({ error: insErr.message }, { status: 400 });
+  if (cErr || !conv) {
+    return NextResponse.json({ error: "Konuşma bulunamadı." }, { status: 404 });
+  }
+
+  const row = conv as { buyer_id: string; seller_id: string };
+  if (user.id !== row.buyer_id && user.id !== row.seller_id) {
+    return NextResponse.json({ error: "Yetkisiz." }, { status: 403 });
   }
 
   try {
-    await notifyRecipientByEmail(sb, user.id, conversationId, text);
+    await notifyRecipientByEmail(sb, user.id, conversationId, preview);
   } catch {
     /* e-posta isteğe bağlı */
   }

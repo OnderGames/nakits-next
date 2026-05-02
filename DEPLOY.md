@@ -53,6 +53,44 @@ Moderasyon paneli (`/admin/moderasyon`) icin ek ortam degiskenleri:
 4. Environment Variables gir.
 5. Deploy et.
 
+### Güncellemeyi canlı siteye alma (önemli)
+
+Cursor'da yaptığın her değişiklik **otomatik olarak internetteki siteye gitmez**. Canlıda görmek için şunlardan biri gerekir:
+
+**A) Git + Vercel (çoğu kurulum)**
+
+1. Proje klasöründe değişiklikleri kaydet.
+2. Git ile commit ve push (GitHub’a gönder). Vercel repoyu bağlıysa push sonrası **yeni bir deployment** başlar.
+3. [vercel.com](https://vercel.com) → projen → **Deployments**: son dağıtımın **Ready** (yeşil) olduğunu bekle.
+4. Tarayıcıda siteyi açıp **sert yenile**: `Ctrl+F5` veya `Ctrl+Shift+R`. Gerekirse gizli sekmede dene (önbellek devreye girmesin).
+
+PowerShell örneği (proje `nakits-next` klasöründeyken):
+
+```powershell
+cd nakits-next
+git status
+git add -A
+git commit -m "Mesajlar ve UI güncellemeleri"
+git push
+```
+
+`git` tanınmıyorsa: **Git for Windows** kur veya **GitHub Desktop** ile aynı işlemi yap.
+
+**B) Vercel CLI (Git kullanmadan da olur)**
+
+```powershell
+cd nakits-next
+npx vercel --prod
+```
+
+(Vercel hesabına giriş ister; projeyi daha önce bağlamış olman gerekir.)
+
+**Bundan sonra hâlâ eski görünüyorsa**
+
+- Yanlış URL’e bakıyor olabilirsin (`www` ile `www`suz farkı).
+- Vercel’de deployment **Failed** (kırmızı) ise **Logs** sekmesinden build hatasını oku.
+- `NEXT_PUBLIC_*` ortam değişkenleri eksikse site Supabase’siz / eksik davranır; **Settings → Environment Variables** kontrol et.
+
 ## 5) Domain Baglama
 
 1. Vercel proje ayarlarindan `nakits.com` ve `www.nakits.com` domainlerini ekle.

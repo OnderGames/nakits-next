@@ -31,6 +31,7 @@ export default function ListingMessagePanel({
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [sendSuccess, setSendSuccess] = useState(false);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -57,6 +58,7 @@ export default function ListingMessagePanel({
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError("");
+    setSendSuccess(false);
     if (!sellerId) {
       setError("Bu ilan için satıcı bilgisi yok.");
       return;
@@ -79,15 +81,19 @@ export default function ListingMessagePanel({
       return;
     }
     const sent = await sendMessage(sb, conv.conversationId, text);
-    setSending(false);
     if (sent.error) {
+      setSending(false);
       setError(sent.error);
       return;
     }
     setBody("");
+    setSendSuccess(true);
     notifyUnreadRefresh();
-    router.push(`/mesajlar/${conv.conversationId}`);
-    router.refresh();
+    window.setTimeout(() => {
+      setSending(false);
+      router.push(`/mesajlar/${conv.conversationId}`);
+      router.refresh();
+    }, 1100);
   }
 
   if (!ready) {
@@ -138,8 +144,14 @@ export default function ListingMessagePanel({
     );
   }
 
+  const canSend = body.trim().length > 0;
+
   return (
-    <form onSubmit={(e) => void handleSubmit(e)}>
+    <form
+      onSubmit={(e) => void handleSubmit(e)}
+      className="listing-message-form"
+      style={{ position: "relative", zIndex: 1 }}
+    >
       <p className="meta" style={{ marginBottom: 10 }}>
         Satıcı:{" "}
         {sellerPublicCode ? (
@@ -153,24 +165,58 @@ export default function ListingMessagePanel({
           <strong>{sellerLabel}</strong>
         )}
       </p>
+      <p className="meta" style={{ marginBottom: 10, lineHeight: 1.45 }}>
+        Yanıtları ve tüm yazışmalarını üst menüdeki{" "}
+        <Link href="/mesajlar" style={{ fontWeight: 700, color: "var(--primary)" }}>
+          Mesajlarım
+        </Link>{" "}
+        sekmesinden okursun.
+      </p>
       <textarea
         rows={6}
         placeholder="Mesajınızı yazın…"
         value={body}
-        disabled={sending}
+        disabled={sending || sendSuccess}
         onChange={(e) => setBody(e.target.value)}
       />
+      {!canSend && !sending && !sendSuccess ? (
+        <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>
+          Önce mesajını yaz; ardından <strong>Mesaj gönder</strong> aktif olur.
+        </p>
+      ) : null}
       <button
         className="btn btn-primary"
         style={{ marginTop: 10, width: "100%" }}
         type="submit"
-        disabled={sending}
+        disabled={!canSend || sending || sendSuccess}
+        aria-busy={sending}
       >
-        {sending ? "Gönderiliyor…" : "Mesaj gönder"}
+        {sendSuccess
+          ? "Gönderildi"
+          : sending
+            ? "Gönderiliyor…"
+            : "Mesaj gönder"}
       </button>
       <p className="meta" style={{ marginTop: 12 }}>
-        <Link href="/mesajlar">Mesajlarım</Link>
+        <Link href="/mesajlar" style={{ fontWeight: 600 }}>
+          Mesajlarım — gelen kutusu
+        </Link>
       </p>
+      {sendSuccess && (
+        <p
+          className="notice"
+          role="status"
+          aria-live="polite"
+          style={{
+            marginTop: 12,
+            background: "#dcfce7",
+            borderColor: "#bbf7d0",
+            color: "#14532d"
+          }}
+        >
+          Mesajınız gönderildi. Sohbete yönlendiriliyorsunuz…
+        </p>
+      )}
       {error && (
         <p
           className="notice"

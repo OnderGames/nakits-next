@@ -185,6 +185,13 @@ export default function ProfilePage() {
         <p className="meta" style={{ marginBottom: 10 }}>
           {email ?? "—"}
         </p>
+        {hasSupabaseConfig && userId && (
+          <p style={{ marginBottom: 18 }}>
+            <Link className="btn btn-primary" href="/mesajlar">
+              Mesajlarım
+            </Link>
+          </p>
+        )}
         {hasSupabaseConfig &&
           userId &&
           profileChecked &&

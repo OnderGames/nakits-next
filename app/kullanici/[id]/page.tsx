@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ListingCard from "@/components/ListingCard";
+import ProfileOwnerInboxLink from "@/components/ProfileOwnerInboxLink";
 import {
   fetchPublicActiveListingsForSeller,
   fetchPublicProfileByPublicCode
@@ -71,6 +72,7 @@ export default async function PublicUserProfilePage({ params }: Props) {
         <p className="meta" style={{ marginTop: 10 }}>
           Aşağıda bu üyenin şu an yayındaki ilanları listelenir.
         </p>
+        <ProfileOwnerInboxLink profileId={profile.id} />
       </section>
 
       <h2 className="section-title">Yayındaki ilanlar</h2>

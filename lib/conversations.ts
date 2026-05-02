@@ -131,6 +131,16 @@ export async function markConversationRead(
   );
 }
 
+function humanizeMessageInsertError(
+  code: string | undefined,
+  message: string
+): string {
+  if (code === "23503") {
+    return `${message} Profil kaydı eksik olabilir; bir kez çıkış yapıp tekrar giriş dene.`;
+  }
+  return message;
+}
+
 export async function sendMessage(
   sb: SupabaseClient,
   conversationId: string,
@@ -143,21 +153,6 @@ export async function sendMessage(
   const token = sessionData.session?.access_token;
   if (!token) return { error: "Oturum gerekli." };
 
-  if (typeof window !== "undefined") {
-    const res = await fetch("/api/messages/send", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ conversationId, body: text })
-    });
-    const j = (await res.json()) as { error?: string };
-    if (!res.ok) return { error: j.error ?? "Gönderilemedi." };
-    return {};
-  }
-
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user?.id;
   if (!uid) return { error: "Oturum gerekli." };
@@ -167,7 +162,28 @@ export async function sendMessage(
     sender_id: uid,
     body: text
   });
-  if (error) return { error: error.message };
+
+  if (error) {
+    return {
+      error: humanizeMessageInsertError(
+        error.code,
+        error.message ?? "Gönderilemedi."
+      )
+    };
+  }
+
+  if (typeof window !== "undefined") {
+    void fetch("/api/messages/notify", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ conversationId, preview: text })
+    }).catch(() => {});
+  }
+
   return {};
 }
 

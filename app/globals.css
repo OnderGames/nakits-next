@@ -31,6 +31,9 @@ a {
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   background: var(--card);
   border-bottom: 1px solid var(--border);
 }
@@ -127,6 +130,9 @@ a {
   border-radius: 10px;
   padding: 10px 14px;
   font-weight: 600;
+  min-height: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn-primary {
@@ -134,8 +140,13 @@ a {
   color: #fff;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--primary-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .hero {
