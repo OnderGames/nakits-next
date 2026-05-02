@@ -20,7 +20,10 @@ export function formatRelativeTimeTr(iso: string): string {
 }
 
 type CategoryEmbed = { slug: string } | null;
-type ProfileEmbed = { full_name: string | null } | null;
+type ProfileEmbed = {
+  full_name: string | null;
+  phone: string | null;
+} | null;
 type ImageRow = { image_url: string; sort_order: number };
 
 type ListingRow = {
@@ -31,6 +34,7 @@ type ListingRow = {
   created_at: string;
   status?: string;
   description?: string | null;
+  show_phone_on_listing?: boolean;
   categories: CategoryEmbed;
   profiles: ProfileEmbed;
   listing_images: ImageRow[] | null;
@@ -65,6 +69,7 @@ function normalizeListingRow(raw: unknown): ListingRow {
     created_at: String(r.created_at),
     status: r.status as string | undefined,
     description: (r.description as string | null | undefined) ?? null,
+    show_phone_on_listing: r.show_phone_on_listing as boolean | undefined,
     categories,
     profiles,
     listing_images
@@ -81,6 +86,7 @@ function mapRowToListing(row: ListingRow): Listing {
   const price =
     typeof row.price === "string" ? parseFloat(row.price) : row.price;
   const status = row.status as Listing["status"] | undefined;
+  const phone = row.profiles?.phone?.trim() ?? "";
   return {
     id: row.id,
     title: row.title,
@@ -91,7 +97,12 @@ function mapRowToListing(row: ListingRow): Listing {
     seller: row.profiles?.full_name?.trim() || "Satıcı",
     createdAt: formatRelativeTimeTr(row.created_at),
     status,
-    description: row.description ?? undefined
+    description: row.description ?? undefined,
+    showPhoneOnListing:
+      row.show_phone_on_listing === undefined
+        ? true
+        : Boolean(row.show_phone_on_listing),
+    sellerPhone: phone.length ? phone : null
   };
 }
 
@@ -103,8 +114,9 @@ const listSelect = `
   created_at,
   status,
   description,
+  show_phone_on_listing,
   categories ( slug ),
-  profiles!seller_id ( full_name ),
+  profiles!seller_id ( full_name, phone ),
   listing_images ( image_url, sort_order )
 `;
 

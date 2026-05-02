@@ -8,17 +8,49 @@ import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 import { getAuthRedirectBase } from "@/lib/site-url";
 
+const termsLinkStyle = { color: "var(--primary)", textDecoration: "underline" as const };
+
 export default function RegisterPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+
+    const nameTrim = fullName.trim();
+    const emailTrim = email.trim();
+    const phoneTrim = phone.trim();
+
+    if (!nameTrim) {
+      setError("Ad soyad zorunludur.");
+      return;
+    }
+    if (!emailTrim) {
+      setError("E-posta zorunludur.");
+      return;
+    }
+    if (!phoneTrim) {
+      setError("Telefon numarası zorunludur.");
+      return;
+    }
+    if (!password || password.length < 6) {
+      setError("Şifre en az 6 karakter olmalıdır.");
+      return;
+    }
+    if (!termsAccepted) {
+      setError(
+        "Devam etmek için Nakits.com Üyelik Sözleşmesi’ni okuyup kabul etmelisin."
+      );
+      return;
+    }
+
     const sb = getSupabaseBrowser();
     if (!sb) {
       setError("Supabase yapılandırması eksik.");
@@ -28,13 +60,13 @@ export default function RegisterPage() {
     const base = getAuthRedirectBase();
     const afterConfirm = "/eposta-onaylandi";
     const { error: signError } = await sb.auth.signUp({
-      email: email.trim(),
+      email: emailTrim,
       password,
       options: {
         emailRedirectTo: base
           ? `${base}/auth/callback?next=${encodeURIComponent(afterConfirm)}`
           : undefined,
-        data: { full_name: fullName.trim() }
+        data: { full_name: nameTrim, phone: phoneTrim }
       }
     });
     setLoading(false);
@@ -62,25 +94,45 @@ export default function RegisterPage() {
     <main className="container">
       <h1 className="section-title">Üye ol</h1>
       <section className="panel" style={{ maxWidth: 420 }}>
-        <form onSubmit={(e) => void handleSubmit(e)}>
-          <label>Ad soyad</label>
+        <form onSubmit={(e) => void handleSubmit(e)} noValidate>
+          <label htmlFor="reg-fullname">Ad soyad</label>
           <input
+            id="reg-fullname"
             required
             type="text"
             autoComplete="name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
           />
-          <label style={{ marginTop: 12 }}>E-posta</label>
+          <label htmlFor="reg-email" style={{ marginTop: 12 }}>
+            E-posta
+          </label>
           <input
+            id="reg-email"
             required
             type="email"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <label style={{ marginTop: 12 }}>Şifre (en az 6 karakter)</label>
+          <label htmlFor="reg-phone" style={{ marginTop: 12 }}>
+            Telefon
+          </label>
           <input
+            id="reg-phone"
+            required
+            type="tel"
+            autoComplete="tel"
+            inputMode="tel"
+            placeholder="Örn: 05xx xxx xx xx"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          <label htmlFor="reg-password" style={{ marginTop: 12 }}>
+            Şifre (en az 6 karakter)
+          </label>
+          <input
+            id="reg-password"
             required
             type="password"
             autoComplete="new-password"
@@ -88,8 +140,32 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
+          <div
+            style={{
+              marginTop: 18,
+              display: "flex",
+              gap: 10,
+              alignItems: "flex-start"
+            }}
+          >
+            <input
+              id="reg-terms"
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              style={{ marginTop: 4, flexShrink: 0 }}
+            />
+            <label htmlFor="reg-terms" style={{ margin: 0, lineHeight: 1.45 }}>
+              <Link href="/uyelik-sozlesmesi" style={termsLinkStyle}>
+                Nakits.com Üyelik Sözleşmesi
+              </Link>
+              ’ni okudum, anladım ve tüm şartlarını kabul ediyorum.
+            </label>
+          </div>
+
           {error && (
-            <p className="notice" style={{ marginTop: 10 }}>
+            <p className="notice" style={{ marginTop: 12 }}>
               {error}
             </p>
           )}

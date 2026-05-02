@@ -29,6 +29,7 @@ create table if not exists listings (
   city text not null,
   district text,
   condition text not null default 'used' check (condition in ('new', 'used')),
+  show_phone_on_listing boolean not null default true,
   status text not null default 'pending' check (status in ('pending', 'active', 'sold', 'rejected')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -93,12 +94,20 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  phone_raw text;
 begin
-  insert into public.profiles (id, email, full_name)
+  phone_raw := nullif(
+    trim(coalesce(new.raw_user_meta_data ->> 'phone', '')),
+    ''
+  );
+
+  insert into public.profiles (id, email, full_name, phone)
   values (
     new.id,
     coalesce(new.email, ''),
-    coalesce(new.raw_user_meta_data ->> 'full_name', '')
+    coalesce(new.raw_user_meta_data ->> 'full_name', ''),
+    phone_raw
   )
   on conflict (id) do nothing;
   return new;

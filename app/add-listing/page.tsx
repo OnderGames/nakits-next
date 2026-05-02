@@ -42,6 +42,7 @@ export default function AddListingPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [categoryRowCount, setCategoryRowCount] = useState<number | null>(null);
+  const [showPhoneOnListing, setShowPhoneOnListing] = useState(true);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -166,7 +167,8 @@ export default function AddListingPage() {
         description,
         price,
         city,
-        condition: "used"
+        condition: "used",
+        show_phone_on_listing: showPhoneOnListing
       })
       .select("id")
       .single();
@@ -229,6 +231,7 @@ export default function AddListingPage() {
     });
     setGroupSlug("");
     setDetailCategoryKey("");
+    setShowPhoneOnListing(true);
     event.currentTarget.reset();
   };
 
@@ -404,6 +407,30 @@ export default function AddListingPage() {
               </div>
             )}
           </div>
+
+          <label
+            style={{
+              marginTop: 14,
+              display: "flex",
+              gap: 12,
+              alignItems: "flex-start",
+              cursor: submitting ? "default" : "pointer",
+              lineHeight: 1.45
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={showPhoneOnListing}
+              disabled={submitting}
+              onChange={(e) => setShowPhoneOnListing(e.target.checked)}
+              style={{ marginTop: 4 }}
+            />
+            <span className="meta" style={{ fontSize: 14, color: "var(--text)" }}>
+              İlanda telefon numaram görünsün (profilde kayıtlı numara kullanılır).
+              İşareti kaldırırsanız numaranız gösterilmez; alıcılar satıcıyla yalnızca
+              mesaj üzerinden iletişim kurabilir (mesaj özelliği yakında).
+            </span>
+          </label>
 
           <button
             className="btn btn-primary"
