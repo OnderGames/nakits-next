@@ -60,34 +60,125 @@ a {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px 16px;
+  gap: 10px 12px;
   color: var(--muted);
 }
 
-.menu a:hover {
-  color: var(--text);
+/* Mor–lavanta: İlanlar, Mesajlar, giriş sonrası Profil / İlanlarım / Moderasyon */
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  color: #312e81;
+  background: linear-gradient(160deg, #faf5ff 0%, #eef2ff 42%, #e0e7ff 100%);
+  border: 1.5px solid rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 4px 16px rgba(99, 102, 241, 0.24);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease,
+    color 0.15s ease;
 }
 
+.nav-pill:hover {
+  color: #1e1b4b;
+  border-color: #6366f1;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 1) inset,
+    0 6px 22px rgba(99, 102, 241, 0.38);
+  transform: translateY(-1px);
+}
+
+.nav-pill--badged {
+  position: relative;
+}
+
+button.nav-pill {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Üye ol — zümrüt (İlan ver mavisinden farklı) */
+.nav-pill--join {
+  color: #065f46;
+  background: linear-gradient(160deg, #ecfdf5 0%, #d1fae5 45%, #a7f3d0 100%);
+  border-color: rgba(52, 211, 153, 0.95);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.nav-pill--join:hover {
+  color: #064e3b;
+  border-color: #10b981;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 6px 24px rgba(16, 185, 129, 0.42);
+}
+
+/* Giriş yap — amber / gün batımı */
+.nav-pill--login {
+  color: #9a3412;
+  background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 48%, #fde68a 100%);
+  border-color: rgba(251, 146, 60, 0.9);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 4px 16px rgba(245, 158, 11, 0.28);
+}
+
+.nav-pill--login:hover {
+  color: #7c2d12;
+  border-color: #f97316;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.98) inset,
+    0 6px 24px rgba(245, 158, 11, 0.4);
+}
+
+/* Ana CTA: + İlan ver — tek güçlü mavi */
 .nav-cta {
-  background: var(--primary) !important;
+  background: linear-gradient(180deg, #5c6fff 0%, var(--primary) 55%, #2a45d4 100%) !important;
   color: #fff !important;
-  padding: 10px 18px !important;
-  border-radius: 12px;
+  padding: 10px 20px !important;
+  border-radius: 999px;
   font-weight: 700;
   font-size: 15px;
-  box-shadow: 0 2px 12px rgba(59, 91, 255, 0.4);
-  border: 2px solid var(--primary);
+  letter-spacing: 0.03em;
+  border: 2px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.25) inset,
+    0 6px 22px rgba(59, 91, 255, 0.55),
+    0 2px 8px rgba(30, 58, 180, 0.35);
 }
 
 .nav-cta:hover {
   color: #fff !important;
-  filter: brightness(1.08);
-  box-shadow: 0 4px 16px rgba(59, 91, 255, 0.5);
+  filter: brightness(1.06);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 8px 28px rgba(59, 91, 255, 0.65);
+  transform: translateY(-1px);
 }
 
-.nav-login {
-  font-weight: 600;
-  color: var(--primary) !important;
+/* Çıkış — sade çerçeve */
+.nav-pill--quiet {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.nav-pill--quiet:hover {
+  color: var(--text);
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  transform: none;
 }
 
 .btn-nav-text {

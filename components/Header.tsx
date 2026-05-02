@@ -104,14 +104,16 @@ export default function Header() {
           naki<span>ts</span>
         </Link>
         <nav className="menu">
-          <Link href="/listings">İlanlar</Link>
+          <Link className="nav-pill" href="/listings">
+            İlanlar
+          </Link>
           <Link
+            className="nav-pill nav-pill--badged"
             href="/mesajlar"
             title="Mesajların — gelen kutusu ve tüm yazışmalar"
             style={{
-              position: "relative",
               paddingRight:
-                loggedIn && unreadMessages > 0 ? 14 : 0
+                loggedIn && unreadMessages > 0 ? 16 : undefined
             }}
           >
             Mesajlarım
@@ -120,18 +122,20 @@ export default function Header() {
                 aria-label={`Okunmamış ${unreadMessages} mesaj`}
                 style={{
                   position: "absolute",
-                  top: -7,
-                  right: -2,
-                  minWidth: 18,
-                  height: 18,
-                  padding: "0 5px",
+                  top: -6,
+                  right: -4,
+                  minWidth: 20,
+                  height: 20,
+                  padding: "0 6px",
                   borderRadius: 999,
-                  background: "#dc2626",
+                  background: "linear-gradient(135deg, #f87171, #dc2626)",
                   color: "#fff",
                   fontSize: 11,
-                  fontWeight: 700,
-                  lineHeight: "18px",
-                  textAlign: "center"
+                  fontWeight: 800,
+                  lineHeight: "20px",
+                  textAlign: "center",
+                  boxShadow: "0 2px 8px rgba(220,38,38,0.45)",
+                  border: "2px solid #fff"
                 }}
               >
                 {unreadMessages > 99 ? "99+" : unreadMessages}
@@ -148,13 +152,19 @@ export default function Header() {
             loggedIn ? (
               <>
                 {isAdmin && (
-                  <Link href="/admin/moderasyon">Moderasyon</Link>
+                  <Link className="nav-pill" href="/admin/moderasyon">
+                    Moderasyon
+                  </Link>
                 )}
-                <Link href="/profile">Profilim</Link>
-                <Link href="/ilanlarim">İlanlarım</Link>
+                <Link className="nav-pill" href="/profile">
+                  Profilim
+                </Link>
+                <Link className="nav-pill" href="/ilanlarim">
+                  İlanlarım
+                </Link>
                 <button
                   type="button"
-                  className="btn-nav-text"
+                  className="nav-pill nav-pill--quiet"
                   onClick={() => void handleSignOut()}
                 >
                   Çıkış yap
@@ -162,16 +172,20 @@ export default function Header() {
               </>
             ) : (
               <>
-                <Link href="/register">Üye ol</Link>
-                <Link className="nav-login" href="/login">
+                <Link className="nav-pill nav-pill--join" href="/register">
+                  Üye ol
+                </Link>
+                <Link className="nav-pill nav-pill--login" href="/login">
                   Giriş yap
                 </Link>
               </>
             )
           ) : (
             <>
-              <Link href="/register">Üye ol</Link>
-              <Link className="nav-login" href="/login">
+              <Link className="nav-pill nav-pill--join" href="/register">
+                Üye ol
+              </Link>
+              <Link className="nav-pill nav-pill--login" href="/login">
                 Giriş yap
               </Link>
             </>
