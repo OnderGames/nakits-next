@@ -275,7 +275,7 @@ export default function AdminModerationPage() {
         </div>
       )}
 
-      <p className="footer">
+      <p className="meta" style={{ marginTop: 20 }}>
         <Link href="/">Ana sayfa</Link>
       </p>
     </main>

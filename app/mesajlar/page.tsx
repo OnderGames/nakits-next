@@ -106,9 +106,7 @@ export default function MessagesInboxPage() {
     <main className="container">
       <h1 className="section-title">Mesajlarım</h1>
       <p className="meta" style={{ marginBottom: 14 }}>
-        Bu sayfa senin gelen kutun: giriş yaptığın hesaba gelen tüm yazışmalar burada
-        listelenir. Üst menüden de her zaman{" "}
-        <strong style={{ color: "var(--text)" }}>Mesajlarım</strong> ile gelirsin.
+        Bu hesaba ait yazışmaların özeti aşağıdadır.
       </p>
       {loading ? (
         <p className="meta">Yükleniyor…</p>

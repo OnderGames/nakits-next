@@ -165,13 +165,6 @@ export default function ListingMessagePanel({
           <strong>{sellerLabel}</strong>
         )}
       </p>
-      <p className="meta" style={{ marginBottom: 10, lineHeight: 1.45 }}>
-        Yanıtları ve tüm yazışmalarını üst menüdeki{" "}
-        <Link href="/mesajlar" style={{ fontWeight: 700, color: "var(--primary)" }}>
-          Mesajlarım
-        </Link>{" "}
-        sekmesinden okursun.
-      </p>
       <textarea
         rows={6}
         placeholder="Mesajınızı yazın…"

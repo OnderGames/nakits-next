@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { sqlCategorySlugToKey } from "@/lib/categories";
 import type { Listing } from "@/lib/types";
 
@@ -32,6 +32,7 @@ type ListingRow = {
   seller_id?: string;
   title: string;
   city: string;
+  district?: string | null;
   price: number | string;
   created_at: string;
   status?: string;
@@ -68,6 +69,10 @@ function normalizeListingRow(raw: unknown): ListingRow {
     seller_id: r.seller_id != null ? String(r.seller_id) : undefined,
     title: String(r.title),
     city: String(r.city),
+    district:
+      r.district != null && String(r.district).trim()
+        ? String(r.district).trim()
+        : null,
     price: r.price as number | string,
     created_at: String(r.created_at),
     status: r.status as string | undefined,
@@ -95,6 +100,7 @@ function mapRowToListing(row: ListingRow): Listing {
     title: row.title,
     categoryKey,
     city: row.city,
+    district: row.district ?? null,
     price: Number.isFinite(price) ? price : 0,
     image,
     seller: row.profiles?.full_name?.trim() || "Satıcı",
@@ -111,7 +117,8 @@ function mapRowToListing(row: ListingRow): Listing {
   };
 }
 
-const listSelect = `
+/** Eski veritabanlarında district yoksa ilk select hata verir; district'siz tekrarlanır */
+const listSelectNoDistrict = `
   id,
   seller_id,
   title,
@@ -126,14 +133,91 @@ const listSelect = `
   listing_images ( image_url, sort_order )
 `;
 
+const listSelect = `
+  id,
+  seller_id,
+  title,
+  city,
+  district,
+  price,
+  created_at,
+  status,
+  description,
+  show_phone_on_listing,
+  categories ( slug ),
+  profiles!seller_id ( full_name, phone, public_code ),
+  listing_images ( image_url, sort_order )
+`;
+
+function isMissingDistrictColumnError(error: PostgrestError | null): boolean {
+  if (!error?.message) return false;
+  const m =
+    `${error.message} ${(error as { details?: string }).details ?? ""} ${(error as { hint?: string }).hint ?? ""}`.toLowerCase();
+  /* PostgREST: schema cache / unknown column — metin sürüme göre değişir; "district" yeterli sinyal */
+  return m.includes("district");
+}
+
+async function withListingSelectFallback<T>(
+  run: (
+    selectStr: string
+  ) => PromiseLike<{ data: T; error: PostgrestError | null }>
+): Promise<{ data: T; error: PostgrestError | null }> {
+  const first = await run(listSelect);
+  if (!first.error) return first;
+  if (!isMissingDistrictColumnError(first.error)) return first;
+  return run(listSelectNoDistrict);
+}
+
+const listingEditSelect = `
+      id,
+      seller_id,
+      title,
+      description,
+      price,
+      city,
+      district,
+      condition,
+      show_phone_on_listing,
+      status,
+      categories ( slug ),
+      listing_images ( image_url, sort_order )
+    `;
+
+const listingEditSelectNoDistrict = `
+      id,
+      seller_id,
+      title,
+      description,
+      price,
+      city,
+      condition,
+      show_phone_on_listing,
+      status,
+      categories ( slug ),
+      listing_images ( image_url, sort_order )
+    `;
+
+async function withEditListingSelectFallback<T>(
+  run: (
+    selectStr: string
+  ) => PromiseLike<{ data: T; error: PostgrestError | null }>
+): Promise<{ data: T; error: PostgrestError | null }> {
+  const first = await run(listingEditSelect);
+  if (!first.error) return first;
+  if (!isMissingDistrictColumnError(first.error)) return first;
+  return run(listingEditSelectNoDistrict);
+}
+
 export async function fetchPublicListings(
   sb: SupabaseClient
 ): Promise<Listing[]> {
-  const { data, error } = await sb
-    .from("listings")
-    .select(listSelect)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
+  const { data, error } = await withListingSelectFallback((sel) =>
+    sb
+      .from("listings")
+      .select(sel)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+  );
 
   if (error || !data) return [];
   return data.map((raw) => {
@@ -148,11 +232,9 @@ export async function fetchListingById(
   sb: SupabaseClient,
   id: string
 ): Promise<Listing | null> {
-  const { data, error } = await sb
-    .from("listings")
-    .select(listSelect)
-    .eq("id", id)
-    .maybeSingle();
+  const { data, error } = await withListingSelectFallback((sel) =>
+    sb.from("listings").select(sel).eq("id", id).maybeSingle()
+  );
 
   if (error || !data) return null;
   return mapRowToListing(normalizeListingRow(data));
@@ -162,11 +244,13 @@ export async function fetchMyListings(
   sb: SupabaseClient,
   sellerId: string
 ): Promise<Listing[]> {
-  const { data, error } = await sb
-    .from("listings")
-    .select(listSelect)
-    .eq("seller_id", sellerId)
-    .order("created_at", { ascending: false });
+  const { data, error } = await withListingSelectFallback((sel) =>
+    sb
+      .from("listings")
+      .select(sel)
+      .eq("seller_id", sellerId)
+      .order("created_at", { ascending: false })
+  );
 
   if (error || !data) return [];
   return data.map((raw) => mapRowToListing(normalizeListingRow(raw)));
@@ -177,13 +261,15 @@ export async function fetchSellerActiveListings(
   sellerId: string,
   limit: number
 ): Promise<Listing[]> {
-  const { data, error } = await sb
-    .from("listings")
-    .select(listSelect)
-    .eq("seller_id", sellerId)
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const { data, error } = await withListingSelectFallback((sel) =>
+    sb
+      .from("listings")
+      .select(sel)
+      .eq("seller_id", sellerId)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(limit)
+  );
 
   if (error || !data) return [];
   return data.map((raw) => {
@@ -199,12 +285,14 @@ export async function fetchPublicActiveListingsForSeller(
   sb: SupabaseClient,
   sellerId: string
 ): Promise<Listing[]> {
-  const { data, error } = await sb
-    .from("listings")
-    .select(listSelect)
-    .eq("seller_id", sellerId)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
+  const { data, error } = await withListingSelectFallback((sel) =>
+    sb
+      .from("listings")
+      .select(sel)
+      .eq("seller_id", sellerId)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+  );
 
   if (error || !data) return [];
   return data.map((raw) => {
@@ -254,6 +342,7 @@ export type ListingForEdit = {
   description: string;
   price: number;
   city: string;
+  district: string | null;
   condition: "new" | "used";
   showPhoneOnListing: boolean;
   categoryKey: string;
@@ -268,6 +357,7 @@ type ListingEditRowRaw = {
   description: string | null;
   price: number | string;
   city: string;
+  district?: string | null;
   condition: string;
   show_phone_on_listing?: boolean;
   status?: string;
@@ -279,25 +369,9 @@ export async function fetchListingForEdit(
   sb: SupabaseClient,
   listingId: string
 ): Promise<ListingForEdit | null> {
-  const { data, error } = await sb
-    .from("listings")
-    .select(
-      `
-      id,
-      seller_id,
-      title,
-      description,
-      price,
-      city,
-      condition,
-      show_phone_on_listing,
-      status,
-      categories ( slug ),
-      listing_images ( image_url, sort_order )
-    `
-    )
-    .eq("id", listingId)
-    .maybeSingle();
+  const { data, error } = await withEditListingSelectFallback((sel) =>
+    sb.from("listings").select(sel).eq("id", listingId).maybeSingle()
+  );
 
   if (error || !data) return null;
 
@@ -319,6 +393,10 @@ export async function fetchListingForEdit(
     description: row.description ?? "",
     price: Number.isFinite(price) ? price : 0,
     city: row.city,
+    district:
+      row.district != null && String(row.district).trim()
+        ? String(row.district).trim()
+        : null,
     condition: row.condition === "new" ? "new" : "used",
     showPhoneOnListing: row.show_phone_on_listing !== false,
     categoryKey,

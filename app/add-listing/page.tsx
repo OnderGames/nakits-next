@@ -10,6 +10,7 @@ import {
 } from "@/lib/categories";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
+import { getDistrictsForProvince } from "@/lib/turkish-districts";
 import {
   TURKEY_PROVINCE_COUNT,
   TURKEY_PROVINCES
@@ -58,6 +59,8 @@ export default function AddListingPage() {
   const [authReady, setAuthReady] = useState(false);
   const [categoryRowCount, setCategoryRowCount] = useState<number | null>(null);
   const [showPhoneOnListing, setShowPhoneOnListing] = useState(true);
+  const [listingCity, setListingCity] = useState("");
+  const [listingDistrict, setListingDistrict] = useState("");
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -131,7 +134,8 @@ export default function AddListingPage() {
     const fd = new FormData(event.currentTarget);
     const title = String(fd.get("title") ?? "").trim();
     const description = String(fd.get("description") ?? "").trim();
-    const city = String(fd.get("city") ?? "").trim();
+    const city = listingCity.trim();
+    const districtTrim = listingDistrict.trim();
     const priceRaw = String(fd.get("price") ?? "").trim();
     const price = parseFloat(priceRaw.replace(",", "."));
     const photo = fd.get("photo");
@@ -182,6 +186,7 @@ export default function AddListingPage() {
         description,
         price,
         city,
+        district: districtTrim || null,
         condition: "used",
         show_phone_on_listing: showPhoneOnListing
       })
@@ -243,6 +248,8 @@ export default function AddListingPage() {
     setGroupSlug("");
     setDetailCategoryKey("");
     setShowPhoneOnListing(true);
+    setListingCity("");
+    setListingDistrict("");
     event.currentTarget.reset();
   };
 
@@ -373,13 +380,40 @@ export default function AddListingPage() {
                   ({TURKEY_PROVINCE_COUNT} il)
                 </span>
               </label>
-              <select id="listing-city" name="city" required disabled={submitting}>
+              <select
+                id="listing-city"
+                required
+                disabled={submitting}
+                value={listingCity}
+                onChange={(e) => {
+                  setListingCity(e.target.value);
+                  setListingDistrict("");
+                }}
+              >
                 <option value="">Seçiniz</option>
                 {TURKEY_PROVINCES.map((il) => (
                   <option key={il} value={il}>
                     {il}
                   </option>
                 ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="listing-district">İlçe</label>
+              <select
+                id="listing-district"
+                disabled={!listingCity || submitting}
+                value={listingDistrict}
+                onChange={(e) => setListingDistrict(e.target.value)}
+              >
+                <option value="">İsteğe bağlı</option>
+                {listingCity
+                  ? getDistrictsForProvince(listingCity).map((ilce) => (
+                      <option key={ilce} value={ilce}>
+                        {ilce}
+                      </option>
+                    ))
+                  : null}
               </select>
             </div>
           </div>
@@ -463,7 +497,6 @@ export default function AddListingPage() {
           )}
         </form>
       </section>
-      <p className="footer">Nakits MVP — İlan girişi</p>
     </main>
   );
 }

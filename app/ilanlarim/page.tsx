@@ -174,7 +174,7 @@ export default function MyListingsPage() {
           ))}
         </section>
       )}
-      <p className="footer">
+      <p className="meta" style={{ marginTop: 20 }}>
         <Link href="/add-listing">Yeni ilan ver</Link>
       </p>
     </main>

@@ -42,8 +42,10 @@ export default async function HomePage() {
         ))}
       </section>
 
-      <p className="footer">
+      <p className="meta" style={{ marginTop: 24 }}>
         <Link href="/listings">Tüm ilanları gör</Link>
+        {" "}
+        — şehir ve ilçe filtresi burada.
       </p>
     </main>
   );

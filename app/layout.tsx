@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
-import SiteFooter from "@/components/SiteFooter";
 import "./globals.css";
+
+/** Eski HTML kabuğunun CDN/tarayıcıda uzun süre takılı kalmasını azaltır */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Nakits",
@@ -18,7 +20,6 @@ export default function RootLayout({
       <body>
         <Header />
         {children}
-        <SiteFooter />
       </body>
     </html>
   );

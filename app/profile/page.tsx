@@ -297,10 +297,9 @@ export default function ProfilePage() {
           <ListingCard key={listing.id} listing={listing} />
         ))}
       </section>
-      <p className="footer">
+      <p className="meta" style={{ marginTop: 20 }}>
         <Link href="/ilanlarim">Tüm ilanlarım</Link>
       </p>
-      <p className="footer">Nakits MVP — Profil</p>
     </main>
   );
 }

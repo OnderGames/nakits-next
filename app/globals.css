@@ -221,6 +221,27 @@ a {
   grid-template-columns: 2fr 1fr 1fr auto;
 }
 
+/* Tüm ilanlar: arama + il + ilçe + kategori + düğme */
+.listings-filter-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+}
+
+.listings-filter-grid .filter-field label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.listings-filter-grid .filter-field--action {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 1px;
+}
+
 input,
 select,
 textarea {
@@ -243,12 +264,6 @@ form .row {
   gap: 10px;
 }
 
-.footer {
-  margin: 30px 0;
-  color: var(--muted);
-  text-align: center;
-}
-
 .notice {
   background: #eef4ff;
   border: 1px solid #cdd9ff;
@@ -261,6 +276,7 @@ form .row {
   .cards,
   .grid-2,
   .search-grid,
+  .listings-filter-grid,
   form .row {
     grid-template-columns: 1fr;
   }

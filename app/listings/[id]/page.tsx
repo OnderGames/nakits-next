@@ -37,7 +37,11 @@ export default async function ListingDetailPage({ params }: Props) {
           />
           <h2>{listing.title}</h2>
           <p className="price">{formatPrice(listing.price)}</p>
-          <p>{listing.city}</p>
+          <p>
+            {listing.district?.trim()
+              ? `${listing.city} · ${listing.district.trim()}`
+              : listing.city}
+          </p>
           <p className="meta">{formatCategoryDisplay(listing.categoryKey)}</p>
           <p className="meta">İlan tarihi: {listing.createdAt}</p>
           <p className="meta">
@@ -91,7 +95,6 @@ export default async function ListingDetailPage({ params }: Props) {
           />
         </aside>
       </section>
-      <p className="footer">Nakits MVP — İlan detayı</p>
     </main>
   );
 }

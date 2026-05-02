@@ -4,6 +4,8 @@ export type Listing = {
   /** Bileşik kategori anahtarı, örn. "elektronik.telefon" */
   categoryKey: string;
   city: string;
+  /** İlçe (veritabanı / formlar; eski ilanlarda boş olabilir) */
+  district?: string | null;
   price: number;
   image: string;
   seller: string;

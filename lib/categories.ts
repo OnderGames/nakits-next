@@ -148,11 +148,19 @@ export function formatCategoryDisplay(key: string): string {
   return `${parsed.group.emoji} ${parsed.group.name} › ${parsed.sub.name}`;
 }
 
-/** Kartta kısa: "İstanbul › Taşıtlar › Otomobil" stili şehir + kategori özeti */
-export function formatListingCategoryLineCity(city: string, categoryKey: string): string {
+/** Kartta kısa: şehir (ve isteğe bağlı ilçe) + kategori özeti */
+export function formatListingCategoryLineCity(
+  city: string,
+  categoryKey: string,
+  district?: string | null
+): string {
+  const place =
+    district && district.trim()
+      ? `${city} · ${district.trim()}`
+      : city;
   const parsed = parseCategoryKey(categoryKey);
-  if (!parsed) return `${city} · ${categoryKey}`;
-  return `${city} · ${parsed.group.name} › ${parsed.sub.name}`;
+  if (!parsed) return `${place} · ${categoryKey}`;
+  return `${place} · ${parsed.group.name} › ${parsed.sub.name}`;
 }
 
 export function sqlCategorySlugFromKey(categoryKey: string): string {

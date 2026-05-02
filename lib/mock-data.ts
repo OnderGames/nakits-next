@@ -9,6 +9,7 @@ export const listings: Listing[] = [
     title: "iPhone 13 128 GB",
     categoryKey: "elektronik.telefon",
     city: "İstanbul",
+    district: "Kadıköy",
     price: 27999,
     image:
       "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80",
@@ -20,6 +21,7 @@ export const listings: Listing[] = [
     title: "Ikea Çalışma Masası",
     categoryKey: "ev-yasam.mobilya",
     city: "Ankara",
+    district: "Çankaya",
     price: 3400,
     image:
       "https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=1200&q=80",

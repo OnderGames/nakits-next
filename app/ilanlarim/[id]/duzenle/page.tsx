@@ -17,6 +17,7 @@ import {
 } from "@/lib/listings-data";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
+import { getDistrictsForProvince } from "@/lib/turkish-districts";
 import {
   TURKEY_PROVINCE_COUNT,
   TURKEY_PROVINCES
@@ -84,6 +85,8 @@ export default function EditListingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editDistrict, setEditDistrict] = useState("");
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -151,6 +154,8 @@ export default function EditListingPage() {
       }
       setCondition(row.condition);
       setShowPhoneOnListing(row.showPhoneOnListing);
+      setEditCity(row.city);
+      setEditDistrict(row.district ?? "");
       setListingFetchDone(true);
     })();
     return () => {
@@ -185,7 +190,8 @@ export default function EditListingPage() {
     const fd = new FormData(event.currentTarget);
     const title = String(fd.get("title") ?? "").trim();
     const description = String(fd.get("description") ?? "").trim();
-    const city = String(fd.get("city") ?? "").trim();
+    const city = editCity.trim();
+    const districtVal = editDistrict.trim();
     const priceRaw = String(fd.get("price") ?? "").trim();
     const price = parseFloat(priceRaw.replace(",", "."));
     const photo = fd.get("photo");
@@ -221,6 +227,7 @@ export default function EditListingPage() {
         description,
         price,
         city,
+        district: districtVal || null,
         condition,
         show_phone_on_listing: showPhoneOnListing,
         category_id: catRow.id
@@ -350,6 +357,13 @@ export default function EditListingPage() {
 
   const displayImageSrc = photoPreview ?? listing.coverImageUrl;
   const showBlobPreview = displayImageSrc.startsWith("blob:");
+  const districtChoices = (() => {
+    const fromData = getDistrictsForProvince(editCity);
+    if (editDistrict && !fromData.includes(editDistrict)) {
+      return [editDistrict, ...fromData];
+    }
+    return fromData;
+  })();
 
   return (
     <main className="container">
@@ -456,10 +470,13 @@ export default function EditListingPage() {
               </label>
               <select
                 id="edit-city"
-                name="city"
                 required
-                defaultValue={listing.city}
+                value={editCity}
                 disabled={submitting}
+                onChange={(e) => {
+                  setEditCity(e.target.value);
+                  setEditDistrict("");
+                }}
               >
                 <option value="">Seçiniz</option>
                 {TURKEY_PROVINCES.map((il) => (
@@ -467,6 +484,24 @@ export default function EditListingPage() {
                     {il}
                   </option>
                 ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="edit-district">İlçe</label>
+              <select
+                id="edit-district"
+                disabled={!editCity || submitting}
+                value={editDistrict}
+                onChange={(e) => setEditDistrict(e.target.value)}
+              >
+                <option value="">İsteğe bağlı</option>
+                {editCity
+                  ? districtChoices.map((ilce) => (
+                      <option key={ilce} value={ilce}>
+                        {ilce}
+                      </option>
+                    ))
+                  : null}
               </select>
             </div>
             <div>

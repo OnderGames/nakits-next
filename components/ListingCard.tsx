@@ -35,7 +35,11 @@ export default function ListingCard({ listing, ownerToolbar }: Props) {
           <h3>{listing.title}</h3>
           <p className="price">{formatPrice(listing.price)}</p>
           <p className="meta">
-            {formatListingCategoryLineCity(listing.city, listing.categoryKey)}
+            {formatListingCategoryLineCity(
+              listing.city,
+              listing.categoryKey,
+              listing.district
+            )}
           </p>
           {listing.status && (
             <p className="meta">

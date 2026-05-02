@@ -19,6 +19,7 @@ Bu dosya, projeyi gercek domain (`nakits.com`) uzerine yayinlamak icin adim adim
    - `rls.sql`
    - `storage.sql`
    - Ilk kurulumda `schema.sql` tam calismadiysa veya "kategori bulunamadi" hatasi aliniyorsa `sql/seed_categories.sql` ile kategori satirlarini ekleyin (`INSERT ... on conflict do nothing`).
+   - **Projeyi daha once kurduysaniz ve ilan listesi bos / hata veriyorsa:** `sql/migration_listing_district.sql` dosyasini bir kez calistirin (`district` sutunu ilan filtreleri ve ilan ver formu icin gerekli).
 3. Auth ayarlari (Authentication → URL Configuration):
    - **Site URL**: uygulamanin canonical adresi (tercihen `https://www.nakits.com` veya `https://nakits.com` — tek birini sec ve tum yerlerle uyumlu tut).
    - **Redirect URLs** (her satira bir pattern):
@@ -46,6 +47,36 @@ Moderasyon paneli (`/admin/moderasyon`) icin ek ortam degiskenleri:
 - `SUPABASE_SERVICE_ROLE_KEY` — yalnizca sunucu tarafinda (API route); Supabase Project Settings → API → service_role. Bu anahtar **asla** `NEXT_PUBLIC_` ile baslamaz ve frontend koduna eklenmez.
 
 ## 4) Vercel Deploy
+
+### Hazır komutlar (Windows PowerShell)
+
+Proje kökü `nakits-next` iken tek seferde build + GitHub push (Vercel otomatik deploy için):
+
+```powershell
+cd C:\Users\KULLANICI\Desktop\Nakits\nakits-next
+npm run deploy:check
+npm run deploy:push
+```
+
+Özel commit mesajı ile:
+
+```powershell
+.\scripts\deploy-push.ps1 -Message "İlçe filtresi ve DB migration notları"
+```
+
+**Manuel** (script kullanmadan):
+
+```powershell
+cd nakits-next
+npm run build
+git add -A
+git commit -m "Canliya alinacak degisiklikler"
+git push
+```
+
+Push sonrası [vercel.com](https://vercel.com) → Proje → **Deployments**: son dağıtım **Ready** olunca canlıya düşer. Tarayıcıda `Ctrl+Shift+R` ile sert yenile.
+
+---
 
 1. Projeyi GitHub'a push et.
 2. Vercel'de `New Project` ile repoyu bagla.
