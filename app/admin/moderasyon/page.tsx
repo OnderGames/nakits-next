@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { formatCategoryDisplay } from "@/lib/categories";
-import { formatPrice } from "@/lib/format-price";
+import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 

@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { formatListingCategoryLineCity } from "@/lib/categories";
-import { formatPrice } from "@/lib/format-price";
+import {
+  formatListingCategoryLineCity,
+  formatPrice
+} from "@/lib/categories";
 import type { Listing } from "@/lib/types";
 
 const STATUS_LABEL: Record<NonNullable<Listing["status"]>, string> = {

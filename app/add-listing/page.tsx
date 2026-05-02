@@ -41,6 +41,7 @@ export default function AddListingPage() {
   const [detailCategoryKey, setDetailCategoryKey] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [categoryRowCount, setCategoryRowCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -63,6 +64,25 @@ export default function AddListingPage() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!hasSupabaseConfig || !user) {
+      setCategoryRowCount(null);
+      return;
+    }
+    const sb = getSupabaseBrowser();
+    if (!sb) return;
+    void sb
+      .from("categories")
+      .select("*", { count: "exact", head: true })
+      .then(({ count, error }) => {
+        if (error) {
+          setCategoryRowCount(null);
+          return;
+        }
+        setCategoryRowCount(count ?? 0);
+      });
+  }, [user]);
 
   useEffect(() => {
     return () => {
@@ -122,10 +142,17 @@ export default function AddListingPage() {
       .eq("slug", sqlSlug)
       .maybeSingle();
 
-    if (catErr || !catRow?.id) {
+    if (catErr) {
       setSubmitting(false);
       setError(
-        "Kategori bulunamadı. Sayfayı yenileyip tekrar deneyin veya destek ile iletişime geçin."
+        `Kategori sorgusu başarısız: ${catErr.message}. Tablo izinlerini (RLS) kontrol edin.`
+      );
+      return;
+    }
+    if (!catRow?.id) {
+      setSubmitting(false);
+      setError(
+        "Seçilen kategori veritabanında yok. Supabase → SQL Editor’da `sql/seed_categories.sql` dosyasındaki INSERT’i çalıştırın (veya `schema.sql` içindeki kategori INSERT bloğu). Bir kez yeterli."
       );
       return;
     }
@@ -240,6 +267,17 @@ export default function AddListingPage() {
   return (
     <main className="container">
       <h1 className="section-title">İlan ver</h1>
+      {hasSupabaseConfig && categoryRowCount === 0 && (
+        <p className="notice" style={{ marginBottom: 14 }}>
+          Veritabanında kategori kaydı yok. Supabase → SQL Editor&apos;da
+          depodaki{" "}
+          <code style={{ fontSize: 13 }}>sql/seed_categories.sql</code> içeriğini
+          yapıştırıp çalıştırın (veya{" "}
+          <code style={{ fontSize: 13 }}>schema.sql</code>
+          &nbsp;içindeki kategori <code style={{ fontSize: 13 }}>INSERT</code>{" "}
+          bloğu). Sonra bu sayfayı yenileyin.
+        </p>
+      )}
       <section className="panel">
         <form onSubmit={handleSubmit}>
           <div className="row">

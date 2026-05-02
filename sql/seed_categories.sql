@@ -1,0 +1,41 @@
+-- Kategoriler bos/supabase ilk kurulum: SQL Editor'da bir kez calistir.
+-- schema.sql ile ayni slug'lar; mevcut satirlari ezmez.
+
+insert into categories (slug, name)
+values
+  ('tasitlar_otomobil', 'Otomobil'),
+  ('tasitlar_motosiklet', 'Motosiklet'),
+  ('tasitlar_bisiklet', 'Bisiklet'),
+  ('tasitlar_ticari-araclar', 'Ticari araçlar (kamyon, minibüs, otobüs)'),
+  ('tasitlar_deniz-tasitlari', 'Deniz taşıtları (tekne, yat)'),
+  ('gayrimenkul_ev', 'Ev'),
+  ('gayrimenkul_arsa', 'Arsa'),
+  ('gayrimenkul_daire', 'Daire'),
+  ('gayrimenkul_villa', 'Villa'),
+  ('gayrimenkul_isyeri-ofis', 'İş yeri / Ofis'),
+  ('gayrimenkul_depo-garaj', 'Depo / Garaj'),
+  ('elektronik_telefon', 'Telefon'),
+  ('elektronik_bilgisayar-tablet', 'Bilgisayar / Tablet'),
+  ('elektronik_televizyon', 'Televizyon'),
+  ('elektronik_beyaz-esya', 'Beyaz eşya'),
+  ('elektronik_ses-hoparlor', 'Ses sistemleri / Hoparlör'),
+  ('moda-kisisel_giyim', 'Giyim'),
+  ('moda-kisisel_ayakkabi', 'Ayakkabı'),
+  ('moda-kisisel_canta-aksesuar', 'Çanta & Aksesuar'),
+  ('moda-kisisel_saat-taki', 'Saat & Takı'),
+  ('ev-yasam_mobilya', 'Mobilya'),
+  ('ev-yasam_ev-dekorasyonu', 'Ev dekorasyonu'),
+  ('ev-yasam_mutfak-esyalari', 'Mutfak eşyaları'),
+  ('ev-yasam_bahce-balkon', 'Bahçe & Balkon ürünleri'),
+  ('hobi-eglence_oyun-konsolu-oyunlar', 'Oyun konsolu & oyunlar'),
+  ('hobi-eglence_spor-malzemeleri', 'Spor malzemeleri'),
+  ('hobi-eglence_muzik-aletleri', 'Müzik aletleri'),
+  ('hobi-eglence_koleksiyon-urunleri', 'Koleksiyon ürünleri'),
+  ('hayvanlar_evcil-hayvanlar', 'Evcil hayvanlar'),
+  ('hayvanlar_hayvan-aksesuarlari', 'Hayvan aksesuarları'),
+  ('hayvanlar_mama-bakim-urunleri', 'Mama & bakım ürünleri'),
+  ('is-sanayi_tarim-makineleri', 'Tarım makineleri'),
+  ('is-sanayi_insaat-ekipmanlari', 'İnşaat ekipmanları'),
+  ('is-sanayi_el-aletleri', 'El aletleri'),
+  ('is-sanayi_ofis-malzemeleri', 'Ofis malzemeleri')
+on conflict (slug) do nothing;

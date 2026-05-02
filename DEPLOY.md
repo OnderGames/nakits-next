@@ -18,6 +18,7 @@ Bu dosya, projeyi gercek domain (`nakits.com`) uzerine yayinlamak icin adim adim
    - `schema.sql`
    - `rls.sql`
    - `storage.sql`
+   - Ilk kurulumda `schema.sql` tam calismadiysa veya "kategori bulunamadi" hatasi aliniyorsa `sql/seed_categories.sql` ile kategori satirlarini ekleyin (`INSERT ... on conflict do nothing`).
 3. Auth ayarlari (Authentication → URL Configuration):
    - **Site URL**: uygulamanin canonical adresi (tercihen `https://www.nakits.com` veya `https://nakits.com` — tek birini sec ve tum yerlerle uyumlu tut).
    - **Redirect URLs** (her satira bir pattern):

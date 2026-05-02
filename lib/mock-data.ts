@@ -1,5 +1,5 @@
 import type { Listing } from "./types";
-import { formatPrice } from "./format-price";
+import { formatPrice } from "./categories";
 
 export { formatPrice };
 

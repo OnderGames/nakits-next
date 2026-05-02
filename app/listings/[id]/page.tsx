@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { formatCategoryDisplay } from "@/lib/categories";
-import { formatPrice } from "@/lib/format-price";
+import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
 import { fetchListingById } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";

@@ -174,3 +174,8 @@ export function sqlCategorySlugToKey(sqlSlug: string): string | null {
   }
   return null;
 }
+
+/** Türkçe TL biçimi (tüm ilan ekranları) */
+export function formatPrice(value: number) {
+  return `${new Intl.NumberFormat("tr-TR").format(value)} TL`;
+}
