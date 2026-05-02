@@ -6,6 +6,7 @@ alter table listings enable row level security;
 alter table listing_images enable row level security;
 alter table favorites enable row level security;
 alter table conversations enable row level security;
+alter table conversation_reads enable row level security;
 alter table messages enable row level security;
 
 -- Profiles
@@ -97,7 +98,16 @@ using (auth.uid() in (buyer_id, seller_id));
 drop policy if exists "conversations buyer insert" on conversations;
 create policy "conversations buyer insert"
 on conversations for insert
-with check (auth.uid() = buyer_id);
+with check (
+  auth.uid() = buyer_id
+  and buyer_id <> seller_id
+  and exists (
+    select 1
+    from listings l
+    where l.id = listing_id
+      and l.seller_id = seller_id
+  )
+);
 
 -- Messages
 drop policy if exists "messages participant read" on messages;
@@ -124,3 +134,20 @@ with check (
       and auth.uid() in (c.buyer_id, c.seller_id)
   )
 );
+
+-- Conversation read state (okunmamis sayaci)
+drop policy if exists "conversation_reads select own" on conversation_reads;
+create policy "conversation_reads select own"
+on conversation_reads for select
+using (auth.uid() = profile_id);
+
+drop policy if exists "conversation_reads insert own" on conversation_reads;
+create policy "conversation_reads insert own"
+on conversation_reads for insert
+with check (auth.uid() = profile_id);
+
+drop policy if exists "conversation_reads update own" on conversation_reads;
+create policy "conversation_reads update own"
+on conversation_reads for update
+using (auth.uid() = profile_id)
+with check (auth.uid() = profile_id);

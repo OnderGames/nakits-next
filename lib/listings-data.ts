@@ -23,11 +23,13 @@ type CategoryEmbed = { slug: string } | null;
 type ProfileEmbed = {
   full_name: string | null;
   phone: string | null;
+  public_code: string | null;
 } | null;
 type ImageRow = { image_url: string; sort_order: number };
 
 type ListingRow = {
   id: string;
+  seller_id?: string;
   title: string;
   city: string;
   price: number | string;
@@ -63,6 +65,7 @@ function normalizeListingRow(raw: unknown): ListingRow {
 
   return {
     id: String(r.id),
+    seller_id: r.seller_id != null ? String(r.seller_id) : undefined,
     title: String(r.title),
     city: String(r.city),
     price: r.price as number | string,
@@ -102,12 +105,15 @@ function mapRowToListing(row: ListingRow): Listing {
       row.show_phone_on_listing === undefined
         ? true
         : Boolean(row.show_phone_on_listing),
-    sellerPhone: phone.length ? phone : null
+    sellerPhone: phone.length ? phone : null,
+    sellerId: row.seller_id,
+    sellerPublicCode: row.profiles?.public_code?.trim() || undefined
   };
 }
 
 const listSelect = `
   id,
+  seller_id,
   title,
   city,
   price,
@@ -116,7 +122,7 @@ const listSelect = `
   description,
   show_phone_on_listing,
   categories ( slug ),
-  profiles!seller_id ( full_name, phone ),
+  profiles!seller_id ( full_name, phone, public_code ),
   listing_images ( image_url, sort_order )
 `;
 
@@ -186,4 +192,137 @@ export async function fetchSellerActiveListings(
     void status;
     return rest;
   });
+}
+
+/** Herkese açık üye sayfası: yayındaki ilanlar */
+export async function fetchPublicActiveListingsForSeller(
+  sb: SupabaseClient,
+  sellerId: string
+): Promise<Listing[]> {
+  const { data, error } = await sb
+    .from("listings")
+    .select(listSelect)
+    .eq("seller_id", sellerId)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+  return data.map((raw) => {
+    const item = mapRowToListing(normalizeListingRow(raw));
+    const { status, ...rest } = item;
+    void status;
+    return rest;
+  });
+}
+
+export type PublicProfileBasics = {
+  id: string;
+  publicCode: string;
+  displayName: string;
+  city: string | null;
+};
+
+/** Üye numarası (6–9 hane) ile herkese açık profil */
+export async function fetchPublicProfileByPublicCode(
+  sb: SupabaseClient,
+  publicCode: string
+): Promise<PublicProfileBasics | null> {
+  const code = publicCode.trim();
+  const { data, error } = await sb
+    .from("profiles")
+    .select("id, full_name, city, public_code")
+    .eq("public_code", code)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  const name = (data.full_name as string | null)?.trim();
+  const pc = (data.public_code as string | null)?.trim();
+  if (!pc) return null;
+  return {
+    id: data.id as string,
+    publicCode: pc,
+    displayName: name && name.length > 0 ? name : "Üye",
+    city: (data.city as string | null)?.trim() || null
+  };
+}
+
+/** İlan düzenleme formu (satıcı paneli) */
+export type ListingForEdit = {
+  id: string;
+  sellerId: string;
+  title: string;
+  description: string;
+  price: number;
+  city: string;
+  condition: "new" | "used";
+  showPhoneOnListing: boolean;
+  categoryKey: string;
+  coverImageUrl: string;
+  status?: Listing["status"];
+};
+
+type ListingEditRowRaw = {
+  id: string;
+  seller_id: string;
+  title: string;
+  description: string | null;
+  price: number | string;
+  city: string;
+  condition: string;
+  show_phone_on_listing?: boolean;
+  status?: string;
+  categories: { slug: string } | { slug: string }[] | null;
+  listing_images: ImageRow[] | null;
+};
+
+export async function fetchListingForEdit(
+  sb: SupabaseClient,
+  listingId: string
+): Promise<ListingForEdit | null> {
+  const { data, error } = await sb
+    .from("listings")
+    .select(
+      `
+      id,
+      seller_id,
+      title,
+      description,
+      price,
+      city,
+      condition,
+      show_phone_on_listing,
+      status,
+      categories ( slug ),
+      listing_images ( image_url, sort_order )
+    `
+    )
+    .eq("id", listingId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  const row = data as unknown as ListingEditRowRaw;
+  const cat = embedOne(row.categories);
+  const slug = cat?.slug ?? "";
+  const categoryKey = sqlCategorySlugToKey(slug) ?? slug.replace(/_/g, ".");
+  const images = [...(row.listing_images ?? [])].sort(
+    (a, b) => a.sort_order - b.sort_order
+  );
+  const priceRaw = row.price;
+  const price =
+    typeof priceRaw === "string" ? parseFloat(priceRaw) : priceRaw;
+
+  return {
+    id: row.id,
+    sellerId: row.seller_id,
+    title: row.title,
+    description: row.description ?? "",
+    price: Number.isFinite(price) ? price : 0,
+    city: row.city,
+    condition: row.condition === "new" ? "new" : "used",
+    showPhoneOnListing: row.show_phone_on_listing !== false,
+    categoryKey,
+    coverImageUrl: images[0]?.image_url ?? FALLBACK_IMAGE,
+    status: row.status as Listing["status"] | undefined
+  };
 }

@@ -15,6 +15,21 @@ import {
   TURKEY_PROVINCES
 } from "@/lib/turkish-provinces";
 
+function mapListingInsertError(message: string | undefined): string {
+  if (!message) return "İlan kaydedilemedi.";
+  const lower = message.toLowerCase();
+  if (
+    lower.includes("show_phone_on_listing") ||
+    (lower.includes("schema cache") && lower.includes("listings"))
+  ) {
+    return "Veritabanında «telefon ilanda görünsün» için gerekli sütun eksik. Supabase → SQL Editor’da şu dosyadaki komutu bir kez çalıştırın: sql/migration_listing_show_phone.sql — sonra sayfayı yenileyip tekrar deneyin.";
+  }
+  if (message.includes("row-level security")) {
+    return "İlan kaydedilemedi. Oturumunuzu kontrol edin.";
+  }
+  return message;
+}
+
 function fileExtension(file: File): string {
   const n = file.name;
   const i = n.lastIndexOf(".");
@@ -175,11 +190,7 @@ export default function AddListingPage() {
 
     if (insErr || !inserted?.id) {
       setSubmitting(false);
-      setError(
-        insErr?.message?.includes("row-level security")
-          ? "İlan kaydedilemedi. Oturumunuzu kontrol edin."
-          : insErr?.message ?? "İlan kaydedilemedi."
-      );
+      setError(mapListingInsertError(insErr?.message));
       return;
     }
 

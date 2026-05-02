@@ -1,4 +1,5 @@
 -- Kayıtta gönderilen telefonun profiles.phone'a yazılması (Supabase SQL Editor'da çalıştırın)
+-- Üye numarası ve güncel handle_new_user için ayrıca sql/migration_profiles_public_code.sql çalıştırın.
 
 create or replace function public.handle_new_user()
 returns trigger

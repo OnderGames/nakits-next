@@ -143,10 +143,13 @@ export default function RegisterPage() {
 
           <div
             style={{
-              marginTop: 18,
-              display: "flex",
-              gap: 10,
-              alignItems: "flex-start"
+              marginTop: 20,
+              width: "100%",
+              display: "grid",
+              gridTemplateColumns: "20px minmax(0, 1fr)",
+              columnGap: 12,
+              rowGap: 0,
+              alignItems: "start"
             }}
           >
             <input
@@ -154,9 +157,17 @@ export default function RegisterPage() {
               type="checkbox"
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              style={{ marginTop: 4, flexShrink: 0 }}
+              style={{ marginTop: 3, width: 18, height: 18, cursor: "pointer" }}
             />
-            <label htmlFor="reg-terms" style={{ margin: 0, lineHeight: 1.45 }}>
+            <label
+              htmlFor="reg-terms"
+              style={{
+                margin: 0,
+                lineHeight: 1.5,
+                display: "block",
+                minWidth: 0
+              }}
+            >
               <Link href="/uyelik-sozlesmesi" style={termsLinkStyle}>
                 Nakits.com Üyelik Sözleşmesi
               </Link>
@@ -171,7 +182,7 @@ export default function RegisterPage() {
           )}
           <button
             className="btn btn-primary"
-            style={{ marginTop: 14, width: "100%" }}
+            style={{ marginTop: 16, width: "100%" }}
             type="submit"
             disabled={loading}
           >

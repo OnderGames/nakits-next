@@ -9,7 +9,10 @@ create table if not exists profiles (
   phone text,
   city text,
   avatar_url text,
-  created_at timestamptz not null default now()
+  /** Tarayıcıda görünen üye no (6–9 hane, benzersiz) */
+  public_code text not null unique,
+  created_at timestamptz not null default now(),
+  constraint profiles_public_code_digits check (public_code ~ '^[0-9]{6,9}$')
 );
 
 create table if not exists categories (
@@ -72,6 +75,7 @@ create table if not exists conversations (
   buyer_id uuid not null references profiles(id) on delete cascade,
   seller_id uuid not null references profiles(id) on delete cascade,
   created_at timestamptz not null default now(),
+  last_message_at timestamptz,
   unique (listing_id, buyer_id, seller_id)
 );
 
@@ -83,10 +87,87 @@ create table if not exists messages (
   created_at timestamptz not null default now()
 );
 
+create table if not exists conversation_reads (
+  conversation_id uuid not null references conversations(id) on delete cascade,
+  profile_id uuid not null references profiles(id) on delete cascade,
+  last_read_at timestamptz not null default now(),
+  primary key (conversation_id, profile_id)
+);
+
+create index if not exists idx_conversation_reads_profile on conversation_reads(profile_id);
+
+alter table conversation_reads enable row level security;
+
 create index if not exists idx_listings_status_created_at on listings(status, created_at desc);
 create index if not exists idx_listings_category on listings(category_id);
 create index if not exists idx_listings_city on listings(city);
 create index if not exists idx_messages_conversation on messages(conversation_id, created_at);
+create index if not exists idx_conversations_last_message_at on conversations(last_message_at desc nulls last);
+
+create or replace function public.touch_conversation_last_message()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  update public.conversations
+  set last_message_at = new.created_at
+  where id = new.conversation_id;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_messages_touch_conversation on messages;
+create trigger trg_messages_touch_conversation
+after insert on messages
+for each row
+execute function public.touch_conversation_last_message();
+
+create or replace function public.my_total_unread_messages()
+returns bigint
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(count(*), 0)::bigint
+  from messages m
+  join conversations c on c.id = m.conversation_id
+  left join conversation_reads r
+    on r.conversation_id = c.id
+   and r.profile_id = auth.uid()
+  where auth.uid() in (c.buyer_id, c.seller_id)
+    and m.sender_id <> auth.uid()
+    and m.created_at > coalesce(r.last_read_at, to_timestamp(0));
+$$;
+
+grant execute on function public.my_total_unread_messages() to authenticated;
+
+create or replace function public.generate_profile_public_code()
+returns text
+language plpgsql
+set search_path = public
+as $$
+declare
+  candidate text;
+  attempts int := 0;
+begin
+  loop
+    attempts := attempts + 1;
+    exit when attempts > 100;
+    candidate := (100000 + floor(random() * 899900000)::bigint)::text;
+    if length(candidate) between 6 and 9
+       and not exists (select 1 from public.profiles p where p.public_code = candidate) then
+      return candidate;
+    end if;
+  end loop;
+  candidate := ((extract(epoch from clock_timestamp())::bigint % 899900000) + 100000)::text;
+  while exists (select 1 from public.profiles p where p.public_code = candidate) loop
+    candidate := ((candidate::bigint + 13) % 900000000 + 100000)::text;
+  end loop;
+  return candidate;
+end;
+$$;
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -102,12 +183,13 @@ begin
     ''
   );
 
-  insert into public.profiles (id, email, full_name, phone)
+  insert into public.profiles (id, email, full_name, phone, public_code)
   values (
     new.id,
     coalesce(new.email, ''),
     coalesce(new.raw_user_meta_data ->> 'full_name', ''),
-    phone_raw
+    phone_raw,
+    public.generate_profile_public_code()
   )
   on conflict (id) do nothing;
   return new;

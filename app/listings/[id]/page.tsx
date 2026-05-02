@@ -1,5 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import ListingMessagePanel from "@/components/ListingMessagePanel";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
 import { fetchListingById } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
@@ -38,7 +40,19 @@ export default async function ListingDetailPage({ params }: Props) {
           <p>{listing.city}</p>
           <p className="meta">{formatCategoryDisplay(listing.categoryKey)}</p>
           <p className="meta">İlan tarihi: {listing.createdAt}</p>
-          <p className="meta">Satıcı: {listing.seller}</p>
+          <p className="meta">
+            Satıcı:{" "}
+            {listing.sellerPublicCode ? (
+              <Link
+                href={`/kullanici/${listing.sellerPublicCode}`}
+                style={{ color: "var(--primary)", textDecoration: "underline" }}
+              >
+                {listing.seller}
+              </Link>
+            ) : (
+              listing.seller
+            )}
+          </p>
           {listing.description && (
             <p style={{ marginTop: 12, lineHeight: 1.5 }}>{listing.description}</p>
           )}
@@ -62,17 +76,19 @@ export default async function ListingDetailPage({ params }: Props) {
         </div>
         <aside className="panel">
           <h3>Satıcı ile iletişime geç</h3>
-          <p className="meta">
+          <p className="meta" style={{ marginBottom: 12 }}>
             {listing.showPhoneOnListing !== false &&
             listing.sellerPhone &&
             listing.sellerPhone.trim().length > 0
-              ? "Telefonu ilanda görebilirsin; mesajlaşma yakında aktif olacak."
-              : "Telefon gizliyse veya yoksa mesaj ile iletişim kurulacak (yakında)."}
+              ? "İstersen telefonla ara; aşağıdan da mesaj gönderebilirsin."
+              : "Telefon paylaşılmadıysa satıcıya buradan yaz."}
           </p>
-          <textarea rows={6} placeholder="Mesajınızı yazın" />
-          <button className="btn btn-primary" style={{ marginTop: 10 }}>
-            Mesaj Gönder
-          </button>
+          <ListingMessagePanel
+            listingId={listing.id}
+            sellerId={listing.sellerId}
+            sellerPublicCode={listing.sellerPublicCode}
+            sellerLabel={listing.seller}
+          />
         </aside>
       </section>
       <p className="footer">Nakits MVP — İlan detayı</p>

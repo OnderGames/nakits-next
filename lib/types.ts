@@ -16,4 +16,8 @@ export type Listing = {
   showPhoneOnListing?: boolean;
   /** Satıcı profilindeki telefon (ilan ayarına bağlı gösterim) */
   sellerPhone?: string | null;
+  /** Mesajlaşma (varsayılan anon istemci ile; RLS satıcıyı korur) */
+  sellerId?: string;
+  /** Profil URL’si: /kullanici/{sellerPublicCode} */
+  sellerPublicCode?: string;
 };

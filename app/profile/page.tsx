@@ -26,6 +26,8 @@ export default function ProfilePage() {
   const [profileLoadError, setProfileLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveNotice, setSaveNotice] = useState("");
+  const [publicCode, setPublicCode] = useState<string | null>(null);
+  const [profileChecked, setProfileChecked] = useState(false);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -62,23 +64,60 @@ export default function ProfilePage() {
   }, [userId]);
 
   useEffect(() => {
-    if (!hasSupabaseConfig || !userId) return;
+    if (!hasSupabaseConfig || !userId) {
+      setProfileChecked(false);
+      return;
+    }
     const sb = getSupabaseBrowser();
     if (!sb) return;
+    let cancelled = false;
+    setProfileChecked(false);
     setProfileLoadError("");
-    void sb
-      .from("profiles")
-      .select("full_name, phone")
-      .eq("id", userId)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error) {
-          setProfileLoadError(error.message);
-          return;
+    void (async () => {
+      const [{ data: prof, error: pe }, { data: authData }] = await Promise.all([
+        sb.from("profiles").select("full_name, phone, public_code").eq("id", userId).maybeSingle(),
+        sb.auth.getUser()
+      ]);
+      if (cancelled) return;
+      if (pe) {
+        setProfileLoadError(pe.message);
+        setProfileChecked(true);
+        return;
+      }
+      const meta = authData.user?.user_metadata as
+        | { full_name?: string; phone?: string }
+        | undefined;
+      const metaName = meta?.full_name?.trim() ?? "";
+      const metaPhone = meta?.phone?.trim() ?? "";
+      const profName = prof?.full_name?.trim() ?? "";
+      const profPhone = prof?.phone?.trim() ?? "";
+
+      const displayName = profName || metaName;
+      const displayPhone = profPhone || metaPhone;
+      setFullName(displayName);
+      setPhone(displayPhone);
+      const pc = (prof?.public_code as string | undefined)?.trim();
+      setPublicCode(pc && pc.length > 0 ? pc : null);
+
+      const needsName = !profName && Boolean(metaName);
+      const needsPhone = !profPhone && Boolean(metaPhone);
+      if (needsName || needsPhone) {
+        const { error: syncErr } = await sb
+          .from("profiles")
+          .update({
+            ...(needsName ? { full_name: metaName } : {}),
+            ...(needsPhone ? { phone: metaPhone } : {})
+          })
+          .eq("id", userId);
+        if (!cancelled && syncErr) {
+          setProfileLoadError(syncErr.message);
         }
-        setFullName(data?.full_name ?? "");
-        setPhone(data?.phone ?? "");
-      });
+      }
+      if (!cancelled) setProfileChecked(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   async function handleSaveProfile(event: FormEvent<HTMLFormElement>) {
@@ -143,9 +182,45 @@ export default function ProfilePage() {
         <p style={{ fontSize: 20, fontWeight: 700, margin: "0 0 6px" }}>
           Hoş geldin, {welcome}
         </p>
-        <p className="meta" style={{ marginBottom: 16 }}>
+        <p className="meta" style={{ marginBottom: 10 }}>
           {email ?? "—"}
         </p>
+        {hasSupabaseConfig &&
+          userId &&
+          profileChecked &&
+          !publicCode &&
+          !profileLoadError && (
+            <p className="notice" style={{ marginBottom: 16 }}>
+              Üye numaran veritabanında henüz yok. Supabase → SQL Editor&apos;da
+              önce{" "}
+              <code style={{ fontSize: 13 }}>
+                sql/migration_profiles_public_code.sql
+              </code>{" "}
+              dosyasını çalıştır; hâlâ boşsa{" "}
+              <code style={{ fontSize: 13 }}>
+                sql/fix_profiles_public_code_nulls.sql
+              </code>
+              . Sonra sayfayı yenile. Canlı sitede görmek için projeyi deploy et.
+            </p>
+          )}
+
+        {hasSupabaseConfig && userId && publicCode && (
+          <p className="meta" style={{ marginBottom: 16 }}>
+            Üye numaran:{" "}
+            <Link
+              href={`/kullanici/${publicCode}`}
+              style={{ color: "var(--primary)", fontWeight: 700 }}
+            >
+              {publicCode}
+            </Link>
+            <span style={{ display: "block", marginTop: 6, fontSize: 13 }}>
+              Paylaşılabilir adres:{" "}
+              <strong style={{ wordBreak: "break-all" }}>
+                …/kullanici/{publicCode}
+              </strong>
+            </span>
+          </p>
+        )}
 
         {hasSupabaseConfig && userId && (
           <form onSubmit={(e) => void handleSaveProfile(e)}>
