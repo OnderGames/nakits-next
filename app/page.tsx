@@ -15,12 +15,22 @@ export default async function HomePage() {
 
   return (
     <main className="container">
-      <section className="hero">
-        <h1>Türkiye&apos;nin hızlı ilan platformu</h1>
-        <p>
-          Elektronikten vasıtaya, ihtiyacın olan ürünü bul veya saniyeler içinde
-          ilan ver.
-        </p>
+      <section className="hero hero--spotlight">
+        <div className="hero-spotlight">
+          <h1>Satmak kolay, almak daha da kolay</h1>
+          <p className="hero-spotlight__tagline">
+            <span className="hero-spotlight__quote-open" aria-hidden>
+              “
+            </span>
+            <Link className="hero-spotlight__brandlink" href="/">
+              <strong>Nakits.com</strong>
+            </Link>{" "}
+            ile ihtiyaçlarını anında karşıla!
+            <span className="hero-spotlight__quote-close" aria-hidden>
+              ”
+            </span>
+          </p>
+        </div>
       </section>
 
       {!hasSupabaseConfig && (

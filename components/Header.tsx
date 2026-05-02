@@ -100,8 +100,9 @@ export default function Header() {
   return (
     <header className="topbar">
       <div className="container nav">
-        <Link className="brand" href="/">
-          naki<span>ts</span>
+        <Link className="nav-pill nav-pill--login brand-mark" href="/">
+          <span className="brand-mark__letter">N</span>
+          <span className="brand-mark__rest">akits</span>
         </Link>
         <nav className="menu">
           <Link className="nav-pill" href="/listings">

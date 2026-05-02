@@ -46,13 +46,26 @@ a {
   gap: 20px;
 }
 
-.brand {
+/* Logo: Giriş yap ile aynı amber pill; baş harf vurgulu */
+.brand-mark {
+  font-size: 16px;
   font-weight: 700;
-  font-size: 22px;
+  letter-spacing: 0.06em;
+  padding: 10px 22px !important;
+  min-height: 44px;
+  flex-shrink: 0;
 }
 
-.brand span {
-  color: var(--primary);
+.brand-mark__letter {
+  font-size: 1.45em;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.brand-mark__rest {
+  font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
 .menu {
@@ -241,17 +254,95 @@ button.nav-pill {
 }
 
 .hero {
-  padding: 38px 0 18px;
+  padding: 28px 0 22px;
 }
 
-.hero h1 {
-  font-size: 36px;
-  margin: 0 0 8px;
+.hero--spotlight {
+  padding-top: 20px;
 }
 
-.hero p {
+.hero-spotlight {
+  border-radius: 22px;
+  padding: clamp(22px, 4vw, 36px) clamp(18px, 3vw, 32px);
+  background: linear-gradient(
+    155deg,
+    #ecfdf5 0%,
+    #d1fae5 35%,
+    #a7f3d0 72%,
+    #6ee7b7 100%
+  );
+  border: 1.5px solid rgba(45, 212, 191, 0.65);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.92) inset,
+    0 10px 36px rgba(16, 185, 129, 0.22),
+    0 4px 14px rgba(5, 150, 105, 0.14);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 80% at 100% -20%,
+    rgba(255, 255, 255, 0.55) 0%,
+    transparent 55%
+  );
+  pointer-events: none;
+}
+
+.hero-spotlight h1 {
+  position: relative;
+  margin: 0 0 14px;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: #065f46;
+  text-wrap: balance;
+}
+
+.hero-spotlight__tagline {
+  position: relative;
   margin: 0;
-  color: var(--muted);
+  font-size: clamp(1rem, 2.4vw, 1.2rem);
+  line-height: 1.55;
+  font-weight: 600;
+  color: #047857;
+  max-width: 42em;
+}
+
+.hero-spotlight__brandlink {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(6, 78, 59, 0.45);
+}
+
+.hero-spotlight__brandlink:hover {
+  text-decoration-color: #047857;
+}
+
+.hero-spotlight__brandlink strong {
+  font-weight: 800;
+  color: #064e3b;
+  letter-spacing: 0.02em;
+}
+
+.hero-spotlight__quote-open,
+.hero-spotlight__quote-close {
+  color: rgba(6, 95, 70, 0.55);
+  font-weight: 700;
+}
+
+.hero-spotlight__quote-open {
+  margin-right: 2px;
+}
+
+.hero-spotlight__quote-close {
+  margin-left: 2px;
 }
 
 .section-title {
