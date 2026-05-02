@@ -1,7 +1,10 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { formatCategoryDisplay } from "@/lib/categories";
-import { formatPrice, listings } from "@/lib/mock-data";
+import { formatPrice } from "@/lib/format-price";
+import { fetchListingById } from "@/lib/listings-data";
+import { listings as mockListings } from "@/lib/mock-data";
+import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -9,7 +12,11 @@ type Props = {
 
 export default async function ListingDetailPage({ params }: Props) {
   const { id } = await params;
-  const listing = listings.find((x) => x.id === id);
+
+  const listing =
+    hasSupabaseConfig && supabase
+      ? await fetchListingById(supabase, id)
+      : mockListings.find((x) => x.id === id) ?? null;
 
   if (!listing) {
     notFound();
@@ -20,13 +27,22 @@ export default async function ListingDetailPage({ params }: Props) {
       <h1 className="section-title">İlan detayı</h1>
       <section className="grid-2">
         <div className="panel">
-          <Image src={listing.image} alt={listing.title} width={900} height={500} />
+          <Image
+            src={listing.image}
+            alt={listing.title}
+            width={900}
+            height={500}
+            style={{ width: "100%", height: "auto" }}
+          />
           <h2>{listing.title}</h2>
           <p className="price">{formatPrice(listing.price)}</p>
           <p>{listing.city}</p>
           <p className="meta">{formatCategoryDisplay(listing.categoryKey)}</p>
           <p className="meta">İlan tarihi: {listing.createdAt}</p>
           <p className="meta">Satıcı: {listing.seller}</p>
+          {listing.description && (
+            <p style={{ marginTop: 12, lineHeight: 1.5 }}>{listing.description}</p>
+          )}
         </div>
         <aside className="panel">
           <h3>Satıcı ile iletişime geç</h3>

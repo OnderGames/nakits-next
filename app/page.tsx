@@ -1,9 +1,18 @@
 import Link from "next/link";
 import ListingCard from "@/components/ListingCard";
-import { hasSupabaseConfig } from "@/lib/supabase";
-import { listings } from "@/lib/mock-data";
+import { fetchPublicListings } from "@/lib/listings-data";
+import { listings as mockListings } from "@/lib/mock-data";
+import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const fetched =
+    hasSupabaseConfig && supabase
+      ? await fetchPublicListings(supabase)
+      : null;
+
+  const shown =
+    fetched !== null ? fetched.slice(0, 3) : mockListings.slice(0, 3);
+
   return (
     <main className="container">
       <section className="hero">
@@ -22,8 +31,13 @@ export default function HomePage() {
       )}
 
       <h2 className="section-title">Öne Çıkan İlanlar</h2>
+      {fetched !== null && shown.length === 0 && (
+        <p className="meta">
+          Henüz yayındaki ilan yok. İlk ilanı sen verebilirsin.
+        </p>
+      )}
       <section className="cards">
-        {listings.slice(0, 3).map((listing) => (
+        {shown.map((listing) => (
           <ListingCard key={listing.id} listing={listing} />
         ))}
       </section>

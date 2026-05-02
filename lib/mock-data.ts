@@ -1,4 +1,7 @@
 import type { Listing } from "./types";
+import { formatPrice } from "./format-price";
+
+export { formatPrice };
 
 export const listings: Listing[] = [
   {
@@ -46,6 +49,3 @@ export const listings: Listing[] = [
     createdAt: "3 gün önce"
   }
 ];
-
-export const formatPrice = (value: number) =>
-  `${new Intl.NumberFormat("tr-TR").format(value)} TL`;

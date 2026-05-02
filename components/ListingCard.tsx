@@ -1,8 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { formatListingCategoryLineCity } from "@/lib/categories";
-import { formatPrice } from "@/lib/mock-data";
+import { formatPrice } from "@/lib/format-price";
 import type { Listing } from "@/lib/types";
+
+const STATUS_LABEL: Record<NonNullable<Listing["status"]>, string> = {
+  pending: "Onay bekliyor",
+  active: "Yayında",
+  sold: "Satıldı",
+  rejected: "Yayınlanmadı"
+};
 
 type Props = {
   listing: Listing;
@@ -19,6 +26,11 @@ export default function ListingCard({ listing }: Props) {
           <p className="meta">
             {formatListingCategoryLineCity(listing.city, listing.categoryKey)}
           </p>
+          {listing.status && (
+            <p className="meta">
+              {STATUS_LABEL[listing.status] ?? listing.status}
+            </p>
+          )}
           <p className="meta">{listing.createdAt}</p>
         </div>
       </Link>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
+import { mapAuthErrorToTurkish } from "@/lib/auth-errors";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
@@ -31,7 +32,7 @@ function LoginForm() {
     });
     setLoading(false);
     if (signError) {
-      setError(signError.message);
+      setError(mapAuthErrorToTurkish(signError));
       return;
     }
     router.push(next);

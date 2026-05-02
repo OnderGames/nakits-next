@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { mapAuthErrorToTurkish } from "@/lib/auth-errors";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
+import { getAuthRedirectBase } from "@/lib/site-url";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -23,16 +25,21 @@ export default function RegisterPage() {
       return;
     }
     setLoading(true);
+    const base = getAuthRedirectBase();
+    const afterConfirm = "/eposta-onaylandi";
     const { error: signError } = await sb.auth.signUp({
       email: email.trim(),
       password,
       options: {
+        emailRedirectTo: base
+          ? `${base}/auth/callback?next=${encodeURIComponent(afterConfirm)}`
+          : undefined,
         data: { full_name: fullName.trim() }
       }
     });
     setLoading(false);
     if (signError) {
-      setError(signError.message);
+      setError(mapAuthErrorToTurkish(signError));
       return;
     }
     router.replace("/login?registered=1");

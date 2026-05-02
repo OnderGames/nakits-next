@@ -18,11 +18,16 @@ Bu dosya, projeyi gercek domain (`nakits.com`) uzerine yayinlamak icin adim adim
    - `schema.sql`
    - `rls.sql`
    - `storage.sql`
-3. Auth ayarlari:
-   - Site URL: `https://nakits.com`
-   - Additional redirect URLs:
-     - `https://www.nakits.com`
-     - `https://nakits.com/auth/callback` (ileride auth callback eklenecekse)
+3. Auth ayarlari (Authentication → URL Configuration):
+   - **Site URL**: uygulamanin canonical adresi (tercihen `https://www.nakits.com` veya `https://nakits.com` — tek birini sec ve tum yerlerle uyumlu tut).
+   - **Redirect URLs** (her satira bir pattern):
+     - `https://www.nakits.com/**`
+     - `https://nakits.com/**`
+     - Gelistirme icin: `http://localhost:3000/**`
+   - Site URL hala `http://localhost:3000` ise e-posta onay linkleri localhost'a gider; mutlaka production URL'ye cek.
+4. E-posta sablonlari (Türkçe metin ornekleri):
+   - Proje kökündeki `SUPABASE_EMAIL_TR.txt` dosyasina bak
+   - Authentication → Email Templates ekranina yapistir
 
 ## 3) Environment Variables
 
@@ -30,8 +35,14 @@ Vercel (veya secili platform) uzerinde su degiskenleri tanimla:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SITE_URL` — canli site kok URL'si, ornek: `https://www.nakits.com` (kayit/onay linklerinin dogru domaine gitmesi icin zorunlu)
 
 Not: `service_role` key istemciye kesinlikle verilmez.
+
+Moderasyon paneli (`/admin/moderasyon`) icin ek ortam degiskenleri:
+
+- `ADMIN_EMAILS` — virgulle ayrilmis yonetici giris e-postalari (kucuk harf karsilastirilir).
+- `SUPABASE_SERVICE_ROLE_KEY` — yalnizca sunucu tarafinda (API route); Supabase Project Settings → API → service_role. Bu anahtar **asla** `NEXT_PUBLIC_` ile baslamaz ve frontend koduna eklenmez.
 
 ## 4) Vercel Deploy
 

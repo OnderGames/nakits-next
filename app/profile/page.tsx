@@ -3,13 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import ListingCard from "@/components/ListingCard";
+import { fetchSellerActiveListings } from "@/lib/listings-data";
+import { listings as mockListings } from "@/lib/mock-data";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
-import { listings } from "@/lib/mock-data";
 import { hasSupabaseConfig } from "@/lib/supabase";
+import type { Listing } from "@/lib/types";
 
 export default function ProfilePage() {
   const [email, setEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [activeListings, setActiveListings] = useState<Listing[]>([]);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -23,15 +27,27 @@ export default function ProfilePage() {
     }
     void sb.auth.getSession().then(({ data }) => {
       setEmail(data.session?.user?.email ?? null);
+      setUserId(data.session?.user?.id ?? null);
       setReady(true);
     });
     const {
       data: { subscription }
     } = sb.auth.onAuthStateChange((_e, session) => {
       setEmail(session?.user?.email ?? null);
+      setUserId(session?.user?.id ?? null);
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!hasSupabaseConfig || !userId) {
+      if (!userId) setActiveListings([]);
+      return;
+    }
+    const sb = getSupabaseBrowser();
+    if (!sb) return;
+    void fetchSellerActiveListings(sb, userId, 2).then(setActiveListings);
+  }, [userId]);
 
   if (!ready) {
     return (
@@ -59,6 +75,11 @@ export default function ProfilePage() {
     );
   }
 
+  const shown =
+    hasSupabaseConfig && userId
+      ? activeListings
+      : mockListings.slice(0, 2);
+
   return (
     <main className="container">
       <h1 className="section-title">Profilim</h1>
@@ -68,8 +89,11 @@ export default function ProfilePage() {
       </section>
 
       <h2 className="section-title">Yayındaki ilanlarım</h2>
+      {hasSupabaseConfig && shown.length === 0 && (
+        <p className="meta">Henüz yayındaki ilanın yok (onay bekleyenler dahil değil).</p>
+      )}
       <section className="cards">
-        {listings.slice(0, 2).map((listing) => (
+        {shown.map((listing) => (
           <ListingCard key={listing.id} listing={listing} />
         ))}
       </section>

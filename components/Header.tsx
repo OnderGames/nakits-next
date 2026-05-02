@@ -9,6 +9,7 @@ import { hasSupabaseConfig } from "@/lib/supabase";
 export default function Header() {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const refresh = useCallback(async () => {
     const sb = getSupabaseBrowser();
@@ -33,6 +34,31 @@ export default function Header() {
     });
     return () => subscription.unsubscribe();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!hasSupabaseConfig || !user) {
+      setIsAdmin(false);
+      return;
+    }
+    const sb = getSupabaseBrowser();
+    if (!sb) {
+      setIsAdmin(false);
+      return;
+    }
+    void sb.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token;
+      if (!token) {
+        setIsAdmin(false);
+        return;
+      }
+      void fetch("/api/admin/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then((r) => r.json())
+        .then((j: { admin?: boolean }) => setIsAdmin(Boolean(j.admin)))
+        .catch(() => setIsAdmin(false));
+    });
+  }, [user]);
 
   async function handleSignOut() {
     const sb = getSupabaseBrowser();
@@ -60,6 +86,9 @@ export default function Header() {
           ) : showAuth ? (
             loggedIn ? (
               <>
+                {isAdmin && (
+                  <Link href="/admin/moderasyon">Moderasyon</Link>
+                )}
                 <Link href="/profile">Profilim</Link>
                 <Link href="/ilanlarim">İlanlarım</Link>
                 <button

@@ -8,4 +8,8 @@ export type Listing = {
   image: string;
   seller: string;
   createdAt: string;
+  /** İlanlarım vb.: moderasyon / yayın durumu */
+  status?: "pending" | "active" | "sold" | "rejected";
+  /** Detay sayfası metni */
+  description?: string;
 };

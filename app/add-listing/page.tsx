@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import {
   CATEGORY_GROUPS,
-  compositeCategoryKey
+  compositeCategoryKey,
+  sqlCategorySlugFromKey
 } from "@/lib/categories";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
@@ -14,8 +15,27 @@ import {
   TURKEY_PROVINCES
 } from "@/lib/turkish-provinces";
 
+function fileExtension(file: File): string {
+  const n = file.name;
+  const i = n.lastIndexOf(".");
+  if (i > 0 && i < n.length - 1) {
+    const ext = n
+      .slice(i + 1)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "")
+      .slice(0, 8);
+    if (ext) return ext;
+  }
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  if (file.type === "image/gif") return "gif";
+  return "jpg";
+}
+
 export default function AddListingPage() {
   const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [groupSlug, setGroupSlug] = useState("");
   const [detailCategoryKey, setDetailCategoryKey] = useState("");
@@ -58,9 +78,124 @@ export default function AddListingPage() {
     });
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setNotice("İlanınız alındı. Moderasyon sonrası yayınlanacak.");
+    setNotice("");
+    setError("");
+    const sb = getSupabaseBrowser();
+    if (!sb || !user) {
+      setError("Oturum gerekli. Lütfen giriş yapın.");
+      return;
+    }
+    if (!detailCategoryKey) {
+      setError("Ana ve alt kategori seçin.");
+      return;
+    }
+
+    const fd = new FormData(event.currentTarget);
+    const title = String(fd.get("title") ?? "").trim();
+    const description = String(fd.get("description") ?? "").trim();
+    const city = String(fd.get("city") ?? "").trim();
+    const priceRaw = String(fd.get("price") ?? "").trim();
+    const price = parseFloat(priceRaw.replace(",", "."));
+    const photo = fd.get("photo");
+
+    if (!title || !description || !city) {
+      setError("Başlık, açıklama ve şehir zorunludur.");
+      return;
+    }
+    if (!Number.isFinite(price) || price < 0) {
+      setError("Geçerli bir fiyat girin.");
+      return;
+    }
+    if (!(photo instanceof File) || photo.size === 0) {
+      setError("Bir fotoğraf seçin.");
+      return;
+    }
+
+    const sqlSlug = sqlCategorySlugFromKey(detailCategoryKey);
+    setSubmitting(true);
+
+    const { data: catRow, error: catErr } = await sb
+      .from("categories")
+      .select("id")
+      .eq("slug", sqlSlug)
+      .maybeSingle();
+
+    if (catErr || !catRow?.id) {
+      setSubmitting(false);
+      setError(
+        "Kategori bulunamadı. Sayfayı yenileyip tekrar deneyin veya destek ile iletişime geçin."
+      );
+      return;
+    }
+
+    const { data: inserted, error: insErr } = await sb
+      .from("listings")
+      .insert({
+        seller_id: user.id,
+        category_id: catRow.id,
+        title,
+        description,
+        price,
+        city,
+        condition: "used"
+      })
+      .select("id")
+      .single();
+
+    if (insErr || !inserted?.id) {
+      setSubmitting(false);
+      setError(
+        insErr?.message?.includes("row-level security")
+          ? "İlan kaydedilemedi. Oturumunuzu kontrol edin."
+          : insErr?.message ?? "İlan kaydedilemedi."
+      );
+      return;
+    }
+
+    const listingId = inserted.id as string;
+    const ext = fileExtension(photo);
+    const storagePath = `${user.id}/${listingId}/0.${ext}`;
+
+    const { error: upErr } = await sb.storage
+      .from("listing-images")
+      .upload(storagePath, photo, {
+        contentType: photo.type || "image/jpeg",
+        upsert: false
+      });
+
+    if (upErr) {
+      await sb.from("listings").delete().eq("id", listingId);
+      setSubmitting(false);
+      setError(
+        "Fotoğraf yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin."
+      );
+      return;
+    }
+
+    const {
+      data: { publicUrl }
+    } = sb.storage.from("listing-images").getPublicUrl(storagePath);
+
+    const { error: imgErr } = await sb.from("listing_images").insert({
+      listing_id: listingId,
+      image_url: publicUrl,
+      sort_order: 0
+    });
+
+    if (imgErr) {
+      await sb.storage.from("listing-images").remove([storagePath]);
+      await sb.from("listings").delete().eq("id", listingId);
+      setSubmitting(false);
+      setError("İlan görseli kaydedilemedi. Lütfen tekrar deneyin.");
+      return;
+    }
+
+    setSubmitting(false);
+    setNotice(
+      "İlanınız alındı. Moderasyon sonrası yayınlanacak; onaylanınca herkes görebilir."
+    );
     setPhotoPreview((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return null;
@@ -109,12 +244,28 @@ export default function AddListingPage() {
         <form onSubmit={handleSubmit}>
           <div className="row">
             <div>
-              <label>Başlık</label>
-              <input required type="text" placeholder="Örn: iPhone 14 256 GB" />
+              <label htmlFor="listing-title">Başlık</label>
+              <input
+                id="listing-title"
+                name="title"
+                required
+                type="text"
+                placeholder="Örn: iPhone 14 256 GB"
+                disabled={submitting}
+              />
             </div>
             <div>
-              <label>Fiyat</label>
-              <input required type="number" min="0" placeholder="0" />
+              <label htmlFor="listing-price">Fiyat</label>
+              <input
+                id="listing-price"
+                name="price"
+                required
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0"
+                disabled={submitting}
+              />
             </div>
           </div>
 
@@ -124,6 +275,7 @@ export default function AddListingPage() {
               <select
                 required
                 value={groupSlug}
+                disabled={submitting}
                 onChange={(event) => {
                   setGroupSlug(event.target.value);
                   setDetailCategoryKey("");
@@ -141,7 +293,7 @@ export default function AddListingPage() {
               <label>Alt kategori</label>
               <select
                 required
-                disabled={!groupSlug}
+                disabled={!groupSlug || submitting}
                 value={detailCategoryKey}
                 onChange={(event) => setDetailCategoryKey(event.target.value)}
               >
@@ -169,7 +321,7 @@ export default function AddListingPage() {
                   ({TURKEY_PROVINCE_COUNT} il)
                 </span>
               </label>
-              <select id="listing-city" name="city" required>
+              <select id="listing-city" name="city" required disabled={submitting}>
                 <option value="">Seçiniz</option>
                 {TURKEY_PROVINCES.map((il) => (
                   <option key={il} value={il}>
@@ -181,8 +333,15 @@ export default function AddListingPage() {
           </div>
 
           <div style={{ marginTop: 10 }}>
-            <label>Açıklama</label>
-            <textarea required rows={6} placeholder="Ürünü detaylı açıklayın" />
+            <label htmlFor="listing-desc">Açıklama</label>
+            <textarea
+              id="listing-desc"
+              name="description"
+              required
+              rows={6}
+              placeholder="Ürünü detaylı açıklayın"
+              disabled={submitting}
+            />
           </div>
 
           <div style={{ marginTop: 10 }}>
@@ -193,6 +352,7 @@ export default function AddListingPage() {
               type="file"
               accept="image/*"
               required
+              disabled={submitting}
               onChange={handlePhotoChange}
             />
             {photoPreview && (
@@ -207,9 +367,19 @@ export default function AddListingPage() {
             )}
           </div>
 
-          <button className="btn btn-primary" style={{ marginTop: 12 }} type="submit">
-            İlanı Gönder
+          <button
+            className="btn btn-primary"
+            style={{ marginTop: 12 }}
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? "Gönderiliyor…" : "İlanı Gönder"}
           </button>
+          {error && (
+            <p className="notice" style={{ marginTop: 10, background: "#fee2e2", borderColor: "#fecaca", color: "#7f1d1d" }}>
+              {error}
+            </p>
+          )}
           {notice && (
             <p className="notice" style={{ marginTop: 10 }}>
               {notice}

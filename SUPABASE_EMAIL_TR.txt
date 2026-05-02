@@ -1,0 +1,25 @@
+=== Nakits — Supabase e-posta şablonları (Türkçe) ===
+
+Bu metinleri Supabase Panelinde yapıştır:
+Projeyi aç → Authentication → Email Templates → ilgili şablon.
+
+Not: "Gönderen adı" bazen SMTP/custom domain ile ayarlanır. Ücretsiz gönderimde
+bazı başlıklar Supabase tarafından sabit kalabilir; konu ve gövde yine aşağıdaki gibi olur.
+
+--- Confirm signup (Kaydı onayla) — Konu ---
+Nakits.com'a hoş geldiniz — E-postanızı onaylayın
+
+--- Confirm signup — Gövde (HTML) ---
+<p><strong>Nakits.com'a hoş geldiniz</strong></p>
+<p>Hesabınızı kullanmaya başlamadan önce lütfen e-posta adresinizi onaylayın.</p>
+<p>Aşağıdaki bağlantıya tıklayarak kaydınızı tamamlayın:</p>
+<p><a href="{{ .ConfirmationURL }}">E-postamı onayla</a></p>
+<p>Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.</p>
+<p>— Nakits</p>
+
+--- Magic Link / şifre sıfırlama vb. için benzer Türkçe başlıklar ---
+Örnek "Reset password" konusu:
+Nakits.com — Şifre sıfırlama
+
+Varsayılan İngilizce şablonları tek tek Türkçeleştirmeniz yeterlidir;
+değişkenler aynı kalır: {{ .ConfirmationURL }}, {{ .Email }}, {{ .SiteURL }} vb.
