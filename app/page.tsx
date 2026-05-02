@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ListingCard from "@/components/ListingCard";
+import ListingCardPublic from "@/components/ListingCardPublic";
 import { fetchPublicListings } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
@@ -38,7 +38,7 @@ export default async function HomePage() {
       )}
       <section className="cards">
         {shown.map((listing) => (
-          <ListingCard key={listing.id} listing={listing} />
+          <ListingCardPublic key={listing.id} listing={listing} />
         ))}
       </section>
 

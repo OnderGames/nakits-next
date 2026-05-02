@@ -123,77 +123,90 @@ export default function MessagesInboxPage() {
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {items.map((c) => (
             <li key={c.id} style={{ marginBottom: 12 }}>
-              <Link
-                href={`/mesajlar/${c.id}`}
+              <div
                 className="panel"
                 style={{
-                  display: "flex",
-                  gap: 14,
-                  alignItems: "center",
-                  textDecoration: "none",
-                  color: "inherit",
-                  padding: 14
+                  padding: 0,
+                  overflow: "hidden"
                 }}
               >
-                <Image
-                  src={c.listingImage}
-                  alt=""
-                  width={72}
-                  height={72}
+                <Link
+                  href={`/mesajlar/${c.id}`}
                   style={{
-                    width: 72,
-                    height: 72,
-                    objectFit: "cover",
-                    borderRadius: 10,
-                    flexShrink: 0
+                    display: "flex",
+                    gap: 14,
+                    alignItems: "center",
+                    textDecoration: "none",
+                    color: "inherit",
+                    padding: 14
                   }}
-                />
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <p
+                >
+                  <Image
+                    src={c.listingImage}
+                    alt=""
+                    width={72}
+                    height={72}
                     style={{
-                      margin: "0 0 4px",
-                      fontWeight: 700,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      flexWrap: "wrap"
+                      width: 72,
+                      height: 72,
+                      objectFit: "cover",
+                      borderRadius: 10,
+                      flexShrink: 0
                     }}
-                  >
-                    <span>{c.listingTitle}</span>
-                    {c.unreadCount ? (
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          padding: "2px 8px",
-                          borderRadius: 999,
-                          background: "#dc2626",
-                          color: "#fff"
-                        }}
-                      >
-                        {c.unreadCount > 99 ? "99+" : c.unreadCount}
-                      </span>
-                    ) : null}
-                  </p>
-                  <p className="meta" style={{ margin: 0 }}>
-                    {c.role === "buyer" ? "Satıcı" : "Alıcı"}:{" "}
-                    {c.otherPartyPublicCode ? (
-                      <Link
-                        href={`/kullanici/${c.otherPartyPublicCode}`}
-                        style={{ color: "var(--primary)", textDecoration: "underline" }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {c.otherPartyName}
-                      </Link>
-                    ) : (
-                      c.otherPartyName
-                    )}
-                  </p>
-                  <p className="meta" style={{ margin: "6px 0 0", fontSize: 12 }}>
-                    {formatRelativeTimeTr(c.sortAt)}
-                  </p>
-                </div>
-              </Link>
+                  />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <p
+                      style={{
+                        margin: "0 0 4px",
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        flexWrap: "wrap"
+                      }}
+                    >
+                      <span>{c.listingTitle}</span>
+                      {c.unreadCount ? (
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            padding: "2px 8px",
+                            borderRadius: 999,
+                            background: "#dc2626",
+                            color: "#fff"
+                          }}
+                        >
+                          {c.unreadCount > 99 ? "99+" : c.unreadCount}
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="meta" style={{ margin: "6px 0 0", fontSize: 12 }}>
+                      {formatRelativeTimeTr(c.sortAt)}
+                    </p>
+                  </div>
+                </Link>
+                <p
+                  className="meta"
+                  style={{
+                    margin: 0,
+                    padding: "0 14px 14px",
+                    borderTop: "1px solid var(--border)"
+                  }}
+                >
+                  {c.role === "buyer" ? "Satıcı" : "Alıcı"}:{" "}
+                  {c.otherPartyPublicCode ? (
+                    <Link
+                      href={`/kullanici/${c.otherPartyPublicCode}`}
+                      style={{ color: "var(--primary)", textDecoration: "underline" }}
+                    >
+                      {c.otherPartyName}
+                    </Link>
+                  ) : (
+                    c.otherPartyName
+                  )}
+                </p>
+              </div>
             </li>
           ))}
         </ul>
