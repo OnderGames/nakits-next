@@ -146,8 +146,7 @@ export default function Header() {
         <div className="nav__leading">
           <Link className="brand-mark" href="/" aria-label="Nakits.com — ana sayfa">
             <span className="brand-mark__text">
-              <span className="brand-mark__nakit">Nakit</span>
-              <span className="brand-mark__accent">s</span>
+              <span className="brand-mark__nakits">Nakits</span>
               <span className="brand-mark__domain">.com</span>
             </span>
           </Link>
