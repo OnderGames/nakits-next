@@ -15,6 +15,7 @@ import ListingCard from "@/components/ListingCard";
 import { buildListingCountsByCategoryKey } from "@/lib/category-counts";
 import {
   CATEGORY_GROUPS,
+  categoryKeyMatchesListingSearch,
   compositeCategoryKey
 } from "@/lib/categories";
 import { isListingCodeQuery } from "@/lib/listing-code";
@@ -107,9 +108,18 @@ function ListingsPageInner() {
       const sellerHit =
         !qLower ||
         item.seller.toLowerCase().includes(qLower);
+      const descHit =
+        !qLower ||
+        (item.description != null &&
+          item.description.toLowerCase().includes(qLower));
+      const categoryLabelHit =
+        !qLower || categoryKeyMatchesListingSearch(item.categoryKey, qLower);
       const matchQ = codeExact
         ? item.listingCode === codeExact
-        : titleHit || sellerHit;
+        : titleHit ||
+            sellerHit ||
+            descHit ||
+            categoryLabelHit;
       const matchCity = !city || item.city === city;
       const matchDistrict =
         !district ||
@@ -174,8 +184,9 @@ function ListingsPageInner() {
       <section className="panel">
         <p className="meta" style={{ margin: "0 0 12px" }}>
           Filtreler adres çubuğuna yazılır; sayfa bağlantısını kopyalayarak aynı
-          aramayı paylaşabilirsiniz. Arama: başlık, <strong>satıcı adı</strong> veya
-          <strong> 6–9 haneli ilan no</strong>. Önce <strong>il</strong> seçin;
+          aramayı paylaşabilirsiniz.           Arama: başlık, <strong>açıklama</strong>, <strong>kategori adı</strong>,{" "}
+          <strong>satıcı adı</strong> veya{" "}
+          <strong>6–9 haneli ilan no</strong>. Önce <strong>il</strong> seçin;
           ardından <strong>ilçe</strong> menüsü dolar.
         </p>
         <div className="listings-filter-grid">

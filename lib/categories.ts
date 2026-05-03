@@ -135,6 +135,29 @@ export function parseCategoryKey(key: string): ParsedCategorySlug | null {
   return null;
 }
 
+/**
+ * Serbest kelime aramasında ilanın seçili kategori etiketiyle de eşler
+ * (örn. başlıkta "villa" yoksa bile q "villa" → Villa alt kategorisi).
+ */
+export function categoryKeyMatchesListingSearch(
+  categoryKey: string,
+  qNormalized: string
+): boolean {
+  const q = qNormalized.trim().toLowerCase();
+  if (!q) return false;
+  const parsed = parseCategoryKey(categoryKey);
+  if (!parsed) {
+    return categoryKey.toLowerCase().includes(q);
+  }
+  const { group, sub } = parsed;
+  if (group.name.toLowerCase().includes(q)) return true;
+  if (sub.name.toLowerCase().includes(q)) return true;
+  if (sub.slug.includes(q)) return true;
+  const subAsWords = sub.slug.replace(/-/g, " ");
+  if (subAsWords.includes(q)) return true;
+  return false;
+}
+
 /** Kart / detayda gösterilecek satır örn: "📱 Elektronik › Telefon" */
 export function formatCategoryDisplay(key: string): string {
   const parsed = parseCategoryKey(key);
