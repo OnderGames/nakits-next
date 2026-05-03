@@ -6,7 +6,6 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   fetchConversationParticipants,
   fetchMessages,
-  hideIncomingMessageForUser,
   markConversationRead,
   markIncomingMessagesAsRead,
   notifyUnreadRefresh,
@@ -37,7 +36,6 @@ export default function ConversationPage() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
   const [sendOk, setSendOk] = useState(false);
-  const [hideBusyId, setHideBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -98,6 +96,8 @@ export default function ConversationPage() {
       if (cancelled) return;
       setMessages(rows);
       await markIncomingMessagesAsRead(sb, conversationId, userId, otherPartyId);
+      await markConversationRead(sb, conversationId);
+      notifyUnreadRefresh();
       setLoading(false);
 
       channel = sb
@@ -120,6 +120,14 @@ export default function ConversationPage() {
               otherPartyId
             );
             setMessages(next);
+            await markIncomingMessagesAsRead(
+              nextSb,
+              conversationId,
+              userId,
+              otherPartyId
+            );
+            await markConversationRead(nextSb, conversationId);
+            notifyUnreadRefresh();
           }
         )
         .on(
@@ -163,9 +171,18 @@ export default function ConversationPage() {
     const refresh = () => {
       if (typeof document !== "undefined" && document.visibilityState !== "visible")
         return;
-      void fetchMessages(sb, conversationId, userId, otherPartyId).then(
-        setMessages
-      );
+      void (async () => {
+        const next = await fetchMessages(
+          sb,
+          conversationId,
+          userId,
+          otherPartyId
+        );
+        setMessages(next);
+        await markIncomingMessagesAsRead(sb, conversationId, userId, otherPartyId);
+        await markConversationRead(sb, conversationId);
+        notifyUnreadRefresh();
+      })();
     };
 
     const intervalMs = 12000;
@@ -176,15 +193,6 @@ export default function ConversationPage() {
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [allowed, conversationId, userId, convMeta]);
-
-  useEffect(() => {
-    if (!allowed || !conversationId) return;
-    const sb = getSupabaseBrowser();
-    if (!sb) return;
-    void markConversationRead(sb, conversationId).then(() =>
-      notifyUnreadRefresh()
-    );
-  }, [allowed, conversationId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -214,27 +222,9 @@ export default function ConversationPage() {
       userId === convMeta.buyerId ? convMeta.sellerId : convMeta.buyerId;
     const next = await fetchMessages(sb, conversationId, userId, otherPartyId);
     setMessages(next);
-  }
-
-  async function handleHideIncoming(messageId: string) {
-    if (
-      !window.confirm(
-        "Bu mesaj yalnızca sizin ekranınızdan kaldırılır; karşı taraf mesajı görmeye devam eder."
-      )
-    ) {
-      return;
-    }
-    const sb = getSupabaseBrowser();
-    if (!sb) return;
-    setHideBusyId(messageId);
-    setSendError("");
-    const res = await hideIncomingMessageForUser(sb, messageId);
-    setHideBusyId(null);
-    if (res.error) {
-      setSendError(res.error);
-      return;
-    }
-    setMessages((prev) => prev.filter((x) => x.id !== messageId));
+    await markIncomingMessagesAsRead(sb, conversationId, userId, otherPartyId);
+    await markConversationRead(sb, conversationId);
+    notifyUnreadRefresh();
   }
 
   if (!authReady) {
@@ -391,22 +381,6 @@ export default function ConversationPage() {
                       Görüldü · {formatRelativeTimeTr(m.readByOtherAt)}
                     </p>
                   ) : null}
-                  {!mine && (
-                    <div style={{ marginTop: 8 }}>
-                      <button
-                        type="button"
-                        className="btn btn-outline chat-msg-hide-btn"
-                        disabled={hideBusyId !== null}
-                        onClick={() => void handleHideIncoming(m.id)}
-                        style={{
-                          fontSize: 12,
-                          padding: "4px 10px"
-                        }}
-                      >
-                        {hideBusyId === m.id ? "…" : "Görünümden kaldır"}
-                      </button>
-                    </div>
-                  )}
                 </div>
               );
             })

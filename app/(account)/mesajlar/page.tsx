@@ -2,8 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
-import { fetchMyConversations } from "@/lib/conversations";
+import {
+  deleteConversation,
+  fetchMyConversations,
+  notifyUnreadRefresh
+} from "@/lib/conversations";
 import { formatRelativeTimeTr } from "@/lib/listings-data";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
@@ -15,6 +20,8 @@ export default function MessagesInboxPage() {
     ReturnType<typeof fetchMyConversations>
   > >([]);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [inboxError, setInboxError] = useState("");
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -67,6 +74,33 @@ export default function MessagesInboxPage() {
     };
   }, [userId]);
 
+  async function handleDeleteConversation(
+    conversationId: string,
+    event: MouseEvent<HTMLButtonElement>
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (
+      !window.confirm(
+        "Bu görüşmedeki tüm mesajlar tamamen silinir (karşı taraf da bu yazışmayı artık göremez). Aynı ilan için daha sonra yeniden yazılabilir."
+      )
+    ) {
+      return;
+    }
+    const sb = getSupabaseBrowser();
+    if (!sb) return;
+    setDeletingId(conversationId);
+    setInboxError("");
+    const res = await deleteConversation(sb, conversationId);
+    setDeletingId(null);
+    if (res.error) {
+      setInboxError(res.error);
+      return;
+    }
+    setItems((prev) => prev.filter((row) => row.id !== conversationId));
+    notifyUnreadRefresh();
+  }
+
   if (!ready) {
     return (
       <div className="account-page">
@@ -108,6 +142,11 @@ export default function MessagesInboxPage() {
       <p className="meta" style={{ marginBottom: 14 }}>
         Bu hesaba ait yazışmaların özeti aşağıdadır.
       </p>
+      {inboxError ? (
+        <p className="notice" style={{ marginBottom: 12 }}>
+          {inboxError}
+        </p>
+      ) : null}
       {loading ? (
         <p className="meta">Yükleniyor…</p>
       ) : items.length === 0 ? (
@@ -128,62 +167,102 @@ export default function MessagesInboxPage() {
                   overflow: "hidden"
                 }}
               >
-                <Link
-                  href={`/mesajlar/${c.id}`}
+                <div
                   style={{
                     display: "flex",
-                    gap: 14,
-                    alignItems: "center",
-                    textDecoration: "none",
-                    color: "inherit",
-                    padding: 14
+                    alignItems: "stretch",
+                    gap: 0,
+                    flexWrap: "nowrap"
                   }}
                 >
-                  <Image
-                    src={c.listingImage}
-                    alt=""
-                    width={72}
-                    height={72}
+                  <Link
+                    href={`/mesajlar/${c.id}`}
                     style={{
-                      width: 72,
-                      height: 72,
-                      objectFit: "cover",
-                      borderRadius: 10,
+                      flex: "1 1 auto",
+                      minWidth: 0,
+                      display: "flex",
+                      gap: 14,
+                      alignItems: "center",
+                      textDecoration: "none",
+                      color: "inherit",
+                      padding: 14
+                    }}
+                  >
+                    <Image
+                      src={c.listingImage}
+                      alt=""
+                      width={72}
+                      height={72}
+                      style={{
+                        width: 72,
+                        height: 72,
+                        objectFit: "cover",
+                        borderRadius: 10,
+                        flexShrink: 0
+                      }}
+                    />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <p
+                        style={{
+                          margin: "0 0 4px",
+                          fontWeight: 700,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          flexWrap: "wrap"
+                        }}
+                      >
+                        <span>{c.listingTitle}</span>
+                        {c.unreadCount ? (
+                          <span
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              padding: "2px 8px",
+                              borderRadius: 999,
+                              background: "#dc2626",
+                              color: "#fff"
+                            }}
+                          >
+                            {c.unreadCount > 99 ? "99+" : c.unreadCount}
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className="meta" style={{ margin: "6px 0 0", fontSize: 12 }}>
+                        {formatRelativeTimeTr(c.sortAt)}
+                      </p>
+                    </div>
+                  </Link>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      padding: "8px 12px",
+                      borderLeft: "1px solid var(--border)",
                       flexShrink: 0
                     }}
-                  />
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <p
+                  >
+                    <button
+                      type="button"
+                      className="btn btn-outline"
                       style={{
-                        margin: "0 0 4px",
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        flexWrap: "wrap"
+                        whiteSpace: "nowrap",
+                        fontSize: 13,
+                        padding: "8px 12px",
+                        alignSelf: "center"
                       }}
+                      disabled={deletingId !== null}
+                      aria-label="Görüşmeyi sil"
+                      title="Bu görüşmedeki mesajların tamamını sil"
+                      onClick={(ev) =>
+                        void handleDeleteConversation(c.id, ev)
+                      }
                     >
-                      <span>{c.listingTitle}</span>
-                      {c.unreadCount ? (
-                        <span
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 700,
-                            padding: "2px 8px",
-                            borderRadius: 999,
-                            background: "#dc2626",
-                            color: "#fff"
-                          }}
-                        >
-                          {c.unreadCount > 99 ? "99+" : c.unreadCount}
-                        </span>
-                      ) : null}
-                    </p>
-                    <p className="meta" style={{ margin: "6px 0 0", fontSize: 12 }}>
-                      {formatRelativeTimeTr(c.sortAt)}
-                    </p>
+                      {deletingId === c.id ? "…" : "Sil"}
+                    </button>
                   </div>
-                </Link>
+                </div>
                 <p
                   className="meta"
                   style={{

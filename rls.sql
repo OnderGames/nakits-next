@@ -109,6 +109,11 @@ with check (
   )
 );
 
+drop policy if exists "conversations participant delete" on conversations;
+create policy "conversations participant delete"
+on conversations for delete
+using (auth.uid() in (buyer_id, seller_id));
+
 -- Messages
 drop policy if exists "messages participant read" on messages;
 create policy "messages participant read"

@@ -116,6 +116,24 @@ async function unreadCountForConversation(
   return count ?? 0;
 }
 
+/** Görüşmeyi ve tüm mesajlarını tamamen siler (alıcı/satıcı). */
+export async function deleteConversation(
+  sb: SupabaseClient,
+  conversationId: string
+): Promise<{ error?: string }> {
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return { error: "Oturum gerekli." };
+
+  const { error } = await sb
+    .from("conversations")
+    .delete()
+    .eq("id", conversationId);
+
+  if (error) return { error: error.message };
+  return {};
+}
+
 export async function markConversationRead(
   sb: SupabaseClient,
   conversationId: string
