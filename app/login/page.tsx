@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
+import AuthSplitShell from "@/components/auth/AuthSplitShell";
 import { mapAuthErrorToTurkish } from "@/lib/auth-errors";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
@@ -50,70 +51,75 @@ function LoginForm() {
 
   if (!hasSupabaseConfig) {
     return (
-      <>
+      <main className="container">
         <h1 className="section-title">Giriş yap</h1>
         <p className="notice">
           Ortamda Supabase anahtarları yok. `.env.local` içinde
           NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_ANON_KEY tanımlayın.
         </p>
-      </>
+      </main>
     );
   }
 
   return (
-    <>
-      <h1 className="section-title">Giriş yap</h1>
+    <AuthSplitShell
+      title="Nakits.com'a hoş geldiniz"
+      footer={
+        <p className="meta" style={{ marginTop: 18 }}>
+          Hesabın yok mu? <Link href="/register">Üye ol</Link>
+        </p>
+      }
+    >
       {registered && (
         <p className="notice" style={{ marginBottom: 14 }}>
           Kayıt tamam. Şimdi giriş yapabilirsin.
         </p>
       )}
-      <section className="panel" style={{ maxWidth: 420 }}>
-        <form onSubmit={(e) => void handleSubmit(e)}>
-          <label>E-posta</label>
-          <input
-            required
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <label style={{ marginTop: 12 }}>Şifre</label>
-          <input
-            required
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {error && (
-            <p className="notice" style={{ marginTop: 10 }}>
-              {error}
-            </p>
-          )}
-          <button
-            className="btn btn-primary"
-            style={{ marginTop: 14, width: "100%" }}
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Giriş yapılıyor…" : "Giriş yap"}
-          </button>
-        </form>
-        <p className="meta" style={{ marginTop: 16 }}>
-          Hesabın yok mu? <Link href="/register">Üye ol</Link>
-        </p>
-      </section>
-    </>
+      <form onSubmit={(e) => void handleSubmit(e)}>
+        <label>E-posta</label>
+        <input
+          required
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <label style={{ marginTop: 12 }}>Şifre</label>
+        <input
+          required
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {error && (
+          <p className="notice" style={{ marginTop: 10 }}>
+            {error}
+          </p>
+        )}
+        <button
+          className="btn btn-auth-cta"
+          style={{ marginTop: 14 }}
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? "Giriş yapılıyor…" : "Giriş yap"}
+        </button>
+      </form>
+    </AuthSplitShell>
   );
 }
 
 export default function LoginPage() {
   return (
-    <main className="container">
-      <Suspense fallback={<p className="meta">Yükleniyor…</p>}>
-        <LoginForm />
-      </Suspense>
-    </main>
+    <Suspense
+      fallback={
+        <AuthSplitShell title="Giriş">
+          <p className="meta">Yükleniyor…</p>
+        </AuthSplitShell>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

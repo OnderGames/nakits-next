@@ -7,6 +7,7 @@ import { mapAuthErrorToTurkish } from "@/lib/auth-errors";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 import { getAuthRedirectBase } from "@/lib/site-url";
+import AuthSplitShell from "@/components/auth/AuthSplitShell";
 
 const termsLinkStyle = { color: "var(--primary)", textDecoration: "underline" as const };
 
@@ -91,10 +92,15 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="container">
-      <h1 className="section-title">Üye ol</h1>
-      <section className="panel" style={{ maxWidth: 420 }}>
-        <form onSubmit={(e) => void handleSubmit(e)} noValidate>
+    <AuthSplitShell
+      title="Hesabını oluştur"
+      footer={
+        <p className="meta" style={{ marginTop: 18 }}>
+          Zaten üye misin? <Link href="/login">Giriş yap</Link>
+        </p>
+      }
+    >
+      <form onSubmit={(e) => void handleSubmit(e)} noValidate>
           <label htmlFor="reg-fullname">Ad soyad</label>
           <input
             id="reg-fullname"
@@ -180,19 +186,15 @@ export default function RegisterPage() {
               {error}
             </p>
           )}
-          <button
-            className="btn btn-primary"
-            style={{ marginTop: 16, width: "100%" }}
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Kaydediliyor…" : "Üye ol"}
-          </button>
-        </form>
-        <p className="meta" style={{ marginTop: 16 }}>
-          Zaten üye misin? <Link href="/login">Giriş yap</Link>
-        </p>
-      </section>
-    </main>
+        <button
+          className="btn btn-auth-cta"
+          style={{ marginTop: 16 }}
+          type="submit"
+          disabled={loading}
+        >
+          {loading ? "Kaydediliyor…" : "Oluştur"}
+        </button>
+      </form>
+    </AuthSplitShell>
   );
 }
