@@ -8,7 +8,10 @@ import {
   formatPriceInputDisplay,
   parsePriceInput
 } from "@/lib/categories";
-import { formatListingExpiryShort } from "@/lib/listing-policy";
+import {
+  formatListingExpiryShort,
+  listingCanRepublishFromSold
+} from "@/lib/listing-policy";
 import type { Listing } from "@/lib/types";
 
 const STATUS_LABEL: Record<NonNullable<Listing["status"]>, string> = {
@@ -25,13 +28,16 @@ type OwnerToolbar = {
   onMarkSold?: () => void;
   markSoldBusy?: boolean;
   busy?: boolean;
-  /** Onay bekleyen / yayındaki ilanlarda karttan hızlı fiyat güncelleme */
+  /** Onay bekleyen / yayındaki / satıldı (süre varsa) karttan hızlı fiyat */
   priceQuickEdit?: {
     value: string;
     onChange: (value: string) => void;
     onSave: () => void;
     saving?: boolean;
   };
+  /** Satıldı ama süresi dolmamış ilanı tekrar vitrine */
+  onRepublish?: () => void;
+  republishBusy?: boolean;
 };
 
 type Props = {
@@ -41,7 +47,10 @@ type Props = {
 
 export default function ListingCard({ listing, ownerToolbar }: Props) {
   const expiryLine =
-    listing.status === "pending" || listing.status === "active"
+    listing.expiresAt &&
+    (listing.status === "pending" ||
+      listing.status === "active" ||
+      listing.status === "sold")
       ? formatListingExpiryShort(listing.expiresAt)
       : null;
 
@@ -135,6 +144,32 @@ export default function ListingCard({ listing, ownerToolbar }: Props) {
               {ownerToolbar.markSoldBusy ? "İşleniyor…" : "Satıldı"}
             </button>
           )}
+          {listing.status === "sold" &&
+            ownerToolbar.onRepublish &&
+            listingCanRepublishFromSold(listing.expiresAt) && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ fontSize: 14, padding: "8px 14px" }}
+                disabled={Boolean(
+                  ownerToolbar.busy ||
+                    ownerToolbar.markSoldBusy ||
+                    ownerToolbar.republishBusy
+                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  ownerToolbar.onRepublish?.();
+                }}
+              >
+                {ownerToolbar.republishBusy ? "Yükleniyor…" : "Tekrar yayına al"}
+              </button>
+            )}
+          {listing.status === "sold" &&
+            !listingCanRepublishFromSold(listing.expiresAt) && (
+              <span className="meta" style={{ fontSize: 13 }}>
+                Süre doldu; yeni ilan açın
+              </span>
+            )}
           {ownerToolbar.onDelete && (
             <button
               type="button"
@@ -211,7 +246,8 @@ export default function ListingCard({ listing, ownerToolbar }: Props) {
               disabled={Boolean(
                 ownerToolbar.busy ||
                   ownerToolbar.priceQuickEdit.saving ||
-                  ownerToolbar.markSoldBusy
+                  ownerToolbar.markSoldBusy ||
+                  ownerToolbar.republishBusy
               )}
               onClick={(e) => {
                 e.preventDefault();

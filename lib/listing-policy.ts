@@ -11,6 +11,14 @@ export function listingExpiresAtIsoFromNow(): string {
   ).toISOString();
 }
 
+/** Satıldı ilanı süresi dolmadıysa tekrar yayına alınabilir */
+export function listingCanRepublishFromSold(
+  expiresAtIso: string | undefined
+): boolean {
+  if (!expiresAtIso) return false;
+  return new Date(expiresAtIso).getTime() > Date.now();
+}
+
 /** Kart / özet için kısa süre metni */
 export function formatListingExpiryShort(iso: string | undefined): string | null {
   if (!iso) return null;

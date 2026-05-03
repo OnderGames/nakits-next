@@ -8,7 +8,11 @@ import {
   formatPriceInputDisplay,
   parsePriceInput
 } from "@/lib/categories";
-import { fetchMyListings } from "@/lib/listings-data";
+import {
+  listingCanRepublishFromSold,
+  MAX_LISTINGS_PER_USER
+} from "@/lib/listing-policy";
+import { countSellerOpenListings, fetchMyListings } from "@/lib/listings-data";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 import type { Listing } from "@/lib/types";
@@ -36,6 +40,7 @@ export default function MyListingsPage() {
   const [markingSoldId, setMarkingSoldId] = useState<string | null>(null);
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
   const [savingPriceId, setSavingPriceId] = useState<string | null>(null);
+  const [republishingId, setRepublishingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
@@ -112,12 +117,59 @@ export default function MyListingsPage() {
     [userId, items, priceDrafts]
   );
 
+  const handleRepublish = useCallback(
+    async (listingId: string) => {
+      if (!userId) return;
+      const listing = items.find((x) => x.id === listingId);
+      if (
+        !listing?.expiresAt ||
+        !listingCanRepublishFromSold(listing.expiresAt)
+      ) {
+        setDeleteError(
+          "Bu ilanın yayın süresi dolmuş; tekrar yayına alınamaz. Yeni ilan verebilirsiniz."
+        );
+        return;
+      }
+      const sb = getSupabaseBrowser();
+      if (!sb) return;
+      const open = await countSellerOpenListings(sb, userId);
+      if (open >= MAX_LISTINGS_PER_USER) {
+        setDeleteError(
+          `Tekrar yayına almak için yer açın: en fazla ${MAX_LISTINGS_PER_USER} onay bekleyen veya yayındaki ilanınız olabilir.`
+        );
+        return;
+      }
+      setDeleteError("");
+      setRepublishingId(listingId);
+      try {
+        const { error } = await sb
+          .from("listings")
+          .update({ status: "active" })
+          .eq("id", listingId)
+          .eq("seller_id", userId)
+          .eq("status", "sold");
+        if (error) {
+          setDeleteError(error.message);
+          return;
+        }
+        setItems((prev) =>
+          prev.map((x) =>
+            x.id === listingId ? { ...x, status: "active" } : x
+          )
+        );
+      } finally {
+        setRepublishingId(null);
+      }
+    },
+    [userId, items]
+  );
+
   const handleMarkSold = useCallback(
     async (listingId: string) => {
       if (!userId) return;
       if (
         !window.confirm(
-          "Bu ilanı «satıldı» olarak işaretlemek istiyor musunuz? İlan vitrinden kalkacak; silinmez, istediğiniz zaman ilanlarımdan silebilirsiniz."
+          "İlan vitrinden kalkacak (satıldı). Orijinal bitiş tarihiniz aynı kalır; yanlışlıkla işaretlediyseniz süre dolmadan «Tekrar yayına al» ile geri alabilirsiniz."
         )
       ) {
         return;
@@ -223,8 +275,9 @@ export default function MyListingsPage() {
       <p className="meta" style={{ marginBottom: 14 }}>
         Hesabınızda en fazla <strong>3</strong> onay bekleyen veya yayındaki ilan
         olabilir. Yayında kalan ilanlar <strong>30 gün</strong> sonra otomatik
-        silinir (satıldı veya reddedilenler bu süreye göre silinmez). Onay
-        bekleyen veya yayındaki ilanlarda fiyatı karttan veya düzenle sayfasından
+        silinir. «Satıldı» dediğinizde süre sayacı durmaz; süre bitmeden tek
+        tıkla tekrar yayına alabilirsiniz. Onay bekleyen, yayındaki veya satıldı
+        (süresi devam eden) ilanlarda fiyatı karttan veya düzenle sayfasından
         güncelleyebilirsiniz.
       </p>
       {deleteError && (
@@ -258,8 +311,15 @@ export default function MyListingsPage() {
                 onDelete: () => void handleDeleteListing(listing.id),
                 onMarkSold: () => void handleMarkSold(listing.id),
                 markSoldBusy: markingSoldId === listing.id,
+                onRepublish:
+                  listing.status === "sold"
+                    ? () => void handleRepublish(listing.id)
+                    : undefined,
+                republishBusy: republishingId === listing.id,
                 busy: deletingId === listing.id,
-                ...(listing.status === "pending" || listing.status === "active"
+                ...(listing.status === "pending" ||
+                listing.status === "active" ||
+                listing.status === "sold"
                   ? {
                       priceQuickEdit: {
                         value:
