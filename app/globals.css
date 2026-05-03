@@ -2297,27 +2297,173 @@ span.listing-seller__name--plain {
   background: transparent;
 }
 
-/* Moderasyon: vitrin ızgarası + kart altı yönetim alanı */
-.admin-moderation-browse .admin-moderation-item {
+/* Moderasyon: kompakt liste (açıklama yok) */
+.admin-moderation-list-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-moderation-toolbar {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+
+.admin-moderation-toolbar--secondary {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.admin-moderation-toolbar__field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-moderation-toolbar__field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0;
+}
+
+.admin-moderation-toolbar__field select,
+.admin-moderation-toolbar__field input[type="search"] {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
   min-width: 0;
 }
 
-.admin-moderation-browse .admin-moderation-item > .card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  border-radius: 12px 12px 0 0;
-  border-bottom: none;
+.admin-moderation-toolbar__field input[type="search"] {
+  width: min(100%, 240px);
 }
 
-.admin-moderation-item__footer {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 0 0 12px 12px;
-  background: #fafafa;
+.admin-moderation-compact {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-moderation-compact__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+
+.admin-moderation-compact__row:last-child {
+  border-bottom: 0;
+}
+
+.admin-moderation-compact__thumb {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.admin-moderation-compact__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-moderation-compact__body {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.admin-moderation-compact__title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-moderation-compact__meta {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+}
+
+.admin-moderation-compact__meta span {
+  white-space: nowrap;
+}
+
+.admin-moderation-compact__status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.admin-moderation-compact__status[data-status="pending"] {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.admin-moderation-compact__status[data-status="active"] {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-moderation-compact__status[data-status="sold"] {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.admin-moderation-compact__status[data-status="rejected"] {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-moderation-compact__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.admin-moderation-compact__actions .btn {
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+  min-height: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .admin-moderation-compact__actions {
+    width: 100%;
+    margin-left: 0;
+    padding-left: calc(52px + 12px);
+  }
 }
 
 /* Tema · vitrin başlığı */

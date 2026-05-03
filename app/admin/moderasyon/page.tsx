@@ -1,11 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import ListingCard from "@/components/ListingCard";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState
+} from "react";
+import { formatPrice } from "@/lib/categories";
 import { listingDetailHref } from "@/lib/listing-code";
-import { formatRelativeTimeTr } from "@/lib/listings-data";
-import type { Listing } from "@/lib/types";
 import {
   HOMEPAGE_THEME_LABEL,
   HOMEPAGE_THEMES,
@@ -23,6 +27,26 @@ const FILTER_LABEL: Record<ListingFilter, string> = {
   active: "Yayında",
   sold: "Satıldı",
   rejected: "Reddedilen"
+};
+
+const STATUS_SHORT: Record<string, string> = {
+  pending: "Onay bekliyor",
+  active: "Yayında",
+  sold: "Satıldı",
+  rejected: "Reddedilen"
+};
+
+type SortOption =
+  | "created_desc"
+  | "created_asc"
+  | "expires_asc"
+  | "expires_desc";
+
+const SORT_LABEL: Record<SortOption, string> = {
+  created_desc: "Eklenme (önce yeniler)",
+  created_asc: "Eklenme (önce eskiler)",
+  expires_asc: "Bitiş (önce yakın tarih)",
+  expires_desc: "Bitiş (önce uzak tarih)"
 };
 
 type AdminListingRow = {
@@ -44,30 +68,67 @@ type AdminListingRow = {
 };
 
 const LISTING_IMAGE_FALLBACK =
-  "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?auto=format&fit=crop&w=1200&q=80";
+  "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?auto=format&fit=crop&w=200&q=72";
 
-function adminRowToListing(row: AdminListingRow): Listing {
-  const urls = row.imageUrls?.filter(Boolean) ?? [];
-  const cover =
-    (row.imageUrl && row.imageUrl.trim()) ||
-    urls[0] ||
-    LISTING_IMAGE_FALLBACK;
-  return {
-    id: row.id,
-    listingCode: row.listingCode?.trim() || undefined,
-    title: row.title,
-    categoryKey: row.categoryKey,
-    city: row.city,
-    district: row.district ?? null,
-    price: row.price,
-    image: cover,
-    imageUrls: urls.length > 0 ? urls : undefined,
-    seller: row.sellerName,
-    createdAt: formatRelativeTimeTr(row.created_at),
-    status: row.status as Listing["status"],
-    expiresAt: row.expires_at ?? undefined,
-    description: row.description ?? undefined
+function formatDateTimeCompact(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("tr-TR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function rowThumb(row: AdminListingRow): string {
+  const urls = row.imageUrls?.filter((u) => u && String(u).trim()) ?? [];
+  const u =
+    (row.imageUrl && row.imageUrl.trim()) || urls[0] || LISTING_IMAGE_FALLBACK;
+  return u;
+}
+
+function sortRows(list: AdminListingRow[], sort: SortOption): AdminListingRow[] {
+  const next = [...list];
+  const created = (r: AdminListingRow) => new Date(r.created_at).getTime();
+  const expireSoonFirst = (r: AdminListingRow) => {
+    if (!r.expires_at) return Number.MAX_SAFE_INTEGER;
+    const t = new Date(r.expires_at).getTime();
+    return Number.isNaN(t) ? Number.MAX_SAFE_INTEGER : t;
   };
+  const expireFarFirst = (r: AdminListingRow) => {
+    if (!r.expires_at) return 0;
+    const t = new Date(r.expires_at).getTime();
+    return Number.isNaN(t) ? 0 : t;
+  };
+  switch (sort) {
+    case "created_desc":
+      return next.sort((a, b) => created(b) - created(a));
+    case "created_asc":
+      return next.sort((a, b) => created(a) - created(b));
+    case "expires_asc":
+      return next.sort((a, b) => expireSoonFirst(a) - expireSoonFirst(b));
+    case "expires_desc":
+      return next.sort((a, b) => expireFarFirst(b) - expireFarFirst(a));
+    default:
+      return next;
+  }
+}
+
+function filterRows(list: AdminListingRow[], query: string): AdminListingRow[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return list;
+  return list.filter((r) => {
+    const code = (r.listingCode ?? "").toLowerCase();
+    return (
+      r.title.toLowerCase().includes(q) ||
+      code.includes(q) ||
+      r.sellerEmail.toLowerCase().includes(q) ||
+      r.sellerName.toLowerCase().includes(q) ||
+      r.city.toLowerCase().includes(q)
+    );
+  });
 }
 
 export default function AdminModerationPage() {
@@ -83,6 +144,8 @@ export default function AdminModerationPage() {
   const [themeSaving, setThemeSaving] = useState(false);
   const [themeMessage, setThemeMessage] = useState("");
   const [themeError, setThemeError] = useState("");
+  const [sortKey, setSortKey] = useState<SortOption>("created_desc");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const authHeaders = useCallback(async () => {
     const sb = getSupabaseBrowser();
@@ -117,6 +180,11 @@ export default function AdminModerationPage() {
       setRows(json.listings ?? []);
     },
     [authHeaders]
+  );
+
+  const displayRows = useMemo(
+    () => sortRows(filterRows(rows, searchQuery), sortKey),
+    [rows, searchQuery, sortKey]
   );
 
   useEffect(() => {
@@ -305,8 +373,8 @@ export default function AdminModerationPage() {
     <div className="account-page">
       <h1 className="section-title">İlan moderasyonu</h1>
       <p className="meta" style={{ marginBottom: 16 }}>
-        Tüm ilanları filtreleyebilir, onay bekleyenleri yayına alabilir veya
-        reddedebilir, istediğiniz ilanı kalıcı olarak silebilirsiniz.
+        Durum filtresi ve sıralama ile listeyi daraltın; açıklama metinleri
+        burada gösterilmez (daha az yer kaplar).
       </p>
 
       <section className="panel" style={{ marginBottom: 20 }}>
@@ -388,83 +456,127 @@ export default function AdminModerationPage() {
         </p>
       )}
 
-      <div
-        style={{
-          marginBottom: 16,
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 8,
-          alignItems: "center"
-        }}
-      >
-        {(Object.keys(FILTER_LABEL) as ListingFilter[]).map((key) => (
+      <section className="panel admin-moderation-list-panel">
+        <div className="admin-moderation-toolbar">
+          {(Object.keys(FILTER_LABEL) as ListingFilter[]).map((key) => (
+            <button
+              key={key}
+              type="button"
+              className={filter === key ? "btn btn-primary" : "btn btn-outline"}
+              disabled={busyId !== null}
+              onClick={() => setFilter(key)}
+            >
+              {FILTER_LABEL[key]}
+            </button>
+          ))}
           <button
-            key={key}
             type="button"
-            className={filter === key ? "btn btn-primary" : "btn btn-outline"}
+            className="btn btn-outline"
+            onClick={() => void loadListings(filter)}
             disabled={busyId !== null}
-            onClick={() => setFilter(key)}
           >
-            {FILTER_LABEL[key]}
+            Listeyi yenile
           </button>
-        ))}
-        <button
-          type="button"
-          className="btn btn-outline"
-          onClick={() => void loadListings(filter)}
-          disabled={busyId !== null}
-        >
-          Listeyi yenile
-        </button>
-      </div>
+        </div>
+        <div className="admin-moderation-toolbar admin-moderation-toolbar--secondary">
+          <div className="admin-moderation-toolbar__field">
+            <label htmlFor="admin-mod-sort">Sıralama</label>
+            <select
+              id="admin-mod-sort"
+              value={sortKey}
+              disabled={busyId !== null}
+              onChange={(e) =>
+                setSortKey(e.target.value as SortOption)
+              }
+            >
+              {(Object.keys(SORT_LABEL) as SortOption[]).map((key) => (
+                <option key={key} value={key}>
+                  {SORT_LABEL[key]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="admin-moderation-toolbar__field">
+            <label htmlFor="admin-mod-search">Ara</label>
+            <input
+              id="admin-mod-search"
+              type="search"
+              placeholder="Başlık, ilan no, e-posta, şehir…"
+              autoComplete="off"
+              disabled={busyId !== null}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
 
-      <p className="meta" style={{ marginBottom: 12 }}>
-        {rows.length} ilan
-        {filter !== "all" ? ` (${FILTER_LABEL[filter]})` : ""}
-      </p>
+        <p className="meta" style={{ margin: "10px 14px", fontSize: 13 }}>
+          {displayRows.length} kayıt
+          {filter !== "all" ? ` · ${FILTER_LABEL[filter]}` : ""}
+          {searchQuery.trim() ? ` · arama filtresi aktif` : ""}
+          {displayRows.length !== rows.length ? ` (${rows.length} yüklendi)` : ""}
+        </p>
 
-      {rows.length === 0 ? (
-        <section className="panel account-empty-panel">
-          <p className="account-empty-panel__text">Bu filtrede ilan yok.</p>
-        </section>
-      ) : (
-        <section className="cards cards--browse admin-moderation-browse">
-          {rows.map((row) => (
-            <div key={row.id} className="admin-moderation-item">
-              <ListingCard
-                listing={adminRowToListing(row)}
-                hideFavorite
-              />
-              <div className="admin-moderation-item__footer">
-                {row.sellerEmail ? (
-                  <p className="meta" style={{ margin: "0 0 10px" }}>
-                    Satıcı e-posta:{" "}
-                    <strong>{row.sellerEmail}</strong>
+        {rows.length === 0 ? (
+          <div className="account-empty-panel" style={{ padding: "0 14px 16px" }}>
+            <p className="account-empty-panel__text" style={{ margin: 0 }}>
+              Bu filtrede ilan yok.
+            </p>
+          </div>
+        ) : displayRows.length === 0 ? (
+          <div className="account-empty-panel" style={{ padding: "0 14px 16px" }}>
+            <p className="account-empty-panel__text" style={{ margin: 0 }}>
+              Arama ile eşleşen kayıt yok.
+            </p>
+          </div>
+        ) : (
+          <ul className="admin-moderation-compact">
+            {displayRows.map((row) => (
+              <li key={row.id} className="admin-moderation-compact__row">
+                <div className="admin-moderation-compact__thumb">
+                  <Image
+                    src={rowThumb(row)}
+                    alt=""
+                    width={52}
+                    height={52}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    unoptimized
+                  />
+                </div>
+                <div className="admin-moderation-compact__body">
+                  <p className="admin-moderation-compact__title">{row.title}</p>
+                  <p className="admin-moderation-compact__meta">
+                    <span
+                      className="admin-moderation-compact__status"
+                      data-status={row.status}
+                    >
+                      {STATUS_SHORT[row.status] ?? row.status}
+                    </span>
+                    <span>{formatPrice(row.price)}</span>
+                    <span>{row.city}</span>
+                    {row.listingCode ? (
+                      <span>İlan no: {row.listingCode}</span>
+                    ) : null}
+                    <span title="Eklenme">
+                      {formatDateTimeCompact(row.created_at)}
+                    </span>
+                    {row.expires_at ? (
+                      <span title="Yayından düşeceği zaman">
+                        Bitiş: {formatDateTimeCompact(row.expires_at)}
+                      </span>
+                    ) : (
+                      <span>Bitiş: —</span>
+                    )}
+                    {row.sellerEmail ? (
+                      <span title="Satıcı">
+                        {row.sellerEmail}
+                      </span>
+                    ) : (
+                      <span>{row.sellerName}</span>
+                    )}
                   </p>
-                ) : null}
-                {row.description ? (
-                  <p
-                    className="meta"
-                    style={{
-                      margin: "0 0 12px",
-                      lineHeight: 1.45,
-                      maxHeight: "4.35em",
-                      overflow: "hidden"
-                    }}
-                  >
-                    {row.description.length > 240
-                      ? `${row.description.slice(0, 240)}…`
-                      : row.description}
-                  </p>
-                ) : null}
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 10,
-                    alignItems: "center"
-                  }}
-                >
+                </div>
+                <div className="admin-moderation-compact__actions">
                   {row.status === "active" && (
                     <Link
                       className="btn btn-outline"
@@ -510,14 +622,14 @@ export default function AdminModerationPage() {
                       fontWeight: 600
                     }}
                   >
-                    {busyId === row.id ? "…" : "İlanı sil"}
+                    {busyId === row.id ? "…" : "Sil"}
                   </button>
                 </div>
-              </div>
-            </div>
-          ))}
-        </section>
-      )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <p className="meta" style={{ marginTop: 20 }}>
         <Link href="/">Ana sayfa</Link>
