@@ -314,9 +314,9 @@ function ListingsPageInner() {
         </section>
       )}
 
-      <section className="cards cards--browse" style={{ marginTop: 14 }}>
+      <section className="cards cards--vitrin" style={{ marginTop: 14 }}>
         {filtered.map((listing) => (
-          <ListingCard key={listing.id} listing={listing} />
+          <ListingCard key={listing.id} listing={listing} presentation="vitrin" />
         ))}
       </section>
         </div>

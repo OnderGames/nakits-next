@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import FavoriteHeartButton from "@/components/FavoriteHeartButton";
+import ListingCard from "@/components/ListingCard";
 import {
   formatListingCategoryLineCity,
   formatPrice
@@ -23,43 +23,13 @@ type Props = {
 };
 
 /**
- * Yalnızca sunucu bileşenlerinden kullanın (ör. ana sayfa).
- * Etkileşim / sil düğmesi yok — derleme ve prerender güvenli.
+ * Varsayılan ayrıntılı liste kartı sunucuda kalır; vitrin görünümü ListingCard ile paylaşılır.
  */
 export default function ListingCardPublic({ listing, vitrin }: Props) {
   const href = listingDetailHref(listing);
 
   if (vitrin) {
-    return (
-      <article className="card card--vitrin">
-        <div className="card--vitrin__shell">
-          <Link href={href} className="card--vitrin__link">
-            <div className="card--vitrin__media">
-              <Image
-                src={listing.image}
-                alt={listing.title}
-                width={500}
-                height={280}
-              />
-              {(listing.imageUrls?.length ?? 0) > 1 && (
-                <span className="card--vitrin__badge">
-                  {listing.imageUrls!.length} fotoğraf
-                </span>
-              )}
-            </div>
-            <div className="card-body">
-              <h3 className="card--vitrin__title">{listing.title}</h3>
-              <p className="price price--vitrin">{formatPrice(listing.price)}</p>
-            </div>
-          </Link>
-          <FavoriteHeartButton
-            listingId={listing.id}
-            sellerId={listing.sellerId}
-            variant="vitrin"
-          />
-        </div>
-      </article>
-    );
+    return <ListingCard listing={listing} presentation="vitrin" />;
   }
 
   return (

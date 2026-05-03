@@ -49,13 +49,55 @@ type Props = {
   ownerToolbar?: OwnerToolbar;
   /** Admin önizleme vb.: kalp gizlenir */
   hideFavorite?: boolean;
+  /**
+   * "vitrin": ana sayfa vitrin ile aynı kompakt kart (arama / tüm ilanlar vitrin uyumu).
+   * "browse": şehir, süre vb. dahil klasik liste kartı (üye sayfası, favoriler vb.).
+   */
+  presentation?: "browse" | "vitrin";
 };
 
 export default function ListingCard({
   listing,
   ownerToolbar,
-  hideFavorite = false
+  hideFavorite = false,
+  presentation = "browse"
 }: Props) {
+  if (!ownerToolbar && presentation === "vitrin") {
+    const href = listingDetailHref(listing);
+    return (
+      <article className="card card--vitrin">
+        <div className="card--vitrin__shell">
+          <Link href={href} className="card--vitrin__link">
+            <div className="card--vitrin__media">
+              <Image
+                src={listing.image}
+                alt={listing.title}
+                width={500}
+                height={280}
+              />
+              {(listing.imageUrls?.length ?? 0) > 1 && (
+                <span className="card--vitrin__badge">
+                  {listing.imageUrls!.length} fotoğraf
+                </span>
+              )}
+            </div>
+            <div className="card-body">
+              <h3 className="card--vitrin__title">{listing.title}</h3>
+              <p className="price price--vitrin">{formatPrice(listing.price)}</p>
+            </div>
+          </Link>
+          {!hideFavorite && (
+            <FavoriteHeartButton
+              listingId={listing.id}
+              sellerId={listing.sellerId}
+              variant="vitrin"
+            />
+          )}
+        </div>
+      </article>
+    );
+  }
+
   const showExpiryForStatus =
     listing.status === "pending" ||
     listing.status === "active" ||
