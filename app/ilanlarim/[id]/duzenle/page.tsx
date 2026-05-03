@@ -4,7 +4,13 @@ import type { User } from "@supabase/supabase-js";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 import {
   CATEGORY_GROUPS,
   compositeCategoryKey,
@@ -24,6 +30,8 @@ import {
   TURKEY_PROVINCE_COUNT,
   TURKEY_PROVINCES
 } from "@/lib/turkish-provinces";
+import { MAX_LISTING_PHOTOS } from "@/lib/listing-photos";
+import { resizeListingImageForUpload } from "@/lib/resize-listing-image";
 
 function fileExtension(file: File): string {
   const n = file.name;
@@ -69,6 +77,33 @@ function storagePathFromListingPublicUrl(url: string): string | null {
   }
 }
 
+function uploadContentType(file: File): string {
+  const mime = (file.type || "").trim().toLowerCase();
+  if (mime.startsWith("image/")) return mime;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const map: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    gif: "image/gif"
+  };
+  return map[ext] ?? "image/jpeg";
+}
+
+const IMAGE_NAME_PATTERN =
+  /\.(jpe?g|png|webp|gif|heic|heif|avif|bmp|tif|tiff)$/i;
+
+function isLikelyImageFile(f: File): boolean {
+  const mime = (f.type || "").toLowerCase();
+  if (mime.startsWith("image/")) return true;
+  return IMAGE_NAME_PATTERN.test(f.name);
+}
+
+type EditSlide =
+  | { kind: "existing"; rowId: string; url: string }
+  | { kind: "new"; file: File; previewUrl: string };
+
 export default function EditListingPage() {
   const router = useRouter();
   const params = useParams();
@@ -83,7 +118,13 @@ export default function EditListingPage() {
   const [detailCategoryKey, setDetailCategoryKey] = useState("");
   const [condition, setCondition] = useState<"new" | "used">("used");
   const [showPhoneOnListing, setShowPhoneOnListing] = useState(true);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [slides, setSlides] = useState<EditSlide[]>([]);
+  const [removedExisting, setRemovedExisting] = useState<
+    { rowId: string; url: string }[]
+  >([]);
+  const [galleryNormalizing, setGalleryNormalizing] = useState(false);
+  const slidesRef = useRef<EditSlide[]>([]);
+  slidesRef.current = slides;
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -115,9 +156,26 @@ export default function EditListingPage() {
 
   useEffect(() => {
     return () => {
-      if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
+      slidesRef.current.forEach((s) => {
+        if (s.kind === "new") URL.revokeObjectURL(s.previewUrl);
+      });
     };
-  }, [photoPreview]);
+  }, []);
+
+  useEffect(() => {
+    if (!listing) return;
+    setSlides((prev) => {
+      prev.forEach((s) => {
+        if (s.kind === "new") URL.revokeObjectURL(s.previewUrl);
+      });
+      return listing.galleryImages.map((g) => ({
+        kind: "existing" as const,
+        rowId: g.id,
+        url: g.imageUrl
+      }));
+    });
+    setRemovedExisting([]);
+  }, [listing]);
 
   useEffect(() => {
     if (!authReady || !hasSupabaseConfig) return;
@@ -167,12 +225,61 @@ export default function EditListingPage() {
     };
   }, [authReady, listingId, user]);
 
-  const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    setPhotoPreview((prev) => {
-      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-      return file ? URL.createObjectURL(file) : null;
+  function removeSlideAt(index: number) {
+    const target = slides[index];
+    if (!target) return;
+    if (target.kind === "existing") {
+      setRemovedExisting((prev) => [
+        ...prev,
+        { rowId: target.rowId, url: target.url }
+      ]);
+    } else {
+      URL.revokeObjectURL(target.previewUrl);
+    }
+    setSlides((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function moveSlide(fromIndex: number, delta: -1 | 1) {
+    const toIndex = fromIndex + delta;
+    setSlides((prev) => {
+      if (toIndex < 0 || toIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [item] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, item);
+      return next;
     });
+  }
+
+  const handleGalleryPhotosChange = async (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const raw = Array.from(event.target.files ?? []);
+    const incoming = raw.filter(isLikelyImageFile);
+    if (incoming.length === 0) {
+      event.target.value = "";
+      return;
+    }
+    setGalleryNormalizing(true);
+    try {
+      const resized = await Promise.all(
+        incoming.map((f) => resizeListingImageForUpload(f))
+      );
+      setSlides((prev) => {
+        const next = [...prev];
+        for (const file of resized) {
+          if (next.length >= MAX_LISTING_PHOTOS) break;
+          next.push({
+            kind: "new",
+            file,
+            previewUrl: URL.createObjectURL(file)
+          });
+        }
+        return next;
+      });
+    } finally {
+      setGalleryNormalizing(false);
+      event.target.value = "";
+    }
   };
 
   const selectedGroup = CATEGORY_GROUPS.find((g) => g.slug === groupSlug);
@@ -197,7 +304,6 @@ export default function EditListingPage() {
     const city = editCity.trim();
     const districtVal = editDistrict.trim();
     const price = parsePriceInput(editPriceText);
-    const photo = fd.get("photo");
 
     if (!title || !description || !city) {
       setError("Başlık, açıklama ve şehir zorunludur.");
@@ -205,6 +311,14 @@ export default function EditListingPage() {
     }
     if (!Number.isFinite(price) || price < 0) {
       setError("Geçerli bir fiyat girin.");
+      return;
+    }
+    if (slides.length === 0) {
+      setError("En az bir fotoğraf bulunmalıdır.");
+      return;
+    }
+    if (slides.length > MAX_LISTING_PHOTOS) {
+      setError(`En fazla ${MAX_LISTING_PHOTOS} fotoğraf ekleyebilirsiniz.`);
       return;
     }
 
@@ -244,62 +358,75 @@ export default function EditListingPage() {
       return;
     }
 
-    const newFile = photo instanceof File && photo.size > 0 ? photo : null;
-    if (newFile) {
-      const ext = fileExtension(newFile);
-      const storagePath = `${user.id}/${listing.id}/0.${ext}`;
-      const oldPath = storagePathFromListingPublicUrl(listing.coverImageUrl);
-
-      const { error: upPhotoErr } = await sb.storage
-        .from("listing-images")
-        .upload(storagePath, newFile, {
-          contentType: newFile.type || "image/jpeg",
-          upsert: true
-        });
-
-      if (upPhotoErr) {
+    for (const r of removedExisting) {
+      const { error: delImgErr } = await sb
+        .from("listing_images")
+        .delete()
+        .eq("id", r.rowId);
+      if (delImgErr) {
         setSubmitting(false);
-        setError("Yeni fotoğraf yüklenemedi. İlan metni kaydedildi.");
+        setError(
+          `Fotoğraf silinemedi (metin kaydedildi): ${delImgErr.message}`
+        );
         return;
       }
+      const path = storagePathFromListingPublicUrl(r.url);
+      if (path) {
+        await sb.storage.from("listing-images").remove([path]);
+      }
+    }
 
-      const {
-        data: { publicUrl }
-      } = sb.storage.from("listing-images").getPublicUrl(storagePath);
-
-      const { data: imgRow } = await sb
-        .from("listing_images")
-        .select("id")
-        .eq("listing_id", listing.id)
-        .order("sort_order", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-
-      if (imgRow?.id) {
-        await sb
+    for (let i = 0; i < slides.length; i++) {
+      const s = slides[i];
+      if (s.kind === "existing") {
+        const { error: sortErr } = await sb
           .from("listing_images")
-          .update({ image_url: publicUrl })
-          .eq("id", imgRow.id);
+          .update({ sort_order: i })
+          .eq("id", s.rowId);
+        if (sortErr) {
+          setSubmitting(false);
+          setError(`Fotoğraf sırası güncellenemedi: ${sortErr.message}`);
+          return;
+        }
       } else {
-        await sb.from("listing_images").insert({
+        const ext = fileExtension(s.file);
+        const storagePath = `${user.id}/${listing.id}/e-${i}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+        const { error: upPhotoErr } = await sb.storage
+          .from("listing-images")
+          .upload(storagePath, s.file, {
+            contentType: uploadContentType(s.file),
+            upsert: false
+          });
+        if (upPhotoErr) {
+          setSubmitting(false);
+          setError(`Yeni fotoğraf yüklenemedi: ${upPhotoErr.message}`);
+          return;
+        }
+        const {
+          data: { publicUrl }
+        } = sb.storage.from("listing-images").getPublicUrl(storagePath);
+        const { error: insImgErr } = await sb.from("listing_images").insert({
           listing_id: listing.id,
           image_url: publicUrl,
-          sort_order: 0
+          sort_order: i
         });
+        if (insImgErr) {
+          setSubmitting(false);
+          setError(`Görsel kaydı başarısız: ${insImgErr.message}`);
+          return;
+        }
       }
+    }
 
-      if (oldPath && oldPath !== storagePath) {
-        await sb.storage.from("listing-images").remove([oldPath]);
-      }
+    const refreshed = await fetchListingForEdit(sb, listingId);
+    if (refreshed && refreshed.sellerId === user.id) {
+      setListing(refreshed);
     }
 
     setSubmitting(false);
     setNotice("İlanın güncellendi.");
     setEditPriceText(formatPriceInputDisplay(price));
-    setPhotoPreview((prev) => {
-      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-      return null;
-    });
+    setRemovedExisting([]);
     void router.refresh();
   }
 
@@ -359,8 +486,6 @@ export default function EditListingPage() {
     );
   }
 
-  const displayImageSrc = photoPreview ?? listing.coverImageUrl;
-  const showBlobPreview = displayImageSrc.startsWith("blob:");
   const districtChoices = (() => {
     const fromData = getDistrictsForProvince(editCity);
     if (editDistrict && !fromData.includes(editDistrict)) {
@@ -544,45 +669,191 @@ export default function EditListingPage() {
           </div>
 
           <div style={{ marginTop: 10 }}>
-            <label htmlFor="edit-photo">Fotoğraf (değiştirmek için seçin)</label>
+            <label htmlFor="edit-gallery-photos">
+              Fotoğraflar{" "}
+              <span className="meta" style={{ fontWeight: 400 }}>
+                (en az 1, en fazla {MAX_LISTING_PHOTOS})
+              </span>
+            </label>
             <input
-              id="edit-photo"
-              name="photo"
+              id="edit-gallery-photos"
               type="file"
               accept="image/*"
-              disabled={submitting}
-              onChange={handlePhotoChange}
+              multiple
+              disabled={submitting || galleryNormalizing}
+              onChange={(e) => void handleGalleryPhotosChange(e)}
             />
-            <div style={{ marginTop: 10, position: "relative", width: "100%", maxHeight: 220 }}>
-              {showBlobPreview ? (
-                // eslint-disable-next-line @next/next/no-img-element -- blob önizleme
-                <img
-                  src={displayImageSrc}
-                  alt="İlan görseli"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    maxHeight: 220,
-                    objectFit: "cover",
-                    borderRadius: 10
-                  }}
-                />
-              ) : (
-                <Image
-                  src={displayImageSrc}
-                  alt="İlan görseli"
-                  width={900}
-                  height={400}
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    maxHeight: 220,
-                    objectFit: "cover",
-                    borderRadius: 10
-                  }}
-                />
+            <p className="meta" style={{ marginTop: 6 }}>
+              {galleryNormalizing
+                ? "Fotoğraflar hazırlanıyor…"
+                : "Galeriyi yatay kaydırın; × ile silin, ◀ ▶ ile sırayı değiştirin. İlk fotoğraf kapak olur."}{" "}
+              {slides.length > 0 && (
+                <>
+                  Şu an: {slides.length}/{MAX_LISTING_PHOTOS}
+                </>
               )}
-            </div>
+            </p>
+            {slides.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  overflowX: "auto",
+                  scrollSnapType: "x mandatory",
+                  WebkitOverflowScrolling: "touch",
+                  paddingBottom: 6,
+                  marginTop: 10,
+                  maxWidth: "100%"
+                }}
+              >
+                {slides.map((slide, index) => (
+                  <div
+                    key={
+                      slide.kind === "existing"
+                        ? slide.rowId
+                        : slide.previewUrl
+                    }
+                    style={{
+                      position: "relative",
+                      flex: "0 0 min(42vw, 140px)",
+                      scrollSnapAlign: "start",
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      border: "1px solid var(--border)",
+                      aspectRatio: "1"
+                    }}
+                  >
+                    {slide.kind === "existing" ? (
+                      <Image
+                        src={slide.url}
+                        alt={`İlan ${index + 1}`}
+                        width={280}
+                        height={280}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block"
+                        }}
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element -- blob önizleme
+                      <img
+                        src={slide.previewUrl}
+                        alt={`Yeni fotoğraf ${index + 1}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block"
+                        }}
+                      />
+                    )}
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 4,
+                        left: 4,
+                        right: 4,
+                        display: "flex",
+                        gap: 4,
+                        justifyContent: "center"
+                      }}
+                    >
+                      <button
+                        type="button"
+                        disabled={
+                          submitting ||
+                          galleryNormalizing ||
+                          index <= 0
+                        }
+                        onClick={() => moveSlide(index, -1)}
+                        style={{
+                          padding: "2px 6px",
+                          fontSize: 12,
+                          borderRadius: 6,
+                          border: "none",
+                          background: "rgba(0,0,0,0.65)",
+                          color: "#fff",
+                          cursor:
+                            submitting || galleryNormalizing || index <= 0
+                              ? "default"
+                              : "pointer"
+                        }}
+                        aria-label="Sola taşı"
+                      >
+                        ◀
+                      </button>
+                      <button
+                        type="button"
+                        disabled={
+                          submitting ||
+                          galleryNormalizing ||
+                          index >= slides.length - 1
+                        }
+                        onClick={() => moveSlide(index, 1)}
+                        style={{
+                          padding: "2px 6px",
+                          fontSize: 12,
+                          borderRadius: 6,
+                          border: "none",
+                          background: "rgba(0,0,0,0.65)",
+                          color: "#fff",
+                          cursor:
+                            submitting ||
+                            galleryNormalizing ||
+                            index >= slides.length - 1
+                              ? "default"
+                              : "pointer"
+                        }}
+                        aria-label="Sağa taşı"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={submitting || galleryNormalizing}
+                      onClick={() => removeSlideAt(index)}
+                      style={{
+                        position: "absolute",
+                        top: 6,
+                        right: 6,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 999,
+                        border: "none",
+                        background: "rgba(0,0,0,0.55)",
+                        color: "#fff",
+                        cursor: submitting ? "default" : "pointer",
+                        fontSize: 16,
+                        lineHeight: 1
+                      }}
+                      aria-label="Bu fotoğrafı kaldır"
+                    >
+                      ×
+                    </button>
+                    {index === 0 && (
+                      <span
+                        className="meta"
+                        style={{
+                          position: "absolute",
+                          top: 6,
+                          left: 6,
+                          fontSize: 11,
+                          padding: "2px 6px",
+                          borderRadius: 6,
+                          background: "rgba(0,0,0,0.55)",
+                          color: "#fff"
+                        }}
+                      >
+                        Kapak
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <label
@@ -611,9 +882,13 @@ export default function EditListingPage() {
             className="btn btn-primary"
             style={{ marginTop: 12 }}
             type="submit"
-            disabled={submitting}
+            disabled={submitting || galleryNormalizing}
           >
-            {submitting ? "Kaydediliyor…" : "Değişiklikleri kaydet"}
+            {submitting
+              ? "Kaydediliyor…"
+              : galleryNormalizing
+                ? "Fotoğraflar hazırlanıyor…"
+                : "Değişiklikleri kaydet"}
           </button>
           {error && (
             <p

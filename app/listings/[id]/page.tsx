@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ListingGalleryCarousel from "@/components/ListingGalleryCarousel";
 import ListingMessagePanel from "@/components/ListingMessagePanel";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
 import { fetchListingById } from "@/lib/listings-data";
@@ -33,34 +33,7 @@ export default async function ListingDetailPage({ params }: Props) {
       <h1 className="section-title">İlan detayı</h1>
       <section className="grid-2">
         <div className="panel">
-          <div
-            style={{
-              display: "grid",
-              gap: 10,
-              gridTemplateColumns:
-                gallery.length > 1 ? "repeat(auto-fill, minmax(160px, 1fr))" : "1fr"
-            }}
-          >
-            {gallery.map((src, i) => (
-              <Image
-                key={`${listing.id}-${i}-${src.slice(-24)}`}
-                src={src}
-                alt={
-                  gallery.length > 1
-                    ? `${listing.title} — fotoğraf ${i + 1}`
-                    : listing.title
-                }
-                width={900}
-                height={500}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  borderRadius: 12,
-                  border: "1px solid var(--border)"
-                }}
-              />
-            ))}
-          </div>
+          <ListingGalleryCarousel images={gallery} title={listing.title} />
           <h2>{listing.title}</h2>
           <p className="price">{formatPrice(listing.price)}</p>
           <p>

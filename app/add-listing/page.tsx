@@ -23,6 +23,11 @@ import {
   TURKEY_PROVINCE_COUNT,
   TURKEY_PROVINCES
 } from "@/lib/turkish-provinces";
+import { MAX_LISTING_PHOTOS } from "@/lib/listing-photos";
+import {
+  LISTING_IMAGE_MAX_EDGE_PX,
+  resizeListingImageForUpload
+} from "@/lib/resize-listing-image";
 
 function mapListingInsertError(message: string | undefined): string {
   if (!message) return "İlan kaydedilemedi.";
@@ -86,8 +91,6 @@ function uploadContentType(file: File): string {
   return map[ext] ?? "image/jpeg";
 }
 
-const MAX_LISTING_PHOTOS = 8;
-
 type PhotoPick = { file: File; url: string };
 
 export default function AddListingPage() {
@@ -106,6 +109,7 @@ export default function AddListingPage() {
   const [listingCity, setListingCity] = useState("");
   const [listingDistrict, setListingDistrict] = useState("");
   const [priceText, setPriceText] = useState("");
+  const [photosNormalizing, setPhotosNormalizing] = useState(false);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -154,7 +158,7 @@ export default function AddListingPage() {
     };
   }, []);
 
-  const handlePhotosChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handlePhotosChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const raw = Array.from(event.target.files ?? []);
     const incoming = raw.filter(isLikelyImageFile);
     if (incoming.length === 0) {
@@ -167,18 +171,26 @@ export default function AddListingPage() {
       return;
     }
     setError("");
-    setPhotos((prev) => {
-      prev.forEach((p) => URL.revokeObjectURL(p.url));
-      const merged = [...prev.map((p) => p.file), ...incoming].slice(
-        0,
-        MAX_LISTING_PHOTOS
+    setPhotosNormalizing(true);
+    try {
+      const resized = await Promise.all(
+        incoming.map((f) => resizeListingImageForUpload(f))
       );
-      return merged.map((file) => ({
-        file,
-        url: URL.createObjectURL(file)
-      }));
-    });
-    event.target.value = "";
+      setPhotos((prev) => {
+        prev.forEach((p) => URL.revokeObjectURL(p.url));
+        const merged = [...prev.map((p) => p.file), ...resized].slice(
+          0,
+          MAX_LISTING_PHOTOS
+        );
+        return merged.map((file) => ({
+          file,
+          url: URL.createObjectURL(file)
+        }));
+      });
+    } finally {
+      setPhotosNormalizing(false);
+      event.target.value = "";
+    }
   };
 
   function removePhotoAt(index: number) {
@@ -186,6 +198,17 @@ export default function AddListingPage() {
       const target = prev[index];
       if (target) URL.revokeObjectURL(target.url);
       return prev.filter((_, i) => i !== index);
+    });
+  }
+
+  function movePhoto(fromIndex: number, delta: -1 | 1) {
+    const toIndex = fromIndex + delta;
+    setPhotos((prev) => {
+      if (toIndex < 0 || toIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [item] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, item);
+      return next;
     });
   }
 
@@ -544,10 +567,17 @@ export default function AddListingPage() {
               type="file"
               accept="image/*"
               multiple
-              disabled={submitting || photos.length >= MAX_LISTING_PHOTOS}
+              disabled={
+                submitting ||
+                photosNormalizing ||
+                photos.length >= MAX_LISTING_PHOTOS
+              }
               onChange={handlePhotosChange}
             />
             <p className="meta" style={{ marginTop: 6 }}>
+              {photosNormalizing
+                ? "Fotoğraflar standart boyuta getiriliyor…"
+                : `Büyük görseller en fazla ${LISTING_IMAGE_MAX_EDGE_PX} px uzun kenara indirilir ve JPEG olarak kaydedilir.`}{" "}
               Birden fazla seçebilir veya tekrar ekleyerek tamamlayabilirsiniz.
               {photos.length > 0 && (
                 <>
@@ -557,80 +587,148 @@ export default function AddListingPage() {
               )}
             </p>
             {photos.length > 0 && (
-              <div
-                style={{
-                  marginTop: 12,
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-                  gap: 10,
-                  maxWidth: "100%"
-                }}
-              >
-                {photos.map((p, index) => (
-                  <div
-                    key={p.url}
-                    style={{
-                      position: "relative",
-                      borderRadius: 10,
-                      overflow: "hidden",
-                      border: "1px solid var(--border)",
-                      aspectRatio: "1"
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element -- blob preview */}
-                    <img
-                      src={p.url}
-                      alt={`Önizleme ${index + 1}`}
+              <div style={{ marginTop: 12 }}>
+                <p className="meta" style={{ marginBottom: 8 }}>
+                  Fotoğrafları yatay kaydırarak görebilir; sırayı «Sol / Sağ» ile,
+                  silmek için × kullanın. İlk sıradaki görsel ilanda kapak olur.
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    overflowX: "auto",
+                    scrollSnapType: "x mandatory",
+                    WebkitOverflowScrolling: "touch",
+                    paddingBottom: 6,
+                    maxWidth: "100%"
+                  }}
+                >
+                  {photos.map((p, index) => (
+                    <div
+                      key={p.url}
                       style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        display: "block"
+                        position: "relative",
+                        flex: "0 0 min(42vw, 140px)",
+                        scrollSnapAlign: "start",
+                        borderRadius: 10,
+                        overflow: "hidden",
+                        border: "1px solid var(--border)",
+                        aspectRatio: "1"
                       }}
-                    />
-                    <button
-                      type="button"
-                      disabled={submitting}
-                      onClick={() => removePhotoAt(index)}
-                      style={{
-                        position: "absolute",
-                        top: 6,
-                        right: 6,
-                        width: 28,
-                        height: 28,
-                        borderRadius: 999,
-                        border: "none",
-                        background: "rgba(0,0,0,0.55)",
-                        color: "#fff",
-                        cursor: submitting ? "default" : "pointer",
-                        fontSize: 16,
-                        lineHeight: 1
-                      }}
-                      aria-label="Bu fotoğrafı kaldır"
                     >
-                      ×
-                    </button>
-                    {index === 0 && (
-                      <span
-                        className="meta"
+                      {/* eslint-disable-next-line @next/next/no-img-element -- blob preview */}
+                      <img
+                        src={p.url}
+                        alt={`Önizleme ${index + 1}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block"
+                        }}
+                      />
+                      <div
                         style={{
                           position: "absolute",
-                          bottom: 6,
-                          left: 6,
-                          right: 6,
-                          textAlign: "center",
-                          background: "rgba(0,0,0,0.5)",
-                          color: "#fff",
-                          fontSize: 11,
-                          padding: "2px 6px",
-                          borderRadius: 6
+                          bottom: 4,
+                          left: 4,
+                          right: 4,
+                          display: "flex",
+                          gap: 4,
+                          justifyContent: "center"
                         }}
                       >
-                        Kapak
-                      </span>
-                    )}
-                  </div>
-                ))}
+                        <button
+                          type="button"
+                          disabled={
+                            submitting || photosNormalizing || index <= 0
+                          }
+                          onClick={() => movePhoto(index, -1)}
+                          style={{
+                            padding: "2px 6px",
+                            fontSize: 12,
+                            borderRadius: 6,
+                            border: "none",
+                            background: "rgba(0,0,0,0.65)",
+                            color: "#fff",
+                            cursor:
+                              submitting || photosNormalizing || index <= 0
+                                ? "default"
+                                : "pointer"
+                          }}
+                          aria-label="Sola taşı"
+                        >
+                          ◀
+                        </button>
+                        <button
+                          type="button"
+                          disabled={
+                            submitting ||
+                            photosNormalizing ||
+                            index >= photos.length - 1
+                          }
+                          onClick={() => movePhoto(index, 1)}
+                          style={{
+                            padding: "2px 6px",
+                            fontSize: 12,
+                            borderRadius: 6,
+                            border: "none",
+                            background: "rgba(0,0,0,0.65)",
+                            color: "#fff",
+                            cursor:
+                              submitting ||
+                              photosNormalizing ||
+                              index >= photos.length - 1
+                                ? "default"
+                                : "pointer"
+                          }}
+                          aria-label="Sağa taşı"
+                        >
+                          ▶
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={submitting || photosNormalizing}
+                        onClick={() => removePhotoAt(index)}
+                        style={{
+                          position: "absolute",
+                          top: 6,
+                          right: 6,
+                          width: 28,
+                          height: 28,
+                          borderRadius: 999,
+                          border: "none",
+                          background: "rgba(0,0,0,0.55)",
+                          color: "#fff",
+                          cursor: submitting ? "default" : "pointer",
+                          fontSize: 16,
+                          lineHeight: 1
+                        }}
+                        aria-label="Bu fotoğrafı kaldır"
+                      >
+                        ×
+                      </button>
+                      {index === 0 && (
+                        <span
+                          className="meta"
+                          style={{
+                            position: "absolute",
+                            top: 6,
+                            left: 6,
+                            fontSize: 11,
+                            padding: "2px 6px",
+                            borderRadius: 6,
+                            background: "rgba(0,0,0,0.55)",
+                            color: "#fff"
+                          }}
+                        >
+                          Kapak
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -663,9 +761,13 @@ export default function AddListingPage() {
             className="btn btn-primary"
             style={{ marginTop: 12 }}
             type="submit"
-            disabled={submitting}
+            disabled={submitting || photosNormalizing}
           >
-            {submitting ? "Gönderiliyor…" : "İlanı Gönder"}
+            {submitting
+              ? "Gönderiliyor…"
+              : photosNormalizing
+                ? "Fotoğraflar hazırlanıyor…"
+                : "İlanı Gönder"}
           </button>
           {error && (
             <p className="notice" style={{ marginTop: 10, background: "#fee2e2", borderColor: "#fecaca", color: "#7f1d1d" }}>

@@ -184,7 +184,7 @@ const listingEditSelect = `
       show_phone_on_listing,
       status,
       categories ( slug ),
-      listing_images ( image_url, sort_order )
+      listing_images ( id, image_url, sort_order )
     `;
 
 const listingEditSelectNoDistrict = `
@@ -198,7 +198,7 @@ const listingEditSelectNoDistrict = `
       show_phone_on_listing,
       status,
       categories ( slug ),
-      listing_images ( image_url, sort_order )
+      listing_images ( id, image_url, sort_order )
     `;
 
 async function withEditListingSelectFallback<T>(
@@ -351,6 +351,8 @@ export type ListingForEdit = {
   showPhoneOnListing: boolean;
   categoryKey: string;
   coverImageUrl: string;
+  /** Sıralı galeri (kapak = ilk öğe) */
+  galleryImages: { id: string; imageUrl: string }[];
   status?: Listing["status"];
 };
 
@@ -366,7 +368,9 @@ type ListingEditRowRaw = {
   show_phone_on_listing?: boolean;
   status?: string;
   categories: { slug: string } | { slug: string }[] | null;
-  listing_images: ImageRow[] | null;
+  listing_images:
+    | { id: string; image_url: string; sort_order: number }[]
+    | null;
 };
 
 export async function fetchListingForEdit(
@@ -386,6 +390,10 @@ export async function fetchListingForEdit(
   const images = [...(row.listing_images ?? [])].sort(
     (a, b) => a.sort_order - b.sort_order
   );
+  const galleryImages = images.map((im) => ({
+    id: im.id,
+    imageUrl: im.image_url
+  }));
   const priceRaw = row.price;
   const price =
     typeof priceRaw === "string" ? parseFloat(priceRaw) : priceRaw;
@@ -405,6 +413,7 @@ export async function fetchListingForEdit(
     showPhoneOnListing: row.show_phone_on_listing !== false,
     categoryKey,
     coverImageUrl: images[0]?.image_url ?? FALLBACK_IMAGE,
+    galleryImages,
     status: row.status as Listing["status"] | undefined
   };
 }
