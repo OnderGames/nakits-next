@@ -8,6 +8,7 @@
   --border: #e5e8f0;
   --success: #16a34a;
   --nav-height: 70px;
+  --vitrin-orange: #ea580c;
 }
 
 * {
@@ -517,6 +518,54 @@ button.nav-pill {
     0 1px 0 rgba(255, 255, 255, 0.35) inset,
     0 8px 28px rgba(59, 91, 255, 0.65);
   transform: translateY(-1px);
+}
+
+/* Üst çubuk · kalp (Satariz tarzı; dar ekranda gizli) */
+.nav-fav {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: 4px;
+  border-radius: 12px;
+  color: var(--vitrin-orange, #ea580c);
+  background: #fff;
+  border: 1px solid var(--border);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.nav-fav:hover {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #c2410c;
+}
+
+@media (min-width: 960px) {
+  .nav-fav {
+    display: inline-flex;
+  }
+}
+
+/* İlan ver — turuncu CTA (Satariz) */
+.nav-cta.nav-cta--orange {
+  background: linear-gradient(180deg, #fb923c 0%, #ea580c 100%) !important;
+  border: 2px solid rgba(255, 255, 255, 0.38) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    0 6px 22px rgba(234, 88, 12, 0.48),
+    0 2px 8px rgba(180, 83, 9, 0.35);
+}
+
+.nav-cta.nav-cta--orange:hover {
+  filter: brightness(1.05);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 8px 28px rgba(234, 88, 12, 0.58);
 }
 
 /* Çıkış — sade çerçeve */
@@ -1720,7 +1769,7 @@ form .row {
 .home--sunrise .home-listings-title,
 .home--minimal .home-listings-title,
 .home--slate .home-listings-title {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .home--aurora .home-listings-title {
@@ -1780,4 +1829,268 @@ form .row {
 .home--v2 .home-more-link a {
   color: var(--primary);
   font-weight: 600;
+}
+
+/* ——— Anasayfa · Satariz tarzı (sol kategoriler + vitrin ızgarası) ——— */
+
+.home-satariz-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .home-satariz-layout {
+    grid-template-columns: 252px minmax(0, 1fr);
+    gap: 28px;
+  }
+}
+
+.home-category-sidebar {
+  background: #fafafa;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 10px 10px;
+}
+
+@media (min-width: 900px) {
+  .home-category-sidebar {
+    position: sticky;
+    top: calc(var(--nav-height) + 10px);
+    max-height: calc(100vh - var(--nav-height) - 24px);
+    overflow: auto;
+  }
+}
+
+.home-category-sidebar__title {
+  margin: 0 0 10px;
+  padding: 0 6px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.home-category-sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-category-sidebar__details {
+  border-bottom: 1px solid var(--border);
+}
+
+.home-category-sidebar__details:last-child {
+  border-bottom: 0;
+}
+
+.home-category-sidebar__summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 10px 6px;
+  font-weight: 700;
+  font-size: 14px;
+  list-style: none;
+}
+
+.home-category-sidebar__summary::-webkit-details-marker {
+  display: none;
+}
+
+.home-category-sidebar__emoji {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.home-category-sidebar__group-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-category-sidebar__subs {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0 0 4px 10px;
+}
+
+.home-category-sidebar__sub-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  border-radius: 8px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.home-category-sidebar__sub-link:hover {
+  background: #fff;
+  color: var(--vitrin-orange);
+}
+
+.home-category-sidebar__arrow {
+  flex-shrink: 0;
+  color: #94a3b8;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.home-satariz-main {
+  min-width: 0;
+}
+
+.home-satariz-notice {
+  margin-bottom: 16px;
+}
+
+.home-vitrin-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.home-vitrin-head__title {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.home-vitrin-head__all {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vitrin-orange);
+  white-space: nowrap;
+}
+
+.home-vitrin-head__all:hover {
+  text-decoration: underline;
+}
+
+.home-satariz-foot {
+  margin-top: 22px;
+}
+
+.cards--vitrin {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .cards--vitrin {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .cards--vitrin {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .cards--vitrin {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .cards.cards--vitrin {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .cards.cards--vitrin {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.card--vitrin {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.card--vitrin img {
+  height: 118px;
+}
+
+.card--vitrin .card-body {
+  padding: 10px 10px 12px;
+}
+
+.card--vitrin__media {
+  position: relative;
+}
+
+.card--vitrin__fav {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
+
+.card--vitrin__badge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.68);
+  color: #fff;
+}
+
+.card--vitrin__title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0 0 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.price--vitrin {
+  color: var(--vitrin-orange) !important;
+  margin: 0 !important;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Tema · vitrin başlığı */
+.home--aurora .home-vitrin-head__title {
+  color: #312e81;
+}
+
+.home--sunrise .home-vitrin-head__title {
+  color: #431407;
+}
+
+.home--minimal .home-vitrin-head__title {
+  color: #171717;
+}
+
+.home--slate .home-vitrin-head__title {
+  color: #1e293b;
 }

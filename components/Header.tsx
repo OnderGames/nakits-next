@@ -54,7 +54,7 @@ function HeaderSearchBar() {
         name="q"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Kelime veya ilan no (6–9 hane)…"
+        placeholder="Kelime, ilan no veya mağaza adı ile ara…"
         autoComplete="off"
         enterKeyHint="search"
         maxLength={120}
@@ -244,11 +244,11 @@ export default function Header() {
 
           <div className="nav-mobile-bar">
             <Link
-              className="nav-cta nav-cta--toolbar"
+              className="nav-cta nav-cta--orange nav-cta--toolbar"
               href="/add-listing"
               onClick={() => setMenuOpen(false)}
             >
-              + İlan ver
+              İlan ver
             </Link>
             <button
               type="button"
@@ -295,6 +295,28 @@ export default function Header() {
         <Suspense fallback={<HeaderSearchFallback />}>
           <HeaderSearchBar />
         </Suspense>
+
+        <Link
+          href="/listings"
+          className="nav-fav"
+          title="Tüm ilanlara göz at"
+          aria-label="Tüm ilanlara göz at"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden
+          >
+            <path
+              d="M12 21s-6.716-4.432-9-8.5C.89 9.732 2.14 6 6 6c2.352 0 3.638 1.352 4 2 .362-.648 1.648-2 4-2 3.86 0 5.11 3.732 3 6.5C16.716 16.568 12 21 12 21z"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              fill="none"
+            />
+          </svg>
+        </Link>
 
         <nav
           id="site-menu"
@@ -357,8 +379,8 @@ export default function Header() {
               )}
             </Link>
           )}
-          <Link className="nav-cta" href="/add-listing">
-            + İlan ver
+          <Link className="nav-cta nav-cta--orange" href="/add-listing">
+            İlan ver
           </Link>
 
           {!ready ? (
