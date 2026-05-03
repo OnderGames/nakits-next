@@ -1928,6 +1928,22 @@ form .row {
   color: var(--vitrin-orange);
 }
 
+.home-category-sidebar__sub-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-category-sidebar__count {
+  color: #64748b;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.home-category-sidebar__sub-link:hover .home-category-sidebar__count {
+  color: var(--vitrin-orange);
+}
+
 .home-category-sidebar__arrow {
   flex-shrink: 0;
   color: #94a3b8;

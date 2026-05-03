@@ -1,6 +1,7 @@
 import Link from "next/link";
 import HomeCategorySidebar from "@/components/HomeCategorySidebar";
 import ListingCardPublic from "@/components/ListingCardPublic";
+import { buildListingCountsByCategoryKey } from "@/lib/category-counts";
 import { fetchPublicListings } from "@/lib/listings-data";
 import { getHomepageTheme } from "@/lib/site-settings";
 import { listings as mockListings } from "@/lib/mock-data";
@@ -24,12 +25,15 @@ export default async function HomePage() {
       ? fetched.slice(0, VITRIN_COUNT)
       : mockListings.slice(0, VITRIN_COUNT);
 
+  const listingSource = fetched !== null ? fetched : mockListings;
+  const categoryCounts = buildListingCountsByCategoryKey(listingSource);
+
   const mainClass = `container home--${theme}`;
 
   return (
     <main className={mainClass}>
       <div className="home-satariz-layout">
-        <HomeCategorySidebar />
+        <HomeCategorySidebar counts={categoryCounts} />
 
         <div className="home-satariz-main">
           {!hasSupabaseConfig && (
