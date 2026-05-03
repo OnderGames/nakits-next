@@ -2246,9 +2246,39 @@ form .row {
   flex-direction: column;
   height: 100%;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  border-color: rgba(15, 23, 42, 0.08);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card.card--vitrin:hover,
+  .card.card--vitrin:focus-within {
+    transform: translateY(-4px);
+    box-shadow:
+      0 14px 32px rgba(15, 23, 42, 0.12),
+      0 4px 10px rgba(234, 88, 12, 0.1);
+    border-color: rgba(234, 88, 12, 0.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card--vitrin {
+    transition: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .card.card--vitrin:hover,
+    .card.card--vitrin:focus-within {
+      transform: none;
+    }
+  }
 }
 
 .card--vitrin__shell {
+  --vitrin-thumb: 118px;
   position: relative;
   flex: 1;
   display: flex;
@@ -2256,16 +2286,59 @@ form .row {
   min-height: 0;
 }
 
-.card--vitrin__link {
+.card--vitrin__surface {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  color: inherit;
 }
 
-.card--vitrin img {
-  height: 132px;
+/** Tüm kart tıklanır; görünür içerik altında tek link (kalp katmanda üstte) */
+.card--vitrin__cover-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.card--vitrin__cover-link:focus-visible {
+  outline: 3px solid var(--vitrin-orange);
+  outline-offset: 3px;
+  z-index: 3;
+}
+
+/* Küçük kare küvet: foto tam görünsün (letterbox), kesilmesin */
+.card--vitrin__media {
+  position: relative;
+  width: var(--vitrin-thumb);
+  height: var(--vitrin-thumb);
+  flex-shrink: 0;
+  margin: 12px auto 8px;
+  border-radius: 12px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.9) 0%, transparent 62%),
+    linear-gradient(160deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-sizing: border-box;
+}
+
+.card--vitrin__media img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain !important;
+}
+
+@media (max-width: 899px) {
+  .card--vitrin__shell {
+    --vitrin-thumb: 112px;
+  }
+
+  .card--vitrin__media {
+    margin-top: 10px;
+    margin-bottom: 6px;
+  }
 }
 
 .card--vitrin .card-body {
@@ -2277,10 +2350,6 @@ form .row {
   padding: 11px 11px 13px;
   background: linear-gradient(180deg, #f0fdf9 0%, #ecfdf5 52%, #e6fffa 100%);
   border-top: 1px solid rgba(45, 212, 191, 0.22);
-}
-
-.card--vitrin__media {
-  position: relative;
 }
 
 /* Favori kalbi — kart overlay / liste / detay */
@@ -2319,9 +2388,14 @@ form .row {
 
 .favorite-heart--vitrin {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  z-index: 4;
+  z-index: 2;
+}
+
+/* Küçük kare önizlemenin sağ üstü (kalp başlıkta kapanmasın diye foto alanında) */
+.card--vitrin__shell > .favorite-heart--vitrin {
+  top: 12px;
+  left: calc(50% + var(--vitrin-thumb) / 2 - 40px);
+  right: auto;
 }
 
 .favorite-heart--browse {
@@ -2370,16 +2444,15 @@ form .row {
 }
 
 .card--vitrin__title {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.35;
   margin: 0;
-  min-height: calc(1.35em * 2);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  min-height: 1.35em;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card--vitrin__place {
@@ -2405,6 +2478,8 @@ form .row {
   letter-spacing: -0.022em;
   line-height: 1.25;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--vitrin-orange) !important;
 }
 

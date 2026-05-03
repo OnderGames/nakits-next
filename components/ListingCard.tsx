@@ -65,16 +65,19 @@ export default function ListingCard({
 }: Props) {
   if (!ownerToolbar && presentation === "vitrin") {
     const href = listingDetailHref(listing);
+    const titleId = `vitrin-title-${listing.id}`;
+
     return (
       <article className="card card--vitrin">
         <div className="card--vitrin__shell">
-          <Link href={href} className="card--vitrin__link">
+          <div className="card--vitrin__surface">
             <div className="card--vitrin__media">
               <Image
                 src={listing.image}
-                alt={listing.title}
-                width={500}
+                alt=""
+                width={280}
                 height={280}
+                aria-hidden
               />
               {(listing.imageUrls?.length ?? 0) > 1 && (
                 <span className="card--vitrin__badge">
@@ -83,13 +86,20 @@ export default function ListingCard({
               )}
             </div>
             <div className="card-body">
-              <h3 className="card--vitrin__title">{listing.title}</h3>
+              <h3 id={titleId} className="card--vitrin__title">
+                {listing.title}
+              </h3>
               <p className="card--vitrin__place">
                 {formatListingPlaceLine(listing.city, listing.district)}
               </p>
               <p className="price price--vitrin">{formatPrice(listing.price)}</p>
             </div>
-          </Link>
+          </div>
+          <Link
+            href={href}
+            className="card--vitrin__cover-link"
+            aria-labelledby={titleId}
+          />
           {!hideFavorite && (
             <FavoriteHeartButton
               listingId={listing.id}
