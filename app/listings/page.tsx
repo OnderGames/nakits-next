@@ -1,7 +1,14 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ListingCard from "@/components/ListingCard";
 import {
   CATEGORY_GROUPS,
@@ -16,7 +23,21 @@ import type { Listing } from "@/lib/types";
 import { getDistrictsForProvince } from "@/lib/turkish-districts";
 import { TURKEY_PROVINCES } from "@/lib/turkish-provinces";
 
+function buildListingsSearch(
+  p: Record<"q" | "city" | "district" | "category", string>
+): string {
+  const sp = new URLSearchParams();
+  const qt = p.q.trim();
+  if (qt) sp.set("q", qt);
+  if (p.city) sp.set("city", p.city);
+  if (p.district) sp.set("district", p.district);
+  if (p.category) sp.set("category", p.category);
+  const s = sp.toString();
+  return s ? `?${s}` : "";
+}
+
 function ListingsPageInner() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [data, setData] = useState<Listing[]>([]);
   const [ready, setReady] = useState(false);
@@ -25,9 +46,33 @@ function ListingsPageInner() {
   const [district, setDistrict] = useState("");
   const [category, setCategory] = useState("");
 
+  const filtersRef = useRef({ q, city, district, category });
+  filtersRef.current = { q, city, district, category };
+
+  const qDebounceRef = useRef<number | null>(null);
+
+  const replaceListingsUrl = useCallback(
+    (next: Record<"q" | "city" | "district" | "category", string>) => {
+      const search = buildListingsSearch(next);
+      const path = search ? `/listings${search}` : "/listings";
+      router.replace(path, { scroll: false });
+    },
+    [router]
+  );
+
+  /** URL ↔ state (geri/ileri ve üst menü araması dahil) */
   useEffect(() => {
     setQ(searchParams.get("q") ?? "");
+    setCity(searchParams.get("city") ?? "");
+    setDistrict(searchParams.get("district") ?? "");
+    setCategory(searchParams.get("category") ?? "");
   }, [searchParams]);
+
+  useEffect(() => {
+    return () => {
+      if (qDebounceRef.current) window.clearTimeout(qDebounceRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -67,6 +112,34 @@ function ListingsPageInner() {
     });
   }, [q, city, district, category, data]);
 
+  function scheduleSearchUrl(text: string) {
+    if (qDebounceRef.current) window.clearTimeout(qDebounceRef.current);
+    qDebounceRef.current = window.setTimeout(() => {
+      qDebounceRef.current = null;
+      const f = filtersRef.current;
+      replaceListingsUrl({
+        q: text,
+        city: f.city,
+        district: f.district,
+        category: f.category
+      });
+    }, 380);
+  }
+
+  function applyFiltersNow() {
+    if (qDebounceRef.current) {
+      window.clearTimeout(qDebounceRef.current);
+      qDebounceRef.current = null;
+    }
+    const f = filtersRef.current;
+    replaceListingsUrl({
+      q: f.q,
+      city: f.city,
+      district: f.district,
+      category: f.category
+    });
+  }
+
   if (!ready) {
     return (
       <main className="container">
@@ -80,10 +153,11 @@ function ListingsPageInner() {
       <h1 className="section-title">Tüm İlanlar</h1>
       <section className="panel">
         <p className="meta" style={{ margin: "0 0 12px" }}>
-          Üst menüden arama yaparak da bu sayfaya gelebilirsiniz. Önce{" "}
-          <strong>il</strong> seçin; ardından <strong>ilçe</strong> menüsü dolar.
-          Arama kutusuna <strong>6–9 haneli ilan numarasını</strong> yazarak giriş
-          yapmadan ilanı bulabilirsiniz.
+          Filtreler adres çubuğuna yazılır; sayfa bağlantısını kopyalayarak aynı
+          aramayı paylaşabilirsiniz. Üst menüden arama da bu parametrelerle açılır.
+          Önce <strong>il</strong> seçin; ardından <strong>ilçe</strong> menüsü
+          dolar. <strong>6–9 haneli ilan numarası</strong> ile doğrudan eşleşme
+          yapılır.
         </p>
         <div className="listings-filter-grid">
           <div className="filter-field">
@@ -91,7 +165,11 @@ function ListingsPageInner() {
             <input
               id="listings-q"
               value={q}
-              onChange={(event) => setQ(event.target.value)}
+              onChange={(event) => {
+                const v = event.target.value;
+                setQ(v);
+                scheduleSearchUrl(v);
+              }}
               placeholder="Başlık veya ilan no (6–9 hane)…"
             />
           </div>
@@ -101,8 +179,15 @@ function ListingsPageInner() {
               id="listings-city"
               value={city}
               onChange={(event) => {
-                setCity(event.target.value);
+                const v = event.target.value;
+                setCity(v);
                 setDistrict("");
+                replaceListingsUrl({
+                  q,
+                  city: v,
+                  district: "",
+                  category
+                });
               }}
             >
               <option value="">Tüm iller</option>
@@ -119,7 +204,16 @@ function ListingsPageInner() {
               id="listings-district"
               value={district}
               disabled={!city}
-              onChange={(event) => setDistrict(event.target.value)}
+              onChange={(event) => {
+                const v = event.target.value;
+                setDistrict(v);
+                replaceListingsUrl({
+                  q,
+                  city,
+                  district: v,
+                  category
+                });
+              }}
               title={!city ? "Önce il seçin" : "İlçe"}
             >
               <option value="">
@@ -139,7 +233,16 @@ function ListingsPageInner() {
             <select
               id="listings-cat"
               value={category}
-              onChange={(event) => setCategory(event.target.value)}
+              onChange={(event) => {
+                const v = event.target.value;
+                setCategory(v);
+                replaceListingsUrl({
+                  q,
+                  city,
+                  district,
+                  category: v
+                });
+              }}
             >
               <option value="">Tüm kategoriler</option>
               {CATEGORY_GROUPS.map((group) => (
@@ -157,7 +260,11 @@ function ListingsPageInner() {
             </select>
           </div>
           <div className="filter-field filter-field--action">
-            <button type="button" className="btn btn-primary">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={applyFiltersNow}
+            >
               Filtrele
             </button>
           </div>
