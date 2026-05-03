@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ListingCard from "@/components/ListingCard";
 import {
   CATEGORY_GROUPS,
@@ -15,13 +16,18 @@ import type { Listing } from "@/lib/types";
 import { getDistrictsForProvince } from "@/lib/turkish-districts";
 import { TURKEY_PROVINCES } from "@/lib/turkish-provinces";
 
-export default function ListingsPage() {
+function ListingsPageInner() {
+  const searchParams = useSearchParams();
   const [data, setData] = useState<Listing[]>([]);
   const [ready, setReady] = useState(false);
   const [q, setQ] = useState("");
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const [category, setCategory] = useState("");
+
+  useEffect(() => {
+    setQ(searchParams.get("q") ?? "");
+  }, [searchParams]);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -74,10 +80,10 @@ export default function ListingsPage() {
       <h1 className="section-title">Tüm İlanlar</h1>
       <section className="panel">
         <p className="meta" style={{ margin: "0 0 12px" }}>
-          Önce <strong>il</strong> seçin; ardından <strong>ilçe</strong> menüsü
-          dolar. Arama kutusuna <strong>6–9 haneli ilan numarasını</strong>{" "}
-          yazarak giriş yapmadan ilanı bulabilirsiniz. Filtreler bu sayfada
-          geçerlidir.
+          Üst menüden arama yaparak da bu sayfaya gelebilirsiniz. Önce{" "}
+          <strong>il</strong> seçin; ardından <strong>ilçe</strong> menüsü dolar.
+          Arama kutusuna <strong>6–9 haneli ilan numarasını</strong> yazarak giriş
+          yapmadan ilanı bulabilirsiniz.
         </p>
         <div className="listings-filter-grid">
           <div className="filter-field">
@@ -172,5 +178,19 @@ export default function ListingsPage() {
         ))}
       </section>
     </main>
+  );
+}
+
+export default function ListingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="container">
+          <p className="meta">Yükleniyor…</p>
+        </main>
+      }
+    >
+      <ListingsPageInner />
+    </Suspense>
   );
 }

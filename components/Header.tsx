@@ -2,11 +2,93 @@
 
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import {
+  usePathname,
+  useRouter,
+  useSearchParams
+} from "next/navigation";
+import {
+  FormEvent,
+  Suspense,
+  useCallback,
+  useEffect,
+  useState
+} from "react";
 import { fetchTotalUnreadMessages } from "@/lib/conversations";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
+
+function HeaderSearchBar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [value, setValue] = useState("");
+
+  useEffect(() => {
+    if (pathname === "/listings") {
+      setValue(searchParams.get("q") ?? "");
+    } else {
+      setValue("");
+    }
+  }, [pathname, searchParams]);
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    const q = value.trim();
+    router.push(q ? `/listings?q=${encodeURIComponent(q)}` : "/listings");
+  }
+
+  return (
+    <form
+      className="nav-header-search"
+      onSubmit={submit}
+      role="search"
+      aria-label="İlan ara"
+    >
+      <label htmlFor="header-search-q" className="nav-header-search__label">
+        Kelime veya ilan no ile ara
+      </label>
+      <input
+        id="header-search-q"
+        type="search"
+        name="q"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Kelime veya ilan no (6–9 hane)…"
+        autoComplete="off"
+        enterKeyHint="search"
+        maxLength={120}
+        className="nav-header-search__input"
+      />
+      <button type="submit" className="nav-header-search__submit" aria-label="Ara">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden
+        >
+          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+          <path
+            d="M16 16l5 5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+    </form>
+  );
+}
+
+function HeaderSearchFallback() {
+  return (
+    <div
+      className="nav-header-search nav-header-search--fallback"
+      aria-hidden
+    />
+  );
+}
 
 export default function Header() {
   const pathname = usePathname();
@@ -117,47 +199,102 @@ export default function Header() {
   return (
     <header className="topbar">
       <div className="container nav">
-        <Link className="brand-mark" href="/" aria-label="Nakits — ana sayfa">
-          <span className="brand-mark__icon" aria-hidden>
-            <svg
-              className="brand-mark__svg"
-              viewBox="0 0 32 32"
-              width="32"
-              height="32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect
+        <div className="nav__leading">
+          <Link className="brand-mark" href="/" aria-label="Nakits — ana sayfa">
+            <span className="brand-mark__icon" aria-hidden>
+              <svg
+                className="brand-mark__svg"
+                viewBox="0 0 32 32"
                 width="32"
                 height="32"
-                rx="10"
-                fill="url(#nakitsBrandMarkGrad)"
-              />
-              <path
-                d="M10 24V8M10 8l12 16M22 8v16"
-                stroke="white"
-                strokeWidth="3.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <defs>
-                <linearGradient
-                  id="nakitsBrandMarkGrad"
-                  x1="2"
-                  y1="2"
-                  x2="32"
-                  y2="32"
-                  gradientUnits="userSpaceOnUse"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  width="32"
+                  height="32"
+                  rx="10"
+                  fill="url(#nakitsBrandMarkGrad)"
+                />
+                <path
+                  d="M10 24V8M10 8l12 16M22 8v16"
+                  stroke="white"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <defs>
+                  <linearGradient
+                    id="nakitsBrandMarkGrad"
+                    x1="2"
+                    y1="2"
+                    x2="32"
+                    y2="32"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop stopColor="#4f46e5" />
+                    <stop offset="0.55" stopColor="#4f39f6" />
+                    <stop offset="1" stopColor="#2563eb" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>
+            <span className="brand-mark__word">Nakits</span>
+          </Link>
+
+          <div className="nav-mobile-bar">
+            <Link
+              className="nav-cta nav-cta--toolbar"
+              href="/add-listing"
+              onClick={() => setMenuOpen(false)}
+            >
+              + İlan ver
+            </Link>
+            <button
+              type="button"
+              className="nav-toggle"
+              aria-expanded={menuOpen}
+              aria-controls="site-menu"
+              aria-label={menuOpen ? "Menüyü kapat" : "Menüyü aç"}
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              {menuOpen ? (
+                <svg
+                  className="nav-toggle__svg"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  aria-hidden
                 >
-                  <stop stopColor="#4f46e5" />
-                  <stop offset="0.55" stopColor="#4f39f6" />
-                  <stop offset="1" stopColor="#2563eb" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </span>
-          <span className="brand-mark__word">Nakits</span>
-        </Link>
+                  <path
+                    fill="currentColor"
+                    d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1L10.6 12l-4.9 4.9a1 1 0 1 0 1.4 1.4L12 13.4l4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="nav-toggle__svg"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  aria-hidden
+                >
+                  <path
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    d="M4 7h16M4 12h16M4 17h16"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <Suspense fallback={<HeaderSearchFallback />}>
+          <HeaderSearchBar />
+        </Suspense>
 
         <nav
           id="site-menu"
@@ -269,55 +406,6 @@ export default function Header() {
             </>
           )}
         </nav>
-
-        <div className="nav-mobile-bar">
-          <Link
-            className="nav-cta nav-cta--toolbar"
-            href="/add-listing"
-            onClick={() => setMenuOpen(false)}
-          >
-            + İlan ver
-          </Link>
-          <button
-            type="button"
-            className="nav-toggle"
-            aria-expanded={menuOpen}
-            aria-controls="site-menu"
-            aria-label={menuOpen ? "Menüyü kapat" : "Menüyü aç"}
-            onClick={() => setMenuOpen((o) => !o)}
-          >
-            {menuOpen ? (
-              <svg
-                className="nav-toggle__svg"
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                aria-hidden
-              >
-                <path
-                  fill="currentColor"
-                  d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1L10.6 12l-4.9 4.9a1 1 0 1 0 1.4 1.4L12 13.4l4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"
-                />
-              </svg>
-            ) : (
-              <svg
-                className="nav-toggle__svg"
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                aria-hidden
-              >
-                <path
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  d="M4 7h16M4 12h16M4 17h16"
-                />
-              </svg>
-            )}
-          </button>
-        </div>
 
         {menuOpen ? (
           <button
