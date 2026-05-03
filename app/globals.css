@@ -1928,6 +1928,16 @@ form .row {
   color: var(--vitrin-orange);
 }
 
+.home-category-sidebar__sub-link--active {
+  background: color-mix(in srgb, var(--vitrin-orange) 12%, transparent);
+  color: var(--vitrin-orange);
+  font-weight: 600;
+}
+
+.home-category-sidebar__sub-link--active .home-category-sidebar__count {
+  color: var(--vitrin-orange);
+}
+
 .home-category-sidebar__sub-label {
   flex: 1;
   min-width: 0;

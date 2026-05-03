@@ -9,7 +9,9 @@ import {
   useState
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import HomeCategorySidebar from "@/components/HomeCategorySidebar";
 import ListingCard from "@/components/ListingCard";
+import { buildListingCountsByCategoryKey } from "@/lib/category-counts";
 import {
   CATEGORY_GROUPS,
   compositeCategoryKey
@@ -117,6 +119,11 @@ function ListingsPageInner() {
     });
   }, [q, city, district, category, data]);
 
+  const categoryCounts = useMemo(
+    () => buildListingCountsByCategoryKey(data),
+    [data]
+  );
+
   function scheduleSearchUrl(text: string) {
     if (qDebounceRef.current) window.clearTimeout(qDebounceRef.current);
     qDebounceRef.current = window.setTimeout(() => {
@@ -155,6 +162,13 @@ function ListingsPageInner() {
 
   return (
     <main className="container">
+      <div className="home-satariz-layout">
+        <HomeCategorySidebar
+          counts={categoryCounts}
+          selectedCategoryKey={category || null}
+          preserveParams={{ q, city, district }}
+        />
+        <div className="home-satariz-main">
       <h1 className="section-title">Tüm İlanlar</h1>
       <section className="panel">
         <p className="meta" style={{ margin: "0 0 12px" }}>
@@ -288,6 +302,8 @@ function ListingsPageInner() {
           <ListingCard key={listing.id} listing={listing} />
         ))}
       </section>
+        </div>
+      </div>
     </main>
   );
 }
