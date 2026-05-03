@@ -184,41 +184,42 @@ export default function Header() {
           <Link className="nav-pill" href="/listings">
             İlanlar
           </Link>
-          <Link
-            className="nav-pill nav-pill--badged"
-            href="/mesajlar"
-            title="Mesajların — gelen kutusu ve tüm yazışmalar"
-            style={{
-              paddingRight:
-                loggedIn && unreadMessages > 0 ? 16 : undefined
-            }}
-          >
-            Mesajlarım
-            {loggedIn && unreadMessages > 0 && (
-              <span
-                aria-label={`Okunmamış ${unreadMessages} mesaj`}
-                style={{
-                  position: "absolute",
-                  top: -6,
-                  right: -4,
-                  minWidth: 20,
-                  height: 20,
-                  padding: "0 6px",
-                  borderRadius: 999,
-                  background: "linear-gradient(135deg, #f87171, #dc2626)",
-                  color: "#fff",
-                  fontSize: 11,
-                  fontWeight: 800,
-                  lineHeight: "20px",
-                  textAlign: "center",
-                  boxShadow: "0 2px 8px rgba(220,38,38,0.45)",
-                  border: "2px solid #fff"
-                }}
-              >
-                {unreadMessages > 99 ? "99+" : unreadMessages}
-              </span>
-            )}
-          </Link>
+          {loggedIn && (
+            <Link
+              className="nav-pill nav-pill--badged"
+              href="/mesajlar"
+              title="Mesajların — gelen kutusu ve tüm yazışmalar"
+              style={{
+                paddingRight: unreadMessages > 0 ? 16 : undefined
+              }}
+            >
+              Mesajlarım
+              {unreadMessages > 0 && (
+                <span
+                  aria-label={`Okunmamış ${unreadMessages} mesaj`}
+                  style={{
+                    position: "absolute",
+                    top: -6,
+                    right: -4,
+                    minWidth: 20,
+                    height: 20,
+                    padding: "0 6px",
+                    borderRadius: 999,
+                    background: "linear-gradient(135deg, #f87171, #dc2626)",
+                    color: "#fff",
+                    fontSize: 11,
+                    fontWeight: 800,
+                    lineHeight: "20px",
+                    textAlign: "center",
+                    boxShadow: "0 2px 8px rgba(220,38,38,0.45)",
+                    border: "2px solid #fff"
+                  }}
+                >
+                  {unreadMessages > 99 ? "99+" : unreadMessages}
+                </span>
+              )}
+            </Link>
+          )}
           <Link className="nav-cta" href="/add-listing">
             + İlan ver
           </Link>
