@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import ListingGalleryCarousel from "@/components/ListingGalleryCarousel";
 import ListingMessagePanel from "@/components/ListingMessagePanel";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
-import { fetchListingById } from "@/lib/listings-data";
+import { isListingCodeQuery } from "@/lib/listing-code";
+import { fetchListingByCode, fetchListingById } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 
@@ -16,8 +17,12 @@ export default async function ListingDetailPage({ params }: Props) {
 
   const listing =
     hasSupabaseConfig && supabase
-      ? await fetchListingById(supabase, id)
-      : mockListings.find((x) => x.id === id) ?? null;
+      ? isListingCodeQuery(id)
+        ? await fetchListingByCode(supabase, id)
+        : await fetchListingById(supabase, id)
+      : mockListings.find(
+          (x) => x.id === id || x.listingCode === id.trim()
+        ) ?? null;
 
   if (!listing) {
     notFound();
@@ -42,6 +47,11 @@ export default async function ListingDetailPage({ params }: Props) {
               : listing.city}
           </p>
           <p className="meta">{formatCategoryDisplay(listing.categoryKey)}</p>
+          {listing.listingCode && (
+            <p className="meta">
+              İlan no: <strong>{listing.listingCode}</strong>
+            </p>
+          )}
           <p className="meta">İlan tarihi: {listing.createdAt}</p>
           <p className="meta">
             Satıcı:{" "}

@@ -6,6 +6,7 @@ import {
   CATEGORY_GROUPS,
   compositeCategoryKey
 } from "@/lib/categories";
+import { isListingCodeQuery } from "@/lib/listing-code";
 import { fetchPublicListings } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
@@ -39,8 +40,17 @@ export default function ListingsPage() {
   }, []);
 
   const filtered = useMemo(() => {
+    const qTrim = q.trim();
+    const qLower = qTrim.toLowerCase();
+    const codeExact =
+      qTrim.length > 0 && isListingCodeQuery(qTrim)
+        ? qTrim
+        : null;
+
     return data.filter((item) => {
-      const matchQ = item.title.toLowerCase().includes(q.toLowerCase());
+      const matchQ = codeExact
+        ? item.listingCode === codeExact
+        : !qLower || item.title.toLowerCase().includes(qLower);
       const matchCity = !city || item.city === city;
       const matchDistrict =
         !district ||
@@ -65,7 +75,9 @@ export default function ListingsPage() {
       <section className="panel">
         <p className="meta" style={{ margin: "0 0 12px" }}>
           Önce <strong>il</strong> seçin; ardından <strong>ilçe</strong> menüsü
-          dolar. Filtreler yalnızca bu sayfada (üst menü → İlanlar).
+          dolar. Arama kutusuna <strong>6–9 haneli ilan numarasını</strong>{" "}
+          yazarak giriş yapmadan ilanı bulabilirsiniz. Filtreler bu sayfada
+          geçerlidir.
         </p>
         <div className="listings-filter-grid">
           <div className="filter-field">
@@ -74,7 +86,7 @@ export default function ListingsPage() {
               id="listings-q"
               value={q}
               onChange={(event) => setQ(event.target.value)}
-              placeholder="Başlıkta ara…"
+              placeholder="Başlık veya ilan no (6–9 hane)…"
             />
           </div>
           <div className="filter-field">

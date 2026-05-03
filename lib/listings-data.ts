@@ -30,6 +30,7 @@ type ImageRow = { image_url: string; sort_order: number };
 
 type ListingRow = {
   id: string;
+  listing_code?: string;
   seller_id?: string;
   title: string;
   city: string;
@@ -68,6 +69,8 @@ function normalizeListingRow(raw: unknown): ListingRow {
 
   return {
     id: String(r.id),
+    listing_code:
+      r.listing_code != null ? String(r.listing_code).trim() : undefined,
     seller_id: r.seller_id != null ? String(r.seller_id) : undefined,
     title: String(r.title),
     city: String(r.city),
@@ -104,6 +107,7 @@ function mapRowToListing(row: ListingRow): Listing {
   const phone = row.profiles?.phone?.trim() ?? "";
   return {
     id: row.id,
+    listingCode: row.listing_code?.trim() || undefined,
     title: row.title,
     categoryKey,
     city: row.city,
@@ -129,6 +133,7 @@ function mapRowToListing(row: ListingRow): Listing {
 /** Eski veritabanlarında district yoksa ilk select hata verir; district'siz tekrarlanır */
 const listSelectNoDistrict = `
   id,
+  listing_code,
   seller_id,
   title,
   city,
@@ -145,6 +150,7 @@ const listSelectNoDistrict = `
 
 const listSelect = `
   id,
+  listing_code,
   seller_id,
   title,
   city,
@@ -181,6 +187,7 @@ async function withListingSelectFallback<T>(
 
 const listingEditSelect = `
       id,
+      listing_code,
       seller_id,
       title,
       description,
@@ -197,6 +204,7 @@ const listingEditSelect = `
 
 const listingEditSelectNoDistrict = `
       id,
+      listing_code,
       seller_id,
       title,
       description,
@@ -249,6 +257,24 @@ export async function fetchListingById(
 ): Promise<Listing | null> {
   const { data, error } = await withListingSelectFallback((sel) =>
     sb.from("listings").select(sel).eq("id", id).maybeSingle()
+  );
+
+  if (error || !data) return null;
+  return mapRowToListing(normalizeListingRow(data));
+}
+
+export async function fetchListingByCode(
+  sb: SupabaseClient,
+  code: string
+): Promise<Listing | null> {
+  const normalized = code.trim();
+  if (!/^[0-9]{6,9}$/.test(normalized)) return null;
+  const { data, error } = await withListingSelectFallback((sel) =>
+    sb
+      .from("listings")
+      .select(sel)
+      .eq("listing_code", normalized)
+      .maybeSingle()
   );
 
   if (error || !data) return null;
@@ -365,6 +391,7 @@ export async function fetchPublicProfileByPublicCode(
 /** İlan düzenleme formu (satıcı paneli) */
 export type ListingForEdit = {
   id: string;
+  listingCode: string;
   sellerId: string;
   title: string;
   description: string;
@@ -383,6 +410,7 @@ export type ListingForEdit = {
 
 type ListingEditRowRaw = {
   id: string;
+  listing_code?: string;
   seller_id: string;
   title: string;
   description: string | null;
@@ -426,6 +454,7 @@ export async function fetchListingForEdit(
 
   return {
     id: row.id,
+    listingCode: String(row.listing_code ?? "").trim() || "—",
     sellerId: row.seller_id,
     title: row.title,
     description: row.description ?? "",

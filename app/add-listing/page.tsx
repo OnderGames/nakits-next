@@ -23,6 +23,7 @@ import {
   TURKEY_PROVINCE_COUNT,
   TURKEY_PROVINCES
 } from "@/lib/turkish-provinces";
+import { isUniqueViolation, randomListingCode } from "@/lib/listing-code";
 import {
   listingExpiresAtIsoFromNow,
   MAX_LISTINGS_PER_USER
@@ -42,6 +43,12 @@ function mapListingInsertError(message: string | undefined): string {
     lower.includes("expires at")
   ) {
     return "Veritabanında ilan süresi sütunu eksik. Supabase → SQL Editor’da sql/migration_listing_expires_quota.sql dosyasını çalıştırın.";
+  }
+  if (
+    lower.includes("listing_code") ||
+    (lower.includes("listing code") && lower.includes("column"))
+  ) {
+    return "Veritabanında ilan numarası sütunu eksik. Supabase → SQL Editor’da sql/migration_listing_code.sql dosyasını çalıştırın.";
   }
   if (
     lower.includes("show_phone_on_listing") ||
@@ -289,22 +296,40 @@ export default function AddListingPage() {
       return;
     }
 
-    const { data: inserted, error: insErr } = await sb
-      .from("listings")
-      .insert({
-        seller_id: user.id,
-        category_id: catRow.id,
-        title,
-        description,
-        price,
-        city,
-        district: districtTrim || null,
-        condition: "used",
-        show_phone_on_listing: showPhoneOnListing,
-        expires_at: listingExpiresAtIsoFromNow()
-      })
-      .select("id")
-      .single();
+    let inserted: { id: string } | null = null;
+    let insErr: { message?: string; code?: string } | null = null;
+
+    for (let attempt = 0; attempt < 25; attempt++) {
+      const listing_code = randomListingCode();
+      const res = await sb
+        .from("listings")
+        .insert({
+          seller_id: user.id,
+          category_id: catRow.id,
+          title,
+          description,
+          price,
+          city,
+          district: districtTrim || null,
+          condition: "used",
+          show_phone_on_listing: showPhoneOnListing,
+          expires_at: listingExpiresAtIsoFromNow(),
+          listing_code
+        })
+        .select("id")
+        .single();
+
+      if (!res.error && res.data?.id) {
+        inserted = res.data as { id: string };
+        insErr = null;
+        break;
+      }
+      if (res.error && isUniqueViolation(res.error)) {
+        continue;
+      }
+      insErr = res.error;
+      break;
+    }
 
     if (insErr || !inserted?.id) {
       setSubmitting(false);

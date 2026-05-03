@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
+import { listingDetailHref } from "@/lib/listing-code";
 import {
   HOMEPAGE_THEME_LABEL,
   HOMEPAGE_THEMES,
@@ -31,6 +32,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 type AdminListingRow = {
   id: string;
+  listingCode?: string;
   title: string;
   description: string | null;
   city: string;
@@ -463,6 +465,11 @@ export default function AdminModerationPage() {
                       {STATUS_LABEL[row.status] ?? row.status}
                     </span>
                   </p>
+                  {row.listingCode ? (
+                    <p className="meta" style={{ margin: "0 0 6px" }}>
+                      İlan no: <strong>{row.listingCode}</strong>
+                    </p>
+                  ) : null}
                   <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>
                     {row.title}
                   </h2>
@@ -499,7 +506,10 @@ export default function AdminModerationPage() {
                     {row.status === "active" && (
                       <Link
                         className="btn btn-outline"
-                        href={`/listings/${row.id}`}
+                        href={listingDetailHref({
+                          id: row.id,
+                          listingCode: row.listingCode
+                        })}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

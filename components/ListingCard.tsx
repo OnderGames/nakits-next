@@ -8,6 +8,7 @@ import {
   formatPriceInputDisplay,
   parsePriceInput
 } from "@/lib/categories";
+import { listingDetailHref } from "@/lib/listing-code";
 import {
   formatListingExpiryDetailTr,
   formatListingExpiryShort,
@@ -60,7 +61,7 @@ export default function ListingCard({ listing, ownerToolbar }: Props) {
 
   return (
     <article className="card">
-      <Link href={`/listings/${listing.id}`}>
+      <Link href={listingDetailHref(listing)}>
         <div style={{ position: "relative" }}>
           <Image src={listing.image} alt={listing.title} width={500} height={280} />
           {(listing.imageUrls?.length ?? 0) > 1 && (
@@ -95,6 +96,9 @@ export default function ListingCard({ listing, ownerToolbar }: Props) {
             <p className="meta">
               {STATUS_LABEL[listing.status] ?? listing.status}
             </p>
+          )}
+          {listing.listingCode && (
+            <p className="meta">İlan no: {listing.listingCode}</p>
           )}
           {expiryLine && <p className="meta">{expiryLine}</p>}
           <p className="meta">{listing.createdAt}</p>

@@ -36,7 +36,11 @@ create table if not exists listings (
   status text not null default 'pending' check (status in ('pending', 'active', 'sold', 'rejected')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  expires_at timestamptz not null default (now() + interval '30 days')
+  expires_at timestamptz not null default (now() + interval '30 days'),
+  /** Tarayıcıda görünen ilan no (6–9 hane, benzersiz); paylaşım ve arama için */
+  listing_code text not null,
+  constraint listings_listing_code_digits check (listing_code ~ '^[0-9]{6,9}$'),
+  unique (listing_code)
 );
 
 create or replace function public.set_updated_at()

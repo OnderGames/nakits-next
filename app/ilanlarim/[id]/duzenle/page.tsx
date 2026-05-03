@@ -504,6 +504,18 @@ export default function EditListingPage() {
   return (
     <main className="container">
       <h1 className="section-title">İlan düzenle</h1>
+      {listing.listingCode && listing.listingCode !== "—" && (
+        <p className="meta" style={{ marginBottom: 10 }}>
+          İlan numarası: <strong>{listing.listingCode}</strong>
+          {" · "}
+          <Link
+            href={`/listings/${listing.listingCode}`}
+            style={{ color: "var(--primary)" }}
+          >
+            Bu numara ile açılan ilan sayfası
+          </Link>
+        </p>
+      )}
       <p className="meta" style={{ marginBottom: 14 }}>
         <Link href="/ilanlarim">← İlanlarım</Link>
         {listing.status && (

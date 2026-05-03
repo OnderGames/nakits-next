@@ -1,5 +1,7 @@
 export type Listing = {
   id: string;
+  /** Herkese açık ilan numarası (6–9 rakam), vitrin ve arama için */
+  listingCode?: string;
   title: string;
   /** Bileşik kategori anahtarı, örn. "elektronik.telefon" */
   categoryKey: string;

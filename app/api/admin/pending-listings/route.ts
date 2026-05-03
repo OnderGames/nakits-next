@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 const select = `
   id,
+  listing_code,
   title,
   description,
   city,
@@ -59,6 +60,7 @@ export async function GET(request: Request) {
       typeof rawPrice === "string" ? parseFloat(rawPrice) : rawPrice;
     return {
       id: row.id as string,
+      listingCode: (row.listing_code as string | null)?.trim() ?? "",
       title: row.title as string,
       description: row.description as string | null,
       city: row.city as string,
