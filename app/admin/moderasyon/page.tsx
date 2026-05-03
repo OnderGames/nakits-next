@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
+import ListingCard from "@/components/ListingCard";
 import { listingDetailHref } from "@/lib/listing-code";
+import { formatRelativeTimeTr } from "@/lib/listings-data";
+import type { Listing } from "@/lib/types";
 import {
   HOMEPAGE_THEME_LABEL,
   HOMEPAGE_THEMES,
@@ -23,27 +25,50 @@ const FILTER_LABEL: Record<ListingFilter, string> = {
   rejected: "Reddedilen"
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Onay bekliyor",
-  active: "Yayında",
-  sold: "Satıldı",
-  rejected: "Yayınlanmadı"
-};
-
 type AdminListingRow = {
   id: string;
   listingCode?: string;
   title: string;
   description: string | null;
   city: string;
+  district?: string | null;
   price: number;
   created_at: string;
+  expires_at?: string | null;
   status: string;
   categoryKey: string;
   imageUrl: string | null;
+  imageUrls?: string[];
   sellerName: string;
   sellerEmail: string;
 };
+
+const LISTING_IMAGE_FALLBACK =
+  "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?auto=format&fit=crop&w=1200&q=80";
+
+function adminRowToListing(row: AdminListingRow): Listing {
+  const urls = row.imageUrls?.filter(Boolean) ?? [];
+  const cover =
+    (row.imageUrl && row.imageUrl.trim()) ||
+    urls[0] ||
+    LISTING_IMAGE_FALLBACK;
+  return {
+    id: row.id,
+    listingCode: row.listingCode?.trim() || undefined,
+    title: row.title,
+    categoryKey: row.categoryKey,
+    city: row.city,
+    district: row.district ?? null,
+    price: row.price,
+    image: cover,
+    imageUrls: urls.length > 0 ? urls : undefined,
+    seller: row.sellerName,
+    createdAt: formatRelativeTimeTr(row.created_at),
+    status: row.status as Listing["status"],
+    expiresAt: row.expires_at ?? undefined,
+    description: row.description ?? undefined
+  };
+}
 
 export default function AdminModerationPage() {
   const [ready, setReady] = useState(false);
@@ -403,159 +428,95 @@ export default function AdminModerationPage() {
           <p>Bu filtrede ilan yok.</p>
         </section>
       ) : (
-        <div style={{ display: "grid", gap: 16 }}>
+        <section className="cards cards--browse admin-moderation-browse">
           {rows.map((row) => (
-            <article key={row.id} className="panel admin-listing-card">
-              <div
-                className="admin-moderation-grid"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(120px, 160px) 1fr",
-                  gap: 16,
-                  alignItems: "start"
-                }}
-              >
-                <div>
-                  {row.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- dynamic Supabase URL
-                    <img
-                      src={row.imageUrl}
-                      alt=""
-                      style={{
-                        width: "100%",
-                        borderRadius: 10,
-                        aspectRatio: "4/3",
-                        objectFit: "cover"
-                      }}
-                    />
-                  ) : (
-                    <div
-                      className="meta"
-                      style={{
-                        padding: 24,
-                        textAlign: "center",
-                        borderRadius: 10,
-                        border: "1px dashed var(--border)"
-                      }}
-                    >
-                      Görsel yok
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p style={{ margin: "0 0 6px" }}>
-                    <span
-                      style={{
-                        display: "inline-block",
-                        padding: "2px 10px",
-                        borderRadius: 999,
-                        fontSize: 12,
-                        fontWeight: 600,
-                        background:
-                          row.status === "active"
-                            ? "#dcfce7"
-                            : row.status === "pending"
-                              ? "#fef9c3"
-                              : row.status === "rejected"
-                                ? "#fee2e2"
-                                : "#e5e7eb",
-                        color: "#111"
-                      }}
-                    >
-                      {STATUS_LABEL[row.status] ?? row.status}
-                    </span>
+            <div key={row.id} className="admin-moderation-item">
+              <ListingCard
+                listing={adminRowToListing(row)}
+                hideFavorite
+              />
+              <div className="admin-moderation-item__footer">
+                {row.sellerEmail ? (
+                  <p className="meta" style={{ margin: "0 0 10px" }}>
+                    Satıcı e-posta:{" "}
+                    <strong>{row.sellerEmail}</strong>
                   </p>
-                  {row.listingCode ? (
-                    <p className="meta" style={{ margin: "0 0 6px" }}>
-                      İlan no: <strong>{row.listingCode}</strong>
-                    </p>
-                  ) : null}
-                  <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>
-                    {row.title}
-                  </h2>
-                  <p className="price" style={{ margin: "4px 0" }}>
-                    {formatPrice(row.price)}
-                  </p>
-                  <p className="meta">
-                    {row.city} · {formatCategoryDisplay(row.categoryKey)}
-                  </p>
-                  <p className="meta">
-                    Satıcı: {row.sellerName}
-                    {row.sellerEmail ? ` · ${row.sellerEmail}` : ""}
-                  </p>
-                  <p className="meta">
-                    Tarih:{" "}
-                    {new Date(row.created_at).toLocaleString("tr-TR")}
-                  </p>
-                  {row.description && (
-                    <p style={{ marginTop: 10, lineHeight: 1.5 }}>
-                      {row.description.length > 400
-                        ? `${row.description.slice(0, 400)}…`
-                        : row.description}
-                    </p>
-                  )}
-                  <div
+                ) : null}
+                {row.description ? (
+                  <p
+                    className="meta"
                     style={{
-                      marginTop: 14,
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 10,
-                      alignItems: "center"
+                      margin: "0 0 12px",
+                      lineHeight: 1.45,
+                      maxHeight: "4.35em",
+                      overflow: "hidden"
                     }}
                   >
-                    {row.status === "active" && (
-                      <Link
-                        className="btn btn-outline"
-                        href={listingDetailHref({
-                          id: row.id,
-                          listingCode: row.listingCode
-                        })}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Sitede aç
-                      </Link>
-                    )}
-                    {row.status === "pending" && (
-                      <>
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          disabled={busyId !== null}
-                          onClick={() => void setStatus(row.id, "active")}
-                        >
-                          {busyId === row.id ? "…" : "Yayına al"}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-outline"
-                          disabled={busyId !== null}
-                          onClick={() => void setStatus(row.id, "rejected")}
-                          style={{ borderColor: "#b91c1c", color: "#b91c1c" }}
-                        >
-                          Reddet
-                        </button>
-                      </>
-                    )}
-                    <button
-                      type="button"
+                    {row.description.length > 240
+                      ? `${row.description.slice(0, 240)}…`
+                      : row.description}
+                  </p>
+                ) : null}
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 10,
+                    alignItems: "center"
+                  }}
+                >
+                  {row.status === "active" && (
+                    <Link
                       className="btn btn-outline"
-                      disabled={busyId !== null}
-                      onClick={() => void deleteListing(row.id, row.title)}
-                      style={{
-                        borderColor: "#991b1b",
-                        color: "#991b1b",
-                        fontWeight: 600
-                      }}
+                      href={listingDetailHref({
+                        id: row.id,
+                        listingCode: row.listingCode
+                      })}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                      {busyId === row.id ? "…" : "İlanı sil"}
-                    </button>
-                  </div>
+                      Sitede aç
+                    </Link>
+                  )}
+                  {row.status === "pending" && (
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={busyId !== null}
+                        onClick={() => void setStatus(row.id, "active")}
+                      >
+                        {busyId === row.id ? "…" : "Yayına al"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        disabled={busyId !== null}
+                        onClick={() => void setStatus(row.id, "rejected")}
+                        style={{ borderColor: "#b91c1c", color: "#b91c1c" }}
+                      >
+                        Reddet
+                      </button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-outline"
+                    disabled={busyId !== null}
+                    onClick={() => void deleteListing(row.id, row.title)}
+                    style={{
+                      borderColor: "#991b1b",
+                      color: "#991b1b",
+                      fontWeight: 600
+                    }}
+                  >
+                    {busyId === row.id ? "…" : "İlanı sil"}
+                  </button>
                 </div>
               </div>
-            </article>
+            </div>
           ))}
-        </div>
+        </section>
       )}
 
       <p className="meta" style={{ marginTop: 20 }}>

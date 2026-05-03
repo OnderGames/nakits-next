@@ -2229,6 +2229,29 @@ form .row {
   flex-shrink: 0;
 }
 
+/* Moderasyon: vitrin ızgarası + kart altı yönetim alanı */
+.admin-moderation-browse .admin-moderation-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-moderation-browse .admin-moderation-item > .card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: 12px 12px 0 0;
+  border-bottom: none;
+}
+
+.admin-moderation-item__footer {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 0 0 12px 12px;
+  background: #fafafa;
+}
+
 /* Tema · vitrin başlığı */
 .home--aurora .home-vitrin-head__title {
   color: #312e81;

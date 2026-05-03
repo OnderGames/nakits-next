@@ -46,9 +46,15 @@ type OwnerToolbar = {
 type Props = {
   listing: Listing;
   ownerToolbar?: OwnerToolbar;
+  /** Admin önizleme vb.: kalp gizlenir */
+  hideFavorite?: boolean;
 };
 
-export default function ListingCard({ listing, ownerToolbar }: Props) {
+export default function ListingCard({
+  listing,
+  ownerToolbar,
+  hideFavorite = false
+}: Props) {
   const showExpiryForStatus =
     listing.status === "pending" ||
     listing.status === "active" ||
@@ -65,7 +71,7 @@ export default function ListingCard({ listing, ownerToolbar }: Props) {
       <Link href={listingDetailHref(listing)}>
         <div style={{ position: "relative" }}>
           <Image src={listing.image} alt={listing.title} width={500} height={280} />
-          {!ownerToolbar && (
+          {!ownerToolbar && !hideFavorite && (
             <FavoriteHeartButton
               listingId={listing.id}
               sellerId={listing.sellerId}

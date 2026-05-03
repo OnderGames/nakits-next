@@ -22,8 +22,10 @@ const select = `
   title,
   description,
   city,
+  district,
   price,
   created_at,
+  expires_at,
   status,
   categories ( slug ),
   profiles!seller_id ( full_name, email ),
@@ -69,6 +71,9 @@ export async function GET(request: Request) {
       ...((row.listing_images as { image_url: string; sort_order: number }[]) ??
         [])
     ].sort((a, b) => a.sort_order - b.sort_order);
+    const imageUrls = imgs
+      .map((x) => x.image_url?.trim())
+      .filter((u): u is string => Boolean(u));
     const profiles = row.profiles as {
       full_name: string | null;
       email: string | null;
@@ -82,11 +87,18 @@ export async function GET(request: Request) {
       title: row.title as string,
       description: row.description as string | null,
       city: row.city as string,
+      district:
+        row.district != null && String(row.district).trim()
+          ? String(row.district).trim()
+          : null,
       price: Number.isFinite(price) ? price : 0,
       created_at: row.created_at as string,
+      expires_at:
+        row.expires_at != null ? String(row.expires_at) : null,
       status: row.status as string,
       categoryKey,
-      imageUrl: imgs[0]?.image_url ?? null,
+      imageUrl: imageUrls[0] ?? null,
+      imageUrls,
       sellerName: profiles?.full_name?.trim() || "Satıcı",
       sellerEmail: profiles?.email ?? ""
     };
