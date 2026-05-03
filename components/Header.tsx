@@ -262,33 +262,29 @@ export default function Header() {
           <HeaderSearchBar />
         </Suspense>
 
-        <Link
-          href={
-            !hasSupabaseConfig
-              ? "/listings"
-              : loggedIn
-                ? "/favoriler"
-                : "/login?next=/favoriler"
-          }
-          className="nav-fav"
-          title={hasSupabaseConfig ? "Favorilerim" : "İlanlar"}
-          aria-label={hasSupabaseConfig ? "Favorilerim" : "İlanlar"}
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden
+        {hasSupabaseConfig && loggedIn && (
+          <Link
+            href="/favoriler"
+            className="nav-fav"
+            title="Favorilerim"
+            aria-label="Favorilerim"
           >
-            <path
-              d="M12 21s-6.716-4.432-9-8.5C.89 9.732 2.14 6 6 6c2.352 0 3.638 1.352 4 2 .362-.648 1.648-2 4-2 3.86 0 5.11 3.732 3 6.5C16.716 16.568 12 21 12 21z"
-              stroke="currentColor"
-              strokeWidth="1.75"
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
               fill="none"
-            />
-          </svg>
-        </Link>
+              aria-hidden
+            >
+              <path
+                d="M12 21s-6.716-4.432-9-8.5C.89 9.732 2.14 6 6 6c2.352 0 3.638 1.352 4 2 .362-.648 1.648-2 4-2 3.86 0 5.11 3.732 3 6.5C16.716 16.568 12 21 12 21z"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                fill="none"
+              />
+            </svg>
+          </Link>
+        )}
 
         <nav
           id="site-menu"
@@ -315,10 +311,10 @@ export default function Header() {
           <Link className="nav-pill" href="/listings">
             İlanlar
           </Link>
-          {hasSupabaseConfig && (
+          {hasSupabaseConfig && loggedIn && (
             <Link
               className="nav-pill"
-              href={loggedIn ? "/favoriler" : "/login?next=/favoriler"}
+              href="/favoriler"
               onClick={() => setMenuOpen(false)}
             >
               Favorilerim

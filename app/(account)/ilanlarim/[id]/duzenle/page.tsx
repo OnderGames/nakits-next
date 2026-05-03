@@ -424,24 +424,24 @@ export default function EditListingPage() {
 
   if (!authReady) {
     return (
-      <main className="container">
+      <div className="account-page">
         <p className="meta">Yükleniyor…</p>
-      </main>
+      </div>
     );
   }
 
   if (!hasSupabaseConfig) {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">İlan düzenle</h1>
         <p className="notice">Supabase yapılandırması yok.</p>
-      </main>
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">İlan düzenle</h1>
         <section className="panel">
           <p>Düzenlemek için giriş yapın.</p>
@@ -453,28 +453,28 @@ export default function EditListingPage() {
             Giriş yap
           </Link>
         </section>
-      </main>
+      </div>
     );
   }
 
   if (user && !listingFetchDone) {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">İlan düzenle</h1>
         <p className="meta">Yükleniyor…</p>
-      </main>
+      </div>
     );
   }
 
   if (listing === null) {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">İlan düzenle</h1>
         <section className="panel">
           <p>Bu ilan yok veya bu ilanı düzenleme yetkiniz bulunmuyor.</p>
           <Link href="/ilanlarim">İlanlarıma dön</Link>
         </section>
-      </main>
+      </div>
     );
   }
 
@@ -493,7 +493,7 @@ export default function EditListingPage() {
       : null;
 
   return (
-    <main className="container">
+    <div className="account-page">
       <h1 className="section-title">İlan düzenle</h1>
       {listing.listingCode && listing.listingCode !== "—" && (
         <p className="meta" style={{ marginBottom: 10 }}>
@@ -911,6 +911,6 @@ export default function EditListingPage() {
           )}
         </form>
       </section>
-    </main>
+    </div>
   );
 }

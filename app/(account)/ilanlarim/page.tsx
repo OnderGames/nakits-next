@@ -2,7 +2,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ListingCard from "@/components/ListingCard";
 import {
   formatPriceInputDisplay,
@@ -42,6 +42,7 @@ export default function MyListingsPage() {
   const [savingPriceId, setSavingPriceId] = useState<string | null>(null);
   const [republishingId, setRepublishingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [listingTab, setListingTab] = useState<"on" | "off">("on");
 
   useEffect(() => {
     const sb = getSupabaseBrowser();
@@ -229,49 +230,60 @@ export default function MyListingsPage() {
     [userId]
   );
 
+  const onAirListings = useMemo(
+    () => items.filter((x) => x.status === "active"),
+    [items]
+  );
+  const offAirListings = useMemo(
+    () => items.filter((x) => x.status !== "active"),
+    [items]
+  );
+  const displayedListings =
+    listingTab === "on" ? onAirListings : offAirListings;
+
   if (loggedIn === null) {
     return (
-      <main className="container">
+      <div className="account-page">
         <p className="meta">Yükleniyor…</p>
-      </main>
+      </div>
     );
   }
 
   if (!hasSupabaseConfig) {
     return (
-      <main className="container">
-        <h1 className="section-title">İlanlarım</h1>
+      <div className="account-page">
+        <h1 className="section-title">İlan yönetimi</h1>
         <p className="notice">Supabase yapılandırması yok; oturum özelliği devre dışı.</p>
-      </main>
+      </div>
     );
   }
 
   if (!loggedIn) {
     return (
-      <main className="container">
-        <h1 className="section-title">İlanlarım</h1>
+      <div className="account-page">
+        <h1 className="section-title">İlan yönetimi</h1>
         <section className="panel">
           <p>İlanlarını görmek için giriş yapmalısın.</p>
           <Link className="btn btn-primary" style={{ display: "inline-block", marginTop: 12 }} href="/login?next=/ilanlarim">
             Giriş yap
           </Link>
         </section>
-      </main>
+      </div>
     );
   }
 
   if (!loaded) {
     return (
-      <main className="container">
-        <h1 className="section-title">İlanlarım</h1>
+      <div className="account-page">
+        <h1 className="section-title">İlan yönetimi</h1>
         <p className="meta">Yükleniyor…</p>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="container">
-      <h1 className="section-title">İlanlarım</h1>
+    <div className="account-page">
+      <h1 className="section-title">İlan yönetimi</h1>
       <p className="meta" style={{ marginBottom: 14 }}>
         Hesabınızda en fazla <strong>3</strong> onay bekleyen veya yayındaki ilan
         olabilir. Yayında kalan ilanlar <strong>30 gün</strong> sonra otomatik
@@ -301,8 +313,46 @@ export default function MyListingsPage() {
           </Link>
         </section>
       ) : (
+        <>
+          <div className="account-tabs" role="tablist" aria-label="İlan durumu">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={listingTab === "on"}
+              className={
+                listingTab === "on"
+                  ? "account-tabs__btn account-tabs__btn--active"
+                  : "account-tabs__btn"
+              }
+              onClick={() => setListingTab("on")}
+            >
+              Yayında olan ({onAirListings.length})
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={listingTab === "off"}
+              className={
+                listingTab === "off"
+                  ? "account-tabs__btn account-tabs__btn--active"
+                  : "account-tabs__btn"
+              }
+              onClick={() => setListingTab("off")}
+            >
+              Yayında olmayan ({offAirListings.length})
+            </button>
+          </div>
+          {displayedListings.length === 0 ? (
+            <section className="panel">
+              <p className="meta" style={{ margin: 0 }}>
+                {listingTab === "on"
+                  ? "Şu an yayındaki ilanın yok (onay bekleyen veya satıldı / süresi dolmuş ilanlar «Yayında olmayan» sekmesinde)."
+                  : "Bu grupta ilan yok."}
+              </p>
+            </section>
+          ) : (
         <section className="cards">
-          {items.map((listing) => (
+          {displayedListings.map((listing) => (
             <ListingCard
               key={listing.id}
               listing={listing}
@@ -339,10 +389,12 @@ export default function MyListingsPage() {
             />
           ))}
         </section>
+          )}
+        </>
       )}
       <p className="meta" style={{ marginTop: 20 }}>
         <Link href="/add-listing">Yeni ilan ver</Link>
       </p>
-    </main>
+    </div>
   );
 }

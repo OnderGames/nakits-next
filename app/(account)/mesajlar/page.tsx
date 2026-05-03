@@ -69,24 +69,24 @@ export default function MessagesInboxPage() {
 
   if (!ready) {
     return (
-      <main className="container">
+      <div className="account-page">
         <p className="meta">Yükleniyor…</p>
-      </main>
+      </div>
     );
   }
 
   if (!hasSupabaseConfig) {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">Mesajlarım</h1>
         <p className="notice">Supabase yapılandırması yok.</p>
-      </main>
+      </div>
     );
   }
 
   if (!userId) {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">Mesajlarım</h1>
         <section className="panel">
           <p>Mesajlarını görmek için giriş yap.</p>
@@ -98,12 +98,12 @@ export default function MessagesInboxPage() {
             Giriş yap
           </Link>
         </section>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="container">
+    <div className="account-page">
       <h1 className="section-title">Mesajlarım</h1>
       <p className="meta" style={{ marginBottom: 14 }}>
         Bu hesaba ait yazışmaların özeti aşağıdadır.
@@ -209,6 +209,6 @@ export default function MessagesInboxPage() {
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }

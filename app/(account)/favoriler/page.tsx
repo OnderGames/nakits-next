@@ -55,27 +55,27 @@ export default function FavorilerPage() {
 
   if (!hasSupabaseConfig) {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">Favorilerim</h1>
         <p className="notice">
           Supabase yapılandırması yok; favoriler kullanılamıyor.
         </p>
-      </main>
+      </div>
     );
   }
 
   if (phase === "loading") {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">Favorilerim</h1>
         <p className="meta">Yükleniyor…</p>
-      </main>
+      </div>
     );
   }
 
   if (phase === "need-login") {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">Favorilerim</h1>
         <p className="meta" style={{ marginBottom: 16 }}>
           Favori ilanlarını görmek için giriş yapmalısın.
@@ -83,12 +83,12 @@ export default function FavorilerPage() {
         <Link className="btn btn-primary" href="/login?next=/favoriler">
           Giriş yap
         </Link>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="container">
+    <div className="account-page">
       <h1 className="section-title">Favorilerim</h1>
       {listings.length === 0 ? (
         <p className="meta">
@@ -102,6 +102,6 @@ export default function FavorilerPage() {
           ))}
         </section>
       )}
-    </main>
+    </div>
   );
 }

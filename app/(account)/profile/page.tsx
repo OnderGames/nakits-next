@@ -181,16 +181,16 @@ export default function ProfilePage() {
 
   if (!ready) {
     return (
-      <main className="container">
+      <div className="account-page">
         <p className="meta">Yükleniyor…</p>
-      </main>
+      </div>
     );
   }
 
   if (hasSupabaseConfig && !email) {
     return (
-      <main className="container">
-        <h1 className="section-title">Profilim</h1>
+      <div className="account-page">
+        <h1 className="section-title">Profil yönetimi</h1>
         <section className="panel auth-wall">
           <p>Profilini görmek için giriş yap.</p>
           <Link
@@ -201,7 +201,7 @@ export default function ProfilePage() {
             Giriş yap
           </Link>
         </section>
-      </main>
+      </div>
     );
   }
 
@@ -213,8 +213,8 @@ export default function ProfilePage() {
   const welcome = displayWelcomeName(fullName, email);
 
   return (
-    <main className="container">
-      <h1 className="section-title">Profilim</h1>
+    <div className="account-page">
+      <h1 className="section-title">Profil yönetimi</h1>
       <section className="panel">
         <p style={{ fontSize: 20, fontWeight: 700, margin: "0 0 6px" }}>
           Hoş geldin, {welcome}
@@ -222,13 +222,6 @@ export default function ProfilePage() {
         <p className="meta" style={{ marginBottom: 10 }}>
           {email ?? "—"}
         </p>
-        {hasSupabaseConfig && userId && (
-          <p style={{ marginBottom: 18 }}>
-            <Link className="btn btn-primary" href="/mesajlar">
-              Mesajlarım
-            </Link>
-          </p>
-        )}
         {hasSupabaseConfig &&
           userId &&
           profileChecked &&
@@ -372,6 +365,6 @@ export default function ProfilePage() {
       <p className="meta" style={{ marginTop: 20 }}>
         <Link href="/ilanlarim">Tüm ilanlarım</Link>
       </p>
-    </main>
+    </div>
   );
 }

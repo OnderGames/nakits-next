@@ -174,55 +174,55 @@ export default function ConversationPage() {
 
   if (!authReady) {
     return (
-      <main className="container">
+      <div className="account-page">
         <p className="meta">Yükleniyor…</p>
-      </main>
+      </div>
     );
   }
 
   if (!hasSupabaseConfig) {
     return (
-      <main className="container">
+      <div className="account-page">
         <p className="notice">Supabase yapılandırması yok.</p>
-      </main>
+      </div>
     );
   }
 
   if (!userId) {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">Mesaj</h1>
         <section className="panel">
           <Link href={`/login?next=${encodeURIComponent(`/mesajlar/${conversationId}`)}`}>
             Giriş yap
           </Link>
         </section>
-      </main>
+      </div>
     );
   }
 
   if (loading) {
     return (
-      <main className="container">
+      <div className="account-page">
         <p className="meta">Yükleniyor…</p>
-      </main>
+      </div>
     );
   }
 
   if (allowed === false) {
     return (
-      <main className="container">
+      <div className="account-page">
         <h1 className="section-title">Mesaj</h1>
         <section className="panel">
           <p>Bu görüşmeye erişemezsin veya konuşma yok.</p>
           <Link href="/mesajlar">Mesajlarıma dön</Link>
         </section>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="container">
+    <div className="account-page">
       <p className="meta" style={{ marginBottom: 8 }}>
         <Link href="/mesajlar">← Mesajlarım</Link>
       </p>
@@ -368,6 +368,6 @@ export default function ConversationPage() {
           {sendError}
         </p>
       )}
-    </main>
+    </div>
   );
 }
