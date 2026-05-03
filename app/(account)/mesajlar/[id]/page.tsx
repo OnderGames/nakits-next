@@ -6,7 +6,9 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   fetchConversationParticipants,
   fetchMessages,
+  hideIncomingMessageForUser,
   markConversationRead,
+  markIncomingMessagesAsRead,
   notifyUnreadRefresh,
   sendMessage,
   type ChatMessage,
@@ -35,6 +37,7 @@ export default function ConversationPage() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
   const [sendOk, setSendOk] = useState(false);
+  const [hideBusyId, setHideBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -83,9 +86,18 @@ export default function ConversationPage() {
       setAllowed(true);
       setConvMeta(meta);
 
-      const rows = await fetchMessages(sb, conversationId);
+      const otherPartyId =
+        userId === meta.buyerId ? meta.sellerId : meta.buyerId;
+
+      const rows = await fetchMessages(
+        sb,
+        conversationId,
+        userId,
+        otherPartyId
+      );
       if (cancelled) return;
       setMessages(rows);
+      await markIncomingMessagesAsRead(sb, conversationId, userId, otherPartyId);
       setLoading(false);
 
       channel = sb
@@ -101,7 +113,31 @@ export default function ConversationPage() {
           async () => {
             const nextSb = getSupabaseBrowser();
             if (!nextSb) return;
-            const next = await fetchMessages(nextSb, conversationId);
+            const next = await fetchMessages(
+              nextSb,
+              conversationId,
+              userId,
+              otherPartyId
+            );
+            setMessages(next);
+          }
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "message_reads"
+          },
+          async () => {
+            const nextSb = getSupabaseBrowser();
+            if (!nextSb) return;
+            const next = await fetchMessages(
+              nextSb,
+              conversationId,
+              userId,
+              otherPartyId
+            );
             setMessages(next);
           }
         )
@@ -117,14 +153,19 @@ export default function ConversationPage() {
 
   /** Realtime kapalı / yayın yoksa bile karşı taraf mesajları görsün diye yedek yenileme */
   useEffect(() => {
-    if (!allowed || !conversationId) return;
+    if (!allowed || !conversationId || !userId || !convMeta) return;
     const sb = getSupabaseBrowser();
     if (!sb) return;
+
+    const otherPartyId =
+      userId === convMeta.buyerId ? convMeta.sellerId : convMeta.buyerId;
 
     const refresh = () => {
       if (typeof document !== "undefined" && document.visibilityState !== "visible")
         return;
-      void fetchMessages(sb, conversationId).then(setMessages);
+      void fetchMessages(sb, conversationId, userId, otherPartyId).then(
+        setMessages
+      );
     };
 
     const intervalMs = 12000;
@@ -134,7 +175,7 @@ export default function ConversationPage() {
       window.clearInterval(tick);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [allowed, conversationId]);
+  }, [allowed, conversationId, userId, convMeta]);
 
   useEffect(() => {
     if (!allowed || !conversationId) return;
@@ -168,8 +209,32 @@ export default function ConversationPage() {
     setSendOk(true);
     window.setTimeout(() => setSendOk(false), 5000);
     notifyUnreadRefresh();
-    const next = await fetchMessages(sb, conversationId);
+    if (!convMeta || !userId) return;
+    const otherPartyId =
+      userId === convMeta.buyerId ? convMeta.sellerId : convMeta.buyerId;
+    const next = await fetchMessages(sb, conversationId, userId, otherPartyId);
     setMessages(next);
+  }
+
+  async function handleHideIncoming(messageId: string) {
+    if (
+      !window.confirm(
+        "Bu mesaj yalnızca sizin ekranınızdan kaldırılır; karşı taraf mesajı görmeye devam eder."
+      )
+    ) {
+      return;
+    }
+    const sb = getSupabaseBrowser();
+    if (!sb) return;
+    setHideBusyId(messageId);
+    setSendError("");
+    const res = await hideIncomingMessageForUser(sb, messageId);
+    setHideBusyId(null);
+    if (res.error) {
+      setSendError(res.error);
+      return;
+    }
+    setMessages((prev) => prev.filter((x) => x.id !== messageId));
   }
 
   if (!authReady) {
@@ -297,7 +362,8 @@ export default function ConversationPage() {
                     padding: "10px 14px",
                     borderRadius: 12,
                     background: mine ? "var(--primary)" : "var(--border)",
-                    color: mine ? "#fff" : "var(--text)"
+                    color: mine ? "#fff" : "var(--text)",
+                    position: "relative"
                   }}
                 >
                   <p style={{ margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.45 }}>
@@ -307,11 +373,40 @@ export default function ConversationPage() {
                     style={{
                       margin: "8px 0 0",
                       fontSize: 11,
-                      opacity: 0.85
+                      opacity: mine ? 0.88 : 0.85
                     }}
                   >
                     {formatRelativeTimeTr(m.createdAt)}
                   </p>
+                  {mine && m.readByOtherAt ? (
+                    <p
+                      className="chat-read-receipt"
+                      style={{
+                        margin: "6px 0 0",
+                        fontSize: 11,
+                        opacity: 0.92,
+                        fontWeight: 600
+                      }}
+                    >
+                      Görüldü · {formatRelativeTimeTr(m.readByOtherAt)}
+                    </p>
+                  ) : null}
+                  {!mine && (
+                    <div style={{ marginTop: 8 }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline chat-msg-hide-btn"
+                        disabled={hideBusyId !== null}
+                        onClick={() => void handleHideIncoming(m.id)}
+                        style={{
+                          fontSize: 12,
+                          padding: "4px 10px"
+                        }}
+                      >
+                        {hideBusyId === m.id ? "…" : "Görünümden kaldır"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })

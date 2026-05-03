@@ -30,6 +30,8 @@ export type ChatMessage = {
   body: string;
   senderId: string;
   createdAt: string;
+  /** Karşı taraf okudu (yalnızca kendi gönderdiğim mesajlarda) */
+  readByOtherAt?: string | null;
 };
 
 export async function getOrCreateConversation(
@@ -189,7 +191,9 @@ export async function sendMessage(
 
 export async function fetchMessages(
   sb: SupabaseClient,
-  conversationId: string
+  conversationId: string,
+  viewerId: string,
+  otherPartyId: string
 ): Promise<ChatMessage[]> {
   const { data, error } = await sb
     .from("messages")
@@ -198,12 +202,98 @@ export async function fetchMessages(
     .order("created_at", { ascending: true });
 
   if (error || !data) return [];
-  return data.map((m) => ({
-    id: m.id as string,
-    body: String(m.body),
-    senderId: m.sender_id as string,
-    createdAt: String(m.created_at)
+
+  const ids = data.map((m) => m.id as string);
+  let hidden = new Set<string>();
+  if (ids.length > 0) {
+    const { data: hidRows } = await sb
+      .from("message_hidden_by_user")
+      .select("message_id")
+      .eq("profile_id", viewerId)
+      .in("message_id", ids);
+    hidden = new Set(
+      (hidRows ?? []).map((r) => String((r as { message_id: string }).message_id))
+    );
+  }
+
+  const visibleRaw = data.filter((m) => !hidden.has(m.id as string));
+
+  const mySentIds = visibleRaw
+    .filter((m) => (m.sender_id as string) === viewerId)
+    .map((m) => m.id as string);
+
+  let readMap: Record<string, string> = {};
+  if (mySentIds.length > 0) {
+    const { data: reads } = await sb
+      .from("message_reads")
+      .select("message_id, read_at")
+      .eq("reader_id", otherPartyId)
+      .in("message_id", mySentIds);
+    readMap = Object.fromEntries(
+      (reads ?? []).map((r) => [
+        (r as { message_id: string }).message_id,
+        String((r as { read_at: string }).read_at)
+      ])
+    );
+  }
+
+  return visibleRaw.map((m) => {
+    const id = m.id as string;
+    const senderId = m.sender_id as string;
+    const mine = senderId === viewerId;
+    return {
+      id,
+      body: String(m.body),
+      senderId,
+      createdAt: String(m.created_at),
+      readByOtherAt: mine ? readMap[id] ?? null : undefined
+    };
+  });
+}
+
+/** Karşı tarafın gönderdiği tüm mesajları okundu işaretle (görüldü bildirimi için) */
+export async function markIncomingMessagesAsRead(
+  sb: SupabaseClient,
+  conversationId: string,
+  readerId: string,
+  otherPartyId: string
+): Promise<void> {
+  const { data: incoming } = await sb
+    .from("messages")
+    .select("id")
+    .eq("conversation_id", conversationId)
+    .eq("sender_id", otherPartyId);
+
+  const rows = (incoming ?? []).map((row) => ({
+    message_id: row.id as string,
+    reader_id: readerId,
+    read_at: new Date().toISOString()
   }));
+  if (rows.length === 0) return;
+
+  await sb.from("message_reads").upsert(rows, {
+    onConflict: "message_id,reader_id",
+    ignoreDuplicates: true
+  });
+}
+
+/** Gelen mesajı yalnızca benim görünümümden kaldır */
+export async function hideIncomingMessageForUser(
+  sb: SupabaseClient,
+  messageId: string
+): Promise<{ error?: string }> {
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) return { error: "Oturum gerekli." };
+
+  const { error } = await sb.from("message_hidden_by_user").insert({
+    message_id: messageId,
+    profile_id: uid
+  });
+
+  if (error?.code === "23505") return {};
+  if (error) return { error: error.message };
+  return {};
 }
 
 export async function fetchMyConversations(

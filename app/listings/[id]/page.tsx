@@ -4,6 +4,7 @@ import ListingDetailFavoriteBar from "@/components/ListingDetailFavoriteBar";
 import ListingGalleryCarousel from "@/components/ListingGalleryCarousel";
 import ListingMessagePanel from "@/components/ListingMessagePanel";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
+import { formatSellerNameForDisplay } from "@/lib/seller-display";
 import { isListingCodeQuery } from "@/lib/listing-code";
 import { fetchListingByCode, fetchListingById } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
@@ -60,19 +61,21 @@ export default async function ListingDetailPage({ params }: Props) {
             </p>
           )}
           <p className="meta">İlan tarihi: {listing.createdAt}</p>
-          <p className="meta">
-            Satıcı:{" "}
+          <div className="listing-seller listing-seller--detail">
+            <span className="listing-seller__label">Satıcı</span>
             {listing.sellerPublicCode ? (
               <Link
                 href={`/kullanici/${listing.sellerPublicCode}`}
-                style={{ color: "var(--primary)", textDecoration: "underline" }}
+                className="listing-seller__name"
               >
-                {listing.seller}
+                {formatSellerNameForDisplay(listing.seller)}
               </Link>
             ) : (
-              listing.seller
+              <span className="listing-seller__name listing-seller__name--plain">
+                {formatSellerNameForDisplay(listing.seller)}
+              </span>
             )}
-          </p>
+          </div>
           {listing.description && (
             <p style={{ marginTop: 12, lineHeight: 1.5 }}>{listing.description}</p>
           )}
@@ -86,7 +89,7 @@ export default async function ListingDetailPage({ params }: Props) {
             listingId={listing.id}
             sellerId={listing.sellerId}
             sellerPublicCode={listing.sellerPublicCode}
-            sellerLabel={listing.seller}
+            sellerLabel={formatSellerNameForDisplay(listing.seller)}
           />
         </aside>
       </section>

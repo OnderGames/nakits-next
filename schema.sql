@@ -110,6 +110,24 @@ create index if not exists idx_listings_city on listings(city);
 create index if not exists idx_messages_conversation on messages(conversation_id, created_at);
 create index if not exists idx_conversations_last_message_at on conversations(last_message_at desc nulls last);
 
+create table if not exists message_reads (
+  message_id uuid not null references messages(id) on delete cascade,
+  reader_id uuid not null references profiles(id) on delete cascade,
+  read_at timestamptz not null default now(),
+  primary key (message_id, reader_id)
+);
+
+create index if not exists idx_message_reads_reader on message_reads(reader_id);
+
+create table if not exists message_hidden_by_user (
+  message_id uuid not null references messages(id) on delete cascade,
+  profile_id uuid not null references profiles(id) on delete cascade,
+  hidden_at timestamptz not null default now(),
+  primary key (message_id, profile_id)
+);
+
+create index if not exists idx_message_hidden_profile on message_hidden_by_user(profile_id);
+
 create or replace function public.touch_conversation_last_message()
 returns trigger
 language plpgsql

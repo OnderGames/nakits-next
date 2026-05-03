@@ -151,3 +151,54 @@ create policy "conversation_reads update own"
 on conversation_reads for update
 using (auth.uid() = profile_id)
 with check (auth.uid() = profile_id);
+
+alter table message_reads enable row level security;
+alter table message_hidden_by_user enable row level security;
+
+drop policy if exists "message_reads select participants" on message_reads;
+create policy "message_reads select participants"
+on message_reads for select
+using (
+  exists (
+    select 1
+    from messages m
+    join conversations c on c.id = m.conversation_id
+    where m.id = message_reads.message_id
+      and auth.uid() in (c.buyer_id, c.seller_id)
+  )
+);
+
+drop policy if exists "message_reads insert as recipient" on message_reads;
+create policy "message_reads insert as recipient"
+on message_reads for insert
+with check (
+  auth.uid() = reader_id
+  and exists (
+    select 1
+    from messages m
+    join conversations c on c.id = m.conversation_id
+    where m.id = message_reads.message_id
+      and m.sender_id <> auth.uid()
+      and auth.uid() in (c.buyer_id, c.seller_id)
+  )
+);
+
+drop policy if exists "message_hidden select own" on message_hidden_by_user;
+create policy "message_hidden select own"
+on message_hidden_by_user for select
+using (auth.uid() = profile_id);
+
+drop policy if exists "message_hidden insert incoming only" on message_hidden_by_user;
+create policy "message_hidden insert incoming only"
+on message_hidden_by_user for insert
+with check (
+  auth.uid() = profile_id
+  and exists (
+    select 1
+    from messages m
+    join conversations c on c.id = m.conversation_id
+    where m.id = message_hidden_by_user.message_id
+      and m.sender_id <> auth.uid()
+      and auth.uid() in (c.buyer_id, c.seller_id)
+  )
+);

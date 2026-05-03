@@ -2229,6 +2229,69 @@ form .row {
   flex-shrink: 0;
 }
 
+/* İlan kartı / detay: satıcı satırı */
+.listing-seller {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.cards--browse .listing-seller {
+  border-top-color: rgba(45, 212, 191, 0.2);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.98) 100%
+  );
+}
+
+.listing-seller__label {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.listing-seller__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  line-height: 1.35;
+  word-break: break-word;
+  transition: color 0.15s ease;
+}
+
+a.listing-seller__name:hover {
+  color: var(--vitrin-orange);
+}
+
+span.listing-seller__name--plain {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.listing-seller--detail {
+  padding: 10px 0 0;
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  background: transparent;
+}
+
+.listing-message-form > .listing-seller {
+  padding: 0 0 12px;
+  margin-bottom: 4px;
+  border-top: none;
+  background: transparent;
+}
+
 /* Moderasyon: vitrin ızgarası + kart altı yönetim alanı */
 .admin-moderation-browse .admin-moderation-item {
   display: flex;
@@ -2542,11 +2605,12 @@ form .row {
     flex-direction: column;
   }
 
-  .account-shell__main {
+  /* Menü şeridi önce: kaydırmadan hesaba/menüye ulaşılsın */
+  .account-shell__rail {
     order: 1;
   }
 
-  .account-shell__rail {
+  .account-shell__main {
     order: 2;
   }
 }

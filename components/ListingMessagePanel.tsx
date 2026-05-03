@@ -152,19 +152,21 @@ export default function ListingMessagePanel({
       className="listing-message-form"
       style={{ position: "relative", zIndex: 1 }}
     >
-      <p className="meta" style={{ marginBottom: 10 }}>
-        Satıcı:{" "}
+      <div className="listing-seller">
+        <span className="listing-seller__label">Satıcı</span>
         {sellerPublicCode ? (
           <Link
             href={`/kullanici/${sellerPublicCode}`}
-            style={{ color: "var(--primary)", fontWeight: 700 }}
+            className="listing-seller__name"
           >
             {sellerLabel}
           </Link>
         ) : (
-          <strong>{sellerLabel}</strong>
+          <span className="listing-seller__name listing-seller__name--plain">
+            {sellerLabel}
+          </span>
         )}
-      </p>
+      </div>
       <textarea
         rows={6}
         placeholder="Mesajınızı yazın…"

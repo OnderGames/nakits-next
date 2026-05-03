@@ -6,6 +6,7 @@ import {
   formatPrice
 } from "@/lib/categories";
 import { listingDetailHref } from "@/lib/listing-code";
+import { formatSellerNameForDisplay } from "@/lib/seller-display";
 import type { Listing } from "@/lib/types";
 
 const STATUS_LABEL: Record<NonNullable<Listing["status"]>, string> = {
@@ -106,15 +107,15 @@ export default function ListingCardPublic({ listing, vitrin }: Props) {
         </div>
       </Link>
       {listing.sellerPublicCode && (
-        <p className="meta" style={{ padding: "0 12px 12px", margin: 0 }}>
-          Satıcı:{" "}
+        <div className="listing-seller">
+          <span className="listing-seller__label">Satıcı</span>
           <Link
             href={`/kullanici/${listing.sellerPublicCode}`}
-            style={{ color: "var(--primary)", textDecoration: "underline" }}
+            className="listing-seller__name"
           >
-            {listing.seller}
+            {formatSellerNameForDisplay(listing.seller)}
           </Link>
-        </p>
+        </div>
       )}
     </article>
   );
