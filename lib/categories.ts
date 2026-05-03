@@ -10,36 +10,36 @@ export type CategoryGroupDef = {
   subs: SubcategoryDef[];
 };
 
+/**
+ * Satariz / büyük ilan siteleriyle uyumlu sıra ve isimlendirme.
+ * Bileşik anahtar (grup.alt) değişince DB’de categories.slug satırı gerekir.
+ */
 export const CATEGORY_GROUPS: CategoryGroupDef[] = [
   {
     slug: "tasitlar",
     emoji: "🚗",
-    name: "Taşıtlar",
+    name: "Vasıta",
     subs: [
-      { slug: "otomobil", name: "Otomobil" },
+      { slug: "otomobil", name: "Araç" },
       { slug: "motosiklet", name: "Motosiklet" },
+      { slug: "ticari-araclar", name: "Ticari araç" },
       { slug: "bisiklet", name: "Bisiklet" },
-      {
-        slug: "ticari-araclar",
-        name: "Ticari araçlar (kamyon, minibüs, otobüs)"
-      },
-      {
-        slug: "deniz-tasitlari",
-        name: "Deniz taşıtları (tekne, yat)"
-      }
+      { slug: "deniz-tasitlari", name: "Deniz aracı (tekne, yat)" }
     ]
   },
   {
     slug: "gayrimenkul",
     emoji: "🏠",
-    name: "Gayrimenkul",
+    name: "Emlak",
     subs: [
-      { slug: "ev", name: "Ev" },
-      { slug: "arsa", name: "Arsa" },
+      { slug: "konut", name: "Konut" },
       { slug: "daire", name: "Daire" },
       { slug: "villa", name: "Villa" },
-      { slug: "isyeri-ofis", name: "İş yeri / Ofis" },
-      { slug: "depo-garaj", name: "Depo / Garaj" }
+      { slug: "ev", name: "Müstakil ev" },
+      { slug: "isyeri-ofis", name: "İş yeri" },
+      { slug: "arsa", name: "Arsa" },
+      { slug: "toprak", name: "Toprak & tarla" },
+      { slug: "depo-garaj", name: "Depo & garaj" }
     ]
   },
   {
@@ -47,50 +47,44 @@ export const CATEGORY_GROUPS: CategoryGroupDef[] = [
     emoji: "📱",
     name: "Elektronik",
     subs: [
-      { slug: "telefon", name: "Telefon" },
-      { slug: "bilgisayar-tablet", name: "Bilgisayar / Tablet" },
-      { slug: "televizyon", name: "Televizyon" },
+      { slug: "telefon", name: "Cep telefonu" },
+      { slug: "bilgisayar-tablet", name: "Bilgisayar & tablet" },
+      { slug: "televizyon", name: "TV & görüntü" },
       { slug: "beyaz-esya", name: "Beyaz eşya" },
-      { slug: "ses-hoparlor", name: "Ses sistemleri / Hoparlör" }
-    ]
-  },
-  {
-    slug: "moda-kisisel",
-    emoji: "👕",
-    name: "Moda & Kişisel",
-    subs: [
-      { slug: "giyim", name: "Giyim" },
-      { slug: "ayakkabi", name: "Ayakkabı" },
-      { slug: "canta-aksesuar", name: "Çanta & Aksesuar" },
-      { slug: "saat-taki", name: "Saat & Takı" }
+      { slug: "ses-hoparlor", name: "Ses & görüntü" }
     ]
   },
   {
     slug: "ev-yasam",
     emoji: "🧸",
-    name: "Ev & Yaşam",
+    name: "Ev eşyası & yaşam",
     subs: [
       { slug: "mobilya", name: "Mobilya" },
-      { slug: "ev-dekorasyonu", name: "Ev dekorasyonu" },
-      { slug: "mutfak-esyalari", name: "Mutfak eşyaları" },
-      {
-        slug: "bahce-balkon",
-        name: "Bahçe & Balkon ürünleri"
-      }
+      { slug: "ev-dekorasyonu", name: "Ev dekorasyon" },
+      { slug: "mutfak-esyalari", name: "Mutfak" },
+      { slug: "bahce-balkon", name: "Bahçe & balkon" }
+    ]
+  },
+  {
+    slug: "moda-kisisel",
+    emoji: "👕",
+    name: "Giyim & kişisel",
+    subs: [
+      { slug: "giyim", name: "Giyim" },
+      { slug: "ayakkabi", name: "Ayakkabı" },
+      { slug: "canta-aksesuar", name: "Çanta & aksesuar" },
+      { slug: "saat-taki", name: "Saat & takı" }
     ]
   },
   {
     slug: "hobi-eglence",
     emoji: "🎮",
-    name: "Hobi & Eğlence",
+    name: "Hobi & eğlence",
     subs: [
-      {
-        slug: "oyun-konsolu-oyunlar",
-        name: "Oyun konsolu & oyunlar"
-      },
-      { slug: "spor-malzemeleri", name: "Spor malzemeleri" },
-      { slug: "muzik-aletleri", name: "Müzik aletleri" },
-      { slug: "koleksiyon-urunleri", name: "Koleksiyon ürünleri" }
+      { slug: "oyun-konsolu-oyunlar", name: "Oyun & konsol" },
+      { slug: "spor-malzemeleri", name: "Spor" },
+      { slug: "muzik-aletleri", name: "Müzik" },
+      { slug: "koleksiyon-urunleri", name: "Koleksiyon" }
     ]
   },
   {
@@ -98,20 +92,20 @@ export const CATEGORY_GROUPS: CategoryGroupDef[] = [
     emoji: "🐾",
     name: "Hayvanlar",
     subs: [
-      { slug: "evcil-hayvanlar", name: "Evcil hayvanlar" },
-      { slug: "hayvan-aksesuarlari", name: "Hayvan aksesuarları" },
-      { slug: "mama-bakim-urunleri", name: "Mama & bakım ürünleri" }
+      { slug: "evcil-hayvanlar", name: "Evcil hayvan" },
+      { slug: "hayvan-aksesuarlari", name: "Aksesuar" },
+      { slug: "mama-bakim-urunleri", name: "Mama & bakım" }
     ]
   },
   {
     slug: "is-sanayi",
     emoji: "🛠️",
-    name: "İş & Sanayi",
+    name: "İş makineleri & sanayi",
     subs: [
-      { slug: "tarim-makineleri", name: "Tarım makineleri" },
-      { slug: "insaat-ekipmanlari", name: "İnşaat ekipmanları" },
-      { slug: "el-aletleri", name: "El aletleri" },
-      { slug: "ofis-malzemeleri", name: "Ofis malzemeleri" }
+      { slug: "tarim-makineleri", name: "Tarım makinesi" },
+      { slug: "insaat-ekipmanlari", name: "İnşaat" },
+      { slug: "el-aletleri", name: "El aleti" },
+      { slug: "ofis-malzemeleri", name: "Ofis" }
     ]
   }
 ];
