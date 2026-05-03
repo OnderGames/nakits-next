@@ -7,10 +7,15 @@
   --muted: #6a7081;
   --border: #e5e8f0;
   --success: #16a34a;
+  --nav-height: 70px;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -18,6 +23,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   background: var(--bg);
   color: var(--text);
+  overflow-x: clip;
 }
 
 a {
@@ -26,8 +32,15 @@ a {
 }
 
 .container {
-  width: min(1100px, 92%);
+  width: 100%;
+  max-width: 1100px;
   margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+main.container {
+  padding-bottom: max(28px, env(safe-area-inset-bottom));
 }
 
 .topbar {
@@ -36,14 +49,15 @@ a {
   z-index: 50;
   background: var(--card);
   border-bottom: 1px solid var(--border);
+  padding-top: env(safe-area-inset-top);
 }
 
 .nav {
-  min-height: 70px;
+  min-height: var(--nav-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 12px;
 }
 
 /* Logo — monogram + gradient wordmark (giriş pill’inden bağımsız) */
@@ -114,6 +128,198 @@ a {
   justify-content: flex-end;
   gap: 10px 12px;
   color: var(--muted);
+}
+
+.menu__header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -4px -4px 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.menu__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.menu__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fafc;
+  color: var(--text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.menu__close:hover {
+  background: #f1f5f9;
+}
+
+.menu__loading {
+  display: block;
+  padding: 8px 4px;
+}
+
+.nav-mobile-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.nav-cta--toolbar {
+  padding: 8px 14px !important;
+  font-size: 14px !important;
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.nav-toggle:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.nav-toggle__svg {
+  display: block;
+}
+
+.nav-backdrop {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + var(--nav-height));
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(15, 23, 42, 0.4);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 960px) {
+  .nav-backdrop {
+    display: none !important;
+  }
+}
+
+@media (max-width: 959px) {
+  :root {
+    --nav-height: 60px;
+  }
+
+  .nav {
+    min-height: var(--nav-height);
+  }
+
+  .brand-mark__word {
+    font-size: 1.12rem;
+  }
+
+  .nav-mobile-bar {
+    display: flex;
+  }
+
+  .menu__header {
+    display: flex;
+  }
+
+  .menu {
+    position: fixed;
+    z-index: 60;
+    top: calc(env(safe-area-inset-top, 0px) + var(--nav-height));
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: min(100%, 300px);
+    max-width: 100vw;
+    margin: 0;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 12px 14px max(20px, env(safe-area-inset-bottom));
+    background: var(--card);
+    border-left: 1px solid var(--border);
+    box-shadow: -12px 0 40px rgba(15, 23, 42, 0.12);
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translateX(102%);
+    transition: transform 0.22s ease, visibility 0.22s;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .menu.menu--open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .menu .nav-pill,
+  .menu .nav-cta,
+  .menu button.nav-pill {
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  }
+
+  .menu .nav-pill:hover,
+  .menu .nav-cta:hover {
+    transform: none;
+  }
+
+  .menu .nav-cta {
+    text-align: center;
+    justify-content: center;
+  }
+
+  .nav-pill--badged {
+    position: relative;
+  }
+}
+
+@media (min-width: 960px) {
+  .menu__header {
+    display: none !important;
+  }
+
+  .nav-mobile-bar {
+    display: none !important;
+  }
 }
 
 /* Mor–lavanta: İlanlar, Mesajlar, giriş sonrası Profil / İlanlarım / Moderasyon */
@@ -386,7 +592,8 @@ button.nav-pill {
 
 .section-title {
   margin: 26px 0 14px;
-  font-size: 22px;
+  font-size: clamp(1.125rem, 4.2vw, 22px);
+  line-height: 1.25;
 }
 
 .cards {

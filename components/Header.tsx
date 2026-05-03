@@ -2,16 +2,19 @@
 
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { fetchTotalUnreadMessages } from "@/lib/conversations";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
 export default function Header() {
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const refresh = useCallback(async () => {
     const sb = getSupabaseBrowser();
@@ -88,7 +91,21 @@ export default function Header() {
     };
   }, [refreshUnread]);
 
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
+
   async function handleSignOut() {
+    setMenuOpen(false);
     const sb = getSupabaseBrowser();
     if (sb) await sb.auth.signOut();
     setUser(null);
@@ -141,7 +158,29 @@ export default function Header() {
           </span>
           <span className="brand-mark__word">Nakits</span>
         </Link>
-        <nav className="menu">
+
+        <nav
+          id="site-menu"
+          className={`menu ${menuOpen ? "menu--open" : ""}`}
+          aria-label="Site menüsü"
+        >
+          <div className="menu__header">
+            <span className="menu__title">Menü</span>
+            <button
+              type="button"
+              className="menu__close"
+              aria-label="Menüyü kapat"
+              onClick={() => setMenuOpen(false)}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+                <path
+                  fill="currentColor"
+                  d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1L10.6 12l-4.9 4.9a1 1 0 1 0 1.4 1.4L12 13.4l4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"
+                />
+              </svg>
+            </button>
+          </div>
+
           <Link className="nav-pill" href="/listings">
             İlanlar
           </Link>
@@ -185,7 +224,7 @@ export default function Header() {
           </Link>
 
           {!ready ? (
-            <span className="meta">…</span>
+            <span className="meta menu__loading">…</span>
           ) : showAuth ? (
             loggedIn ? (
               <>
@@ -229,6 +268,65 @@ export default function Header() {
             </>
           )}
         </nav>
+
+        <div className="nav-mobile-bar">
+          <Link
+            className="nav-cta nav-cta--toolbar"
+            href="/add-listing"
+            onClick={() => setMenuOpen(false)}
+          >
+            + İlan ver
+          </Link>
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-expanded={menuOpen}
+            aria-controls="site-menu"
+            aria-label={menuOpen ? "Menüyü kapat" : "Menüyü aç"}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            {menuOpen ? (
+              <svg
+                className="nav-toggle__svg"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <path
+                  fill="currentColor"
+                  d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1L10.6 12l-4.9 4.9a1 1 0 1 0 1.4 1.4L12 13.4l4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="nav-toggle__svg"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <path
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  d="M4 7h16M4 12h16M4 17h16"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {menuOpen ? (
+          <button
+            type="button"
+            className="nav-backdrop"
+            tabIndex={-1}
+            aria-hidden
+            onClick={() => setMenuOpen(false)}
+          />
+        ) : null}
       </div>
     </header>
   );
