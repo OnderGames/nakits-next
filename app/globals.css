@@ -402,9 +402,6 @@ main.container {
     justify-content: center;
   }
 
-  .nav-pill--badged {
-    position: relative;
-  }
 }
 
 @media (min-width: 960px) {
@@ -417,7 +414,7 @@ main.container {
   }
 }
 
-/* Mor–lavanta: İlanlar, Mesajlar, giriş sonrası Profil / İlanlarım / Moderasyon */
+/* Mor–lavanta: İlanlar, giriş sonrası Profil / Moderasyon */
 .nav-pill {
   display: inline-flex;
   align-items: center;
@@ -445,10 +442,6 @@ main.container {
     0 1px 0 rgba(255, 255, 255, 1) inset,
     0 6px 22px rgba(99, 102, 241, 0.38);
   transform: translateY(-1px);
-}
-
-.nav-pill--badged {
-  position: relative;
 }
 
 button.nav-pill {
@@ -517,37 +510,6 @@ button.nav-pill {
     0 1px 0 rgba(255, 255, 255, 0.35) inset,
     0 8px 28px rgba(59, 91, 255, 0.65);
   transform: translateY(-1px);
-}
-
-/* Üst çubuk · kalp (Satariz tarzı; dar ekranda gizli) */
-.nav-fav {
-  display: none;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin-left: 4px;
-  border-radius: 12px;
-  color: var(--vitrin-orange, #ea580c);
-  background: #fff;
-  border: 1px solid var(--border);
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.nav-fav:hover {
-  background: #fff7ed;
-  border-color: #fdba74;
-  color: #c2410c;
-}
-
-@media (min-width: 960px) {
-  .nav-fav {
-    display: inline-flex;
-  }
 }
 
 /* İlan ver — turuncu CTA (Satariz) */

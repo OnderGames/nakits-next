@@ -263,24 +263,24 @@ export default function AdminModerationPage() {
 
   if (!ready || !checkedAdmin) {
     return (
-      <main className="container" style={{ padding: "24px 0" }}>
+      <div className="account-page">
         <p className="meta">Yükleniyor…</p>
-      </main>
+      </div>
     );
   }
 
   if (!hasSupabaseConfig) {
     return (
-      <main className="container" style={{ padding: "24px 0" }}>
+      <div className="account-page">
         <h1 className="section-title">Moderasyon</h1>
         <p className="notice">Supabase yapılandırması yok.</p>
-      </main>
+      </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <main className="container" style={{ padding: "24px 0" }}>
+      <div className="account-page">
         <h1 className="section-title">Moderasyon</h1>
         <section className="panel">
           <p>Bu sayfaya yalnızca site yöneticileri erişebilir.</p>
@@ -297,12 +297,12 @@ export default function AdminModerationPage() {
             Giriş yap
           </Link>
         </section>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="container" style={{ padding: "24px 0 48px" }}>
+    <div className="account-page">
       <h1 className="section-title">İlan moderasyonu</h1>
       <p className="meta" style={{ marginBottom: 16 }}>
         Tüm ilanları filtreleyebilir, onay bekleyenleri yayına alabilir veya
@@ -522,6 +522,6 @@ export default function AdminModerationPage() {
       <p className="meta" style={{ marginTop: 20 }}>
         <Link href="/">Ana sayfa</Link>
       </p>
-    </main>
+    </div>
   );
 }

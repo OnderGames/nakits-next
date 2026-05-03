@@ -14,10 +14,14 @@ import { hasSupabaseConfig } from "@/lib/supabase";
 type NavItem = {
   href: string;
   label: string;
-  icon: "listings" | "heart" | "messages" | "user";
+  icon: "moderation" | "listings" | "heart" | "messages" | "user";
 };
 
-const NAV: NavItem[] = [
+const ADMIN_NAV: NavItem[] = [
+  { href: "/admin/moderasyon", label: "Moderasyon", icon: "moderation" }
+];
+
+const MEMBER_NAV: NavItem[] = [
   { href: "/ilanlarim", label: "İlan yönetimi", icon: "listings" },
   { href: "/favoriler", label: "Favoriler", icon: "heart" },
   { href: "/mesajlar", label: "Mesajlarım", icon: "messages" },
@@ -26,6 +30,9 @@ const NAV: NavItem[] = [
 
 function navActive(pathname: string, href: string): boolean {
   if (href === "/profile") return pathname === "/profile";
+  if (href.startsWith("/admin")) {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -57,6 +64,21 @@ function NavIcon({ name }: { name: NavItem["icon"] }) {
     "aria-hidden": true as const
   };
   switch (name) {
+    case "moderation":
+      return (
+        <svg {...common}>
+          <path
+            d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M9 12l2 2 4-4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
     case "listings":
       return (
         <svg {...common}>
@@ -105,15 +127,18 @@ export default function AccountShell({
   const [displayName, setDisplayName] = useState<string>("");
   const [email, setEmail] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const refreshUser = useCallback(async () => {
     if (!hasSupabaseConfig) {
       setReady(true);
+      setIsAdmin(false);
       return;
     }
     const sb = getSupabaseBrowser();
     if (!sb) {
       setReady(true);
+      setIsAdmin(false);
       return;
     }
     const {
@@ -122,6 +147,20 @@ export default function AccountShell({
     const uid = session?.user?.id ?? null;
     const em = session?.user?.email ?? null;
     setEmail(em);
+    const token = session?.access_token;
+    if (token) {
+      try {
+        const r = await fetch("/api/admin/me", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const j = (await r.json()) as { admin?: boolean };
+        setIsAdmin(Boolean(j.admin));
+      } catch {
+        setIsAdmin(false);
+      }
+    } else {
+      setIsAdmin(false);
+    }
     if (!uid) {
       setDisplayName("");
       setReady(true);
@@ -141,6 +180,11 @@ export default function AccountShell({
     setDisplayName(name || "Üye");
     setReady(true);
   }, []);
+
+  const navItems = useMemo(
+    () => (isAdmin ? [...ADMIN_NAV, ...MEMBER_NAV] : MEMBER_NAV),
+    [isAdmin]
+  );
 
   useEffect(() => {
     void refreshUser();
@@ -196,7 +240,7 @@ export default function AccountShell({
                   {ready ? greeting : "…"}
                 </p>
                 <p className="account-shell__identity-badge">
-                  Bireysel hesap
+                  {isAdmin ? "Yönetici" : "Bireysel hesap"}
                 </p>
                 {email ? (
                   <p className="account-shell__identity-email">{email}</p>
@@ -206,7 +250,7 @@ export default function AccountShell({
 
             <nav className="account-shell__rail-nav">
               <ul className="account-shell__rail-list">
-                {NAV.map((item) => {
+                {navItems.map((item) => {
                   const active = navActive(pathname, item.href);
                   return (
                     <li key={item.href}>
