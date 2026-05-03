@@ -1,6 +1,5 @@
 "use client";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ListingCard from "@/components/ListingCard";
@@ -12,24 +11,14 @@ import {
   listingCanRepublishFromSold,
   MAX_LISTINGS_PER_USER
 } from "@/lib/listing-policy";
-import { countSellerOpenListings, fetchMyListings } from "@/lib/listings-data";
+import {
+  countSellerOpenListings,
+  fetchMyListings,
+  removeListingImagesFolderFromStorage
+} from "@/lib/listings-data";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 import type { Listing } from "@/lib/types";
-
-async function removeListingFolderFromStorage(
-  sb: SupabaseClient,
-  userId: string,
-  listingId: string
-) {
-  const folder = `${userId}/${listingId}`;
-  const { data: files, error: listErr } = await sb.storage
-    .from("listing-images")
-    .list(folder);
-  if (listErr || !files?.length) return;
-  const paths = files.map((f) => `${folder}/${f.name}`);
-  await sb.storage.from("listing-images").remove(paths);
-}
 
 export default function MyListingsPage() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
@@ -216,7 +205,7 @@ export default function MyListingsPage() {
       setDeleteError("");
       setDeletingId(listingId);
       try {
-        await removeListingFolderFromStorage(sb, userId, listingId);
+        await removeListingImagesFolderFromStorage(sb, userId, listingId);
         const { error } = await sb.from("listings").delete().eq("id", listingId);
         if (error) {
           setDeleteError(error.message);

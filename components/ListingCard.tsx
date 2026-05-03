@@ -131,87 +131,74 @@ export default function ListingCard({
         </div>
       )}
       {ownerToolbar && (
-        <div
-          style={{
-            padding: "10px 12px 14px",
-            borderTop: "1px solid var(--border)",
-            display: "flex",
-            gap: 10,
-            flexWrap: "wrap",
-            alignItems: "center"
-          }}
-        >
-          <Link
-            href={ownerToolbar.editHref}
-            className="btn btn-outline"
-            style={{ fontSize: 14, padding: "8px 14px" }}
-          >
-            Düzenle
-          </Link>
-          {listing.status === "active" && ownerToolbar.onMarkSold && (
-            <button
-              type="button"
-              className="btn btn-outline"
-              style={{
-                fontSize: 14,
-                padding: "8px 14px",
-                borderColor: "#bbf7d0",
-                color: "#166534"
-              }}
-              disabled={Boolean(ownerToolbar.busy || ownerToolbar.markSoldBusy)}
-              onClick={(e) => {
-                e.preventDefault();
-                ownerToolbar.onMarkSold?.();
-              }}
+        <div className="listing-card-owner-toolbar">
+          <div className="listing-card-owner-toolbar__row">
+            <Link
+              href={ownerToolbar.editHref}
+              className="btn btn-outline listing-card-owner-toolbar__action"
             >
-              {ownerToolbar.markSoldBusy ? "İşleniyor…" : "Satıldı"}
-            </button>
-          )}
-          {listing.status === "sold" &&
-            ownerToolbar.onRepublish &&
-            listingCanRepublishFromSold(listing.expiresAt) && (
+              Düzenle
+            </Link>
+            {listing.status === "active" && ownerToolbar.onMarkSold && (
               <button
                 type="button"
-                className="btn btn-primary"
-                style={{ fontSize: 14, padding: "8px 14px" }}
-                disabled={Boolean(
-                  ownerToolbar.busy ||
-                    ownerToolbar.markSoldBusy ||
-                    ownerToolbar.republishBusy
-                )}
+                className="btn btn-outline listing-card-owner-toolbar__action"
+                style={{
+                  borderColor: "#bbf7d0",
+                  color: "#166534"
+                }}
+                disabled={Boolean(ownerToolbar.busy || ownerToolbar.markSoldBusy)}
                 onClick={(e) => {
                   e.preventDefault();
-                  ownerToolbar.onRepublish?.();
+                  ownerToolbar.onMarkSold?.();
                 }}
               >
-                {ownerToolbar.republishBusy ? "Yükleniyor…" : "Tekrar yayına al"}
+                {ownerToolbar.markSoldBusy ? "İşleniyor…" : "Satıldı"}
               </button>
             )}
+            {listing.status === "sold" &&
+              ownerToolbar.onRepublish &&
+              listingCanRepublishFromSold(listing.expiresAt) && (
+                <button
+                  type="button"
+                  className="btn btn-primary listing-card-owner-toolbar__action"
+                  disabled={Boolean(
+                    ownerToolbar.busy ||
+                      ownerToolbar.markSoldBusy ||
+                      ownerToolbar.republishBusy
+                  )}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    ownerToolbar.onRepublish?.();
+                  }}
+                >
+                  {ownerToolbar.republishBusy ? "Yükleniyor…" : "Tekrar yayına al"}
+                </button>
+              )}
+            {ownerToolbar.onDelete && (
+              <button
+                type="button"
+                className="btn btn-outline listing-card-owner-toolbar__action"
+                style={{
+                  color: "#b91c1c",
+                  borderColor: "#fecaca"
+                }}
+                disabled={ownerToolbar.busy}
+                onClick={(e) => {
+                  e.preventDefault();
+                  ownerToolbar.onDelete?.();
+                }}
+              >
+                {ownerToolbar.busy ? "Siliniyor…" : "Sil"}
+              </button>
+            )}
+          </div>
           {listing.status === "sold" &&
             !listingCanRepublishFromSold(listing.expiresAt) && (
-              <span className="meta" style={{ fontSize: 13 }}>
+              <p className="meta listing-card-owner-toolbar__hint">
                 Süre doldu; yeni ilan açın
-              </span>
+              </p>
             )}
-          {ownerToolbar.onDelete && (
-            <button
-              type="button"
-              className="btn btn-outline"
-              style={{
-                fontSize: 14,
-                padding: "8px 14px",
-                color: "#b91c1c",
-                borderColor: "#fecaca"
-              }}
-              disabled={ownerToolbar.busy}
-              onClick={(e) => {
-                e.preventDefault();
-                ownerToolbar.onDelete?.();
-              }}
-            >
-              {ownerToolbar.busy ? "Siliniyor…" : "Sil"}
-            </button>
-          )}
         </div>
       )}
       {ownerToolbar?.priceQuickEdit && (

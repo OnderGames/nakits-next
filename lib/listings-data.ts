@@ -487,3 +487,18 @@ export async function fetchListingForEdit(
     expiresAt: row.expires_at ?? undefined
   };
 }
+
+/** İlan silinirken depodaki fotoğraf klasörünü boşaltır (best-effort). */
+export async function removeListingImagesFolderFromStorage(
+  sb: SupabaseClient,
+  userId: string,
+  listingId: string
+): Promise<void> {
+  const folder = `${userId}/${listingId}`;
+  const { data: files, error: listErr } = await sb.storage
+    .from("listing-images")
+    .list(folder);
+  if (listErr || !files?.length) return;
+  const paths = files.map((f) => `${folder}/${f.name}`);
+  await sb.storage.from("listing-images").remove(paths);
+}

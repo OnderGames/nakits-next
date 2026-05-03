@@ -4,7 +4,10 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import ListingCard from "@/components/ListingCard";
 import { LISTING_DURATION_DAYS } from "@/lib/listing-policy";
-import { fetchSellerActiveListings } from "@/lib/listings-data";
+import {
+  fetchSellerActiveListings,
+  removeListingImagesFolderFromStorage
+} from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
@@ -30,6 +33,7 @@ export default function ProfilePage() {
   const [publicCode, setPublicCode] = useState<string | null>(null);
   const [profileChecked, setProfileChecked] = useState(false);
   const [markingSoldId, setMarkingSoldId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [listingActionError, setListingActionError] = useState("");
 
   useEffect(() => {
@@ -174,6 +178,35 @@ export default function ProfilePage() {
         );
       } finally {
         setMarkingSoldId(null);
+      }
+    },
+    [userId]
+  );
+
+  const handleDeleteListing = useCallback(
+    async (listingId: string) => {
+      if (!userId) return;
+      if (
+        !window.confirm(
+          "Bu ilanı silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+        )
+      ) {
+        return;
+      }
+      const sb = getSupabaseBrowser();
+      if (!sb) return;
+      setListingActionError("");
+      setDeletingId(listingId);
+      try {
+        await removeListingImagesFolderFromStorage(sb, userId, listingId);
+        const { error } = await sb.from("listings").delete().eq("id", listingId);
+        if (error) {
+          setListingActionError(error.message);
+          return;
+        }
+        setActiveListings((prev) => prev.filter((x) => x.id !== listingId));
+      } finally {
+        setDeletingId(null);
       }
     },
     [userId]
@@ -357,7 +390,9 @@ export default function ProfilePage() {
             ownerToolbar={{
               editHref: `/ilanlarim/${listing.id}/duzenle`,
               onMarkSold: () => void handleMarkSoldFromProfile(listing.id),
-              markSoldBusy: markingSoldId === listing.id
+              markSoldBusy: markingSoldId === listing.id,
+              onDelete: () => void handleDeleteListing(listing.id),
+              busy: deletingId === listing.id
             }}
           />
         ))}

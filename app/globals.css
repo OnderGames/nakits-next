@@ -635,6 +635,43 @@ button.nav-pill {
   cursor: not-allowed;
 }
 
+/* İlan kartı — sahip araçları: Düzenle / Satıldı / Sil aynı hizada */
+.listing-card-owner-toolbar {
+  padding: 10px 12px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.listing-card-owner-toolbar__row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.listing-card-owner-toolbar__action {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  align-self: center;
+  min-height: 40px;
+  padding: 8px 14px !important;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.listing-card-owner-toolbar__hint {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
 .hero {
   padding: 28px 0 22px;
 }
