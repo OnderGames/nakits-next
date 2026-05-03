@@ -23,7 +23,6 @@ export function formatRelativeTimeTr(iso: string): string {
 type CategoryEmbed = { slug: string } | null;
 type ProfileEmbed = {
   full_name: string | null;
-  phone: string | null;
   public_code: string | null;
 } | null;
 type ImageRow = { image_url: string; sort_order: number };
@@ -40,7 +39,6 @@ type ListingRow = {
   expires_at?: string;
   status?: string;
   description?: string | null;
-  show_phone_on_listing?: boolean;
   categories: CategoryEmbed;
   profiles: ProfileEmbed;
   listing_images: ImageRow[] | null;
@@ -84,7 +82,6 @@ function normalizeListingRow(raw: unknown): ListingRow {
       r.expires_at != null ? String(r.expires_at) : undefined,
     status: r.status as string | undefined,
     description: (r.description as string | null | undefined) ?? null,
-    show_phone_on_listing: r.show_phone_on_listing as boolean | undefined,
     categories,
     profiles,
     listing_images
@@ -104,7 +101,6 @@ function mapRowToListing(row: ListingRow): Listing {
   const price =
     typeof row.price === "string" ? parseFloat(row.price) : row.price;
   const status = row.status as Listing["status"] | undefined;
-  const phone = row.profiles?.phone?.trim() ?? "";
   return {
     id: row.id,
     listingCode: row.listing_code?.trim() || undefined,
@@ -119,11 +115,6 @@ function mapRowToListing(row: ListingRow): Listing {
     createdAt: formatRelativeTimeTr(row.created_at),
     status,
     description: row.description ?? undefined,
-    showPhoneOnListing:
-      row.show_phone_on_listing === undefined
-        ? true
-        : Boolean(row.show_phone_on_listing),
-    sellerPhone: phone.length ? phone : null,
     sellerId: row.seller_id,
     sellerPublicCode: row.profiles?.public_code?.trim() || undefined,
     expiresAt: row.expires_at ?? undefined
@@ -142,9 +133,8 @@ const listSelectNoDistrict = `
   expires_at,
   status,
   description,
-  show_phone_on_listing,
   categories ( slug ),
-  profiles!seller_id ( full_name, phone, public_code ),
+  profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
 `;
 
@@ -160,9 +150,8 @@ const listSelect = `
   expires_at,
   status,
   description,
-  show_phone_on_listing,
   categories ( slug ),
-  profiles!seller_id ( full_name, phone, public_code ),
+  profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
 `;
 
@@ -195,7 +184,6 @@ const listingEditSelect = `
       city,
       district,
       condition,
-      show_phone_on_listing,
       status,
       expires_at,
       categories ( slug ),
@@ -211,7 +199,6 @@ const listingEditSelectNoDistrict = `
       price,
       city,
       condition,
-      show_phone_on_listing,
       status,
       expires_at,
       categories ( slug ),
@@ -429,7 +416,6 @@ export type ListingForEdit = {
   city: string;
   district: string | null;
   condition: "new" | "used";
-  showPhoneOnListing: boolean;
   categoryKey: string;
   coverImageUrl: string;
   /** Sıralı galeri (kapak = ilk öğe) */
@@ -448,7 +434,6 @@ type ListingEditRowRaw = {
   city: string;
   district?: string | null;
   condition: string;
-  show_phone_on_listing?: boolean;
   status?: string;
   categories: { slug: string } | { slug: string }[] | null;
   listing_images:
@@ -495,7 +480,6 @@ export async function fetchListingForEdit(
         ? String(row.district).trim()
         : null,
     condition: row.condition === "new" ? "new" : "used",
-    showPhoneOnListing: row.show_phone_on_listing !== false,
     categoryKey,
     coverImageUrl: images[0]?.image_url ?? FALLBACK_IMAGE,
     galleryImages,

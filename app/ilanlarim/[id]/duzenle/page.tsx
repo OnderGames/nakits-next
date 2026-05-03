@@ -53,13 +53,6 @@ function fileExtension(file: File): string {
 
 function mapListingUpdateError(message: string | undefined): string {
   if (!message) return "İlan güncellenemedi.";
-  const lower = message.toLowerCase();
-  if (
-    lower.includes("show_phone_on_listing") ||
-    (lower.includes("schema cache") && lower.includes("listings"))
-  ) {
-    return "Veritabanı şeması güncel değil. Supabase SQL Editor’da `sql/migration_listing_show_phone.sql` dosyasını çalıştırın.";
-  }
   if (message.includes("row-level security")) {
     return "İşlem reddedildi. Oturumunuzu kontrol edin.";
   }
@@ -118,7 +111,6 @@ export default function EditListingPage() {
   const [groupSlug, setGroupSlug] = useState("");
   const [detailCategoryKey, setDetailCategoryKey] = useState("");
   const [condition, setCondition] = useState<"new" | "used">("used");
-  const [showPhoneOnListing, setShowPhoneOnListing] = useState(true);
   const [slides, setSlides] = useState<EditSlide[]>([]);
   const [removedExisting, setRemovedExisting] = useState<
     { rowId: string; url: string }[]
@@ -215,7 +207,6 @@ export default function EditListingPage() {
         setDetailCategoryKey("");
       }
       setCondition(row.condition);
-      setShowPhoneOnListing(row.showPhoneOnListing);
       setEditCity(row.city);
       setEditDistrict(row.district ?? "");
       setEditPriceText(formatPriceInputDisplay(row.price));
@@ -347,7 +338,7 @@ export default function EditListingPage() {
         city,
         district: districtVal || null,
         condition,
-        show_phone_on_listing: showPhoneOnListing,
+        show_phone_on_listing: false,
         category_id: catRow.id
       })
       .eq("id", listing.id)
@@ -887,28 +878,6 @@ export default function EditListingPage() {
               </div>
             )}
           </div>
-
-          <label
-            style={{
-              marginTop: 14,
-              display: "flex",
-              gap: 12,
-              alignItems: "flex-start",
-              cursor: submitting ? "default" : "pointer",
-              lineHeight: 1.45
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={showPhoneOnListing}
-              disabled={submitting}
-              onChange={(e) => setShowPhoneOnListing(e.target.checked)}
-              style={{ marginTop: 4 }}
-            />
-            <span className="meta" style={{ fontSize: 14, color: "var(--text)" }}>
-              İlanda telefon numaram görünsün (profilde kayıtlı numara kullanılır).
-            </span>
-          </label>
 
           <button
             className="btn btn-primary"

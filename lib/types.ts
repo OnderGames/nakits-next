@@ -19,10 +19,6 @@ export type Listing = {
   status?: "pending" | "active" | "sold" | "rejected";
   /** Detay sayfası metni */
   description?: string;
-  /** false ise ilanda telefon gösterilmez; mesaj önerilir */
-  showPhoneOnListing?: boolean;
-  /** Satıcı profilindeki telefon (ilan ayarına bağlı gösterim) */
-  sellerPhone?: string | null;
   /** Mesajlaşma (varsayılan anon istemci ile; RLS satıcıyı korur) */
   sellerId?: string;
   /** Profil URL’si: /kullanici/{sellerPublicCode} */

@@ -291,7 +291,8 @@ export default function ProfilePage() {
               autoComplete="tel"
             />
             <p className="meta" style={{ marginTop: 8 }}>
-              İlan verirken telefonunu göstermeyi seçersen bu numara kullanılır.
+              İsteğe bağlı. İlanlarda telefon gösterilmez; alıcılar satıcıyla yalnızca
+              mesaj kutusu üzerinden iletişir.
             </p>
             <button
               type="submit"

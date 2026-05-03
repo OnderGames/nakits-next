@@ -50,12 +50,6 @@ function mapListingInsertError(message: string | undefined): string {
   ) {
     return "Veritabanında ilan numarası sütunu eksik. Supabase → SQL Editor’da sql/migration_listing_code.sql dosyasını çalıştırın.";
   }
-  if (
-    lower.includes("show_phone_on_listing") ||
-    (lower.includes("schema cache") && lower.includes("listings"))
-  ) {
-    return "Veritabanında «telefon ilanda görünsün» için gerekli sütun eksik. Supabase → SQL Editor’da şu dosyadaki komutu bir kez çalıştırın: sql/migration_listing_show_phone.sql — sonra sayfayı yenileyip tekrar deneyin.";
-  }
   if (message.includes("row-level security")) {
     return "İlan kaydedilemedi. Oturumunuzu kontrol edin.";
   }
@@ -123,7 +117,6 @@ export default function AddListingPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [categoryRowCount, setCategoryRowCount] = useState<number | null>(null);
-  const [showPhoneOnListing, setShowPhoneOnListing] = useState(true);
   const [listingCity, setListingCity] = useState("");
   const [listingDistrict, setListingDistrict] = useState("");
   const [priceText, setPriceText] = useState("");
@@ -312,7 +305,7 @@ export default function AddListingPage() {
           city,
           district: districtTrim || null,
           condition: "used",
-          show_phone_on_listing: showPhoneOnListing,
+          show_phone_on_listing: false,
           expires_at: listingExpiresAtIsoFromNow(),
           listing_code
         })
@@ -409,7 +402,6 @@ export default function AddListingPage() {
     });
     setGroupSlug("");
     setDetailCategoryKey("");
-    setShowPhoneOnListing(true);
     setListingCity("");
     setListingDistrict("");
     setPriceText("");
@@ -787,30 +779,6 @@ export default function AddListingPage() {
               </div>
             )}
           </div>
-
-          <label
-            style={{
-              marginTop: 14,
-              display: "flex",
-              gap: 12,
-              alignItems: "flex-start",
-              cursor: submitting ? "default" : "pointer",
-              lineHeight: 1.45
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={showPhoneOnListing}
-              disabled={submitting}
-              onChange={(e) => setShowPhoneOnListing(e.target.checked)}
-              style={{ marginTop: 4 }}
-            />
-            <span className="meta" style={{ fontSize: 14, color: "var(--text)" }}>
-              İlanda telefon numaram görünsün (profilde kayıtlı numara kullanılır).
-              İşareti kaldırırsanız numaranız gösterilmez; alıcılar satıcıyla yalnızca
-              mesaj üzerinden iletişim kurabilir (mesaj özelliği yakında).
-            </span>
-          </label>
 
           <button
             className="btn btn-primary"

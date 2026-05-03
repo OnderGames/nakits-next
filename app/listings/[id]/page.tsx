@@ -76,32 +76,11 @@ export default async function ListingDetailPage({ params }: Props) {
           {listing.description && (
             <p style={{ marginTop: 12, lineHeight: 1.5 }}>{listing.description}</p>
           )}
-          <div style={{ marginTop: 16 }}>
-            <strong>Telefon</strong>
-            {listing.showPhoneOnListing !== false &&
-            listing.sellerPhone &&
-            listing.sellerPhone.trim().length > 0 ? (
-              <p style={{ margin: "8px 0 0" }}>
-                <a href={`tel:${listing.sellerPhone.replace(/\s/g, "")}`}>
-                  {listing.sellerPhone.trim()}
-                </a>
-              </p>
-            ) : (
-              <p className="meta" style={{ margin: "8px 0 0", lineHeight: 1.5 }}>
-                Satıcı bu ilanda telefon paylaşmadı veya profilde numara yok.
-                İletişim için aşağıdan mesaj göndermeyi kullanın.
-              </p>
-            )}
-          </div>
         </div>
         <aside className="panel">
           <h3>Satıcı ile iletişime geç</h3>
           <p className="meta" style={{ marginBottom: 12 }}>
-            {listing.showPhoneOnListing !== false &&
-            listing.sellerPhone &&
-            listing.sellerPhone.trim().length > 0
-              ? "İstersen telefonla ara; aşağıdan da mesaj gönderebilirsin."
-              : "Telefon paylaşılmadıysa satıcıya buradan yaz."}
+            İletişim yalnızca mesaj ile; aşağıdan satıcıya yazabilirsin.
           </p>
           <ListingMessagePanel
             listingId={listing.id}
