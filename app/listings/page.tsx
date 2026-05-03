@@ -18,6 +18,7 @@ import {
   categoryKeyMatchesListingSearch,
   compositeCategoryKey
 } from "@/lib/categories";
+import { listingPlaceMatchesFreeTextQuery } from "@/lib/listing-place-search";
 import { isListingCodeQuery } from "@/lib/listing-code";
 import { fetchPublicListings } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
@@ -114,12 +115,20 @@ function ListingsPageInner() {
           item.description.toLowerCase().includes(qLower));
       const categoryLabelHit =
         !qLower || categoryKeyMatchesListingSearch(item.categoryKey, qLower);
+      const placeFromQHit =
+        !qTrim ||
+        listingPlaceMatchesFreeTextQuery(
+          item.city,
+          item.district,
+          qTrim
+        );
       const matchQ = codeExact
         ? item.listingCode === codeExact
         : titleHit ||
             sellerHit ||
             descHit ||
-            categoryLabelHit;
+            categoryLabelHit ||
+            placeFromQHit;
       const matchCity = !city || item.city === city;
       const matchDistrict =
         !district ||
@@ -184,10 +193,12 @@ function ListingsPageInner() {
       <section className="panel">
         <p className="meta" style={{ margin: "0 0 12px" }}>
           Filtreler adres çubuğuna yazılır; sayfa bağlantısını kopyalayarak aynı
-          aramayı paylaşabilirsiniz.           Arama: başlık, <strong>açıklama</strong>, <strong>kategori adı</strong>,{" "}
-          <strong>satıcı adı</strong> veya{" "}
-          <strong>6–9 haneli ilan no</strong>. Önce <strong>il</strong> seçin;
-          ardından <strong>ilçe</strong> menüsü dolar.
+          aramayı paylaşabilirsiniz. Arama kutusunda başlık,{" "}
+          <strong>açıklama</strong>, <strong>kategori adı</strong>,{" "}
+          <strong>şehir ve ilçe adı</strong> (örn. «Kadıköy»),{" "}
+          <strong>satıcı adı</strong> veya <strong>6–9 haneli ilan no</strong>{" "}
+          kullanabilirsiniz. İsterseniz önce <strong>il</strong> seçin;
+          ardından <strong>ilçe</strong> menüsü dolar (bu alanlar çıkan listeyi daraltır).
         </p>
         <div className="listings-filter-grid">
           <div className="filter-field">
