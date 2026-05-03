@@ -23,7 +23,12 @@ import {
   TURKEY_PROVINCE_COUNT,
   TURKEY_PROVINCES
 } from "@/lib/turkish-provinces";
+import {
+  listingExpiresAtIsoFromNow,
+  MAX_LISTINGS_PER_USER
+} from "@/lib/listing-policy";
 import { MAX_LISTING_PHOTOS } from "@/lib/listing-photos";
+import { countSellerOpenListings } from "@/lib/listings-data";
 import {
   LISTING_IMAGE_MAX_EDGE_PX,
   resizeListingImageForUpload
@@ -32,6 +37,12 @@ import {
 function mapListingInsertError(message: string | undefined): string {
   if (!message) return "İlan kaydedilemedi.";
   const lower = message.toLowerCase();
+  if (
+    lower.includes("expires_at") ||
+    lower.includes("expires at")
+  ) {
+    return "Veritabanında ilan süresi sütunu eksik. Supabase → SQL Editor’da sql/migration_listing_expires_quota.sql dosyasını çalıştırın.";
+  }
   if (
     lower.includes("show_phone_on_listing") ||
     (lower.includes("schema cache") && lower.includes("listings"))
@@ -246,6 +257,14 @@ export default function AddListingPage() {
       return;
     }
 
+    const openCount = await countSellerOpenListings(sb, user.id);
+    if (openCount >= MAX_LISTINGS_PER_USER) {
+      setError(
+        `En fazla ${MAX_LISTINGS_PER_USER} onay bekleyen veya yayındaki ilanınız olabilir. Bir ilanı satıldı işaretleyin, süresi bitsin veya silin; sonra yeni ilan verebilirsiniz.`
+      );
+      return;
+    }
+
     const sqlSlug = sqlCategorySlugFromKey(detailCategoryKey);
     setSubmitting(true);
 
@@ -281,7 +300,8 @@ export default function AddListingPage() {
         city,
         district: districtTrim || null,
         condition: "used",
-        show_phone_on_listing: showPhoneOnListing
+        show_phone_on_listing: showPhoneOnListing,
+        expires_at: listingExpiresAtIsoFromNow()
       })
       .select("id")
       .single();
@@ -406,6 +426,16 @@ export default function AddListingPage() {
   return (
     <main className="container">
       <h1 className="section-title">İlan ver</h1>
+      {hasSupabaseConfig && (
+        <p className="meta" style={{ marginBottom: 14, maxWidth: 640 }}>
+          Aynı anda en fazla <strong>{MAX_LISTINGS_PER_USER}</strong> onay
+          bekleyen veya yayındaki ilan verebilirsiniz. Yayındaki her ilan en
+          çok <strong>30 gün</strong> listelenir; süre sonunda ilan
+          (fotoğraflarıyla) kaldırılır. Alıcıyla anlaştıysanız profil veya
+          «İlanlarım» üzerinden <strong>Satıldı</strong> diyerek vitrinden
+          erken çekebilirsiniz.
+        </p>
+      )}
       {hasSupabaseConfig && categoryRowCount === 0 && (
         <p className="notice" style={{ marginBottom: 14 }}>
           Veritabanında kategori kaydı yok. Supabase → SQL Editor&apos;da

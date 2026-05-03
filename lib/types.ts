@@ -25,4 +25,6 @@ export type Listing = {
   sellerId?: string;
   /** Profil URL’si: /kullanici/{sellerPublicCode} */
   sellerPublicCode?: string;
+  /** Bitiş zamanı (ISO); süre dolunca sistem ilanı kaldırır */
+  expiresAt?: string;
 };

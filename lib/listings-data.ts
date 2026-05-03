@@ -1,6 +1,7 @@
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { sqlCategorySlugToKey } from "@/lib/categories";
 import type { Listing } from "@/lib/types";
+import { MAX_LISTINGS_PER_USER } from "@/lib/listing-policy";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?auto=format&fit=crop&w=1200&q=80";
@@ -35,6 +36,7 @@ type ListingRow = {
   district?: string | null;
   price: number | string;
   created_at: string;
+  expires_at?: string;
   status?: string;
   description?: string | null;
   show_phone_on_listing?: boolean;
@@ -75,6 +77,8 @@ function normalizeListingRow(raw: unknown): ListingRow {
         : null,
     price: r.price as number | string,
     created_at: String(r.created_at),
+    expires_at:
+      r.expires_at != null ? String(r.expires_at) : undefined,
     status: r.status as string | undefined,
     description: (r.description as string | null | undefined) ?? null,
     show_phone_on_listing: r.show_phone_on_listing as boolean | undefined,
@@ -117,7 +121,8 @@ function mapRowToListing(row: ListingRow): Listing {
         : Boolean(row.show_phone_on_listing),
     sellerPhone: phone.length ? phone : null,
     sellerId: row.seller_id,
-    sellerPublicCode: row.profiles?.public_code?.trim() || undefined
+    sellerPublicCode: row.profiles?.public_code?.trim() || undefined,
+    expiresAt: row.expires_at ?? undefined
   };
 }
 
@@ -129,6 +134,7 @@ const listSelectNoDistrict = `
   city,
   price,
   created_at,
+  expires_at,
   status,
   description,
   show_phone_on_listing,
@@ -145,6 +151,7 @@ const listSelect = `
   district,
   price,
   created_at,
+  expires_at,
   status,
   description,
   show_phone_on_listing,
@@ -183,6 +190,7 @@ const listingEditSelect = `
       condition,
       show_phone_on_listing,
       status,
+      expires_at,
       categories ( slug ),
       listing_images ( id, image_url, sort_order )
     `;
@@ -197,6 +205,7 @@ const listingEditSelectNoDistrict = `
       condition,
       show_phone_on_listing,
       status,
+      expires_at,
       categories ( slug ),
       listing_images ( id, image_url, sort_order )
     `;
@@ -215,11 +224,13 @@ async function withEditListingSelectFallback<T>(
 export async function fetchPublicListings(
   sb: SupabaseClient
 ): Promise<Listing[]> {
+  const nowIso = new Date().toISOString();
   const { data, error } = await withListingSelectFallback((sel) =>
     sb
       .from("listings")
       .select(sel)
       .eq("status", "active")
+      .gt("expires_at", nowIso)
       .order("created_at", { ascending: false })
   );
 
@@ -260,17 +271,33 @@ export async function fetchMyListings(
   return data.map((raw) => mapRowToListing(normalizeListingRow(raw)));
 }
 
+/** Onay bekleyen + yayındaki ilan sayısı (kota için) */
+export async function countSellerOpenListings(
+  sb: SupabaseClient,
+  sellerId: string
+): Promise<number> {
+  const { count, error } = await sb
+    .from("listings")
+    .select("*", { count: "exact", head: true })
+    .eq("seller_id", sellerId)
+    .in("status", ["pending", "active"]);
+  if (error) return MAX_LISTINGS_PER_USER;
+  return typeof count === "number" ? count : 0;
+}
+
 export async function fetchSellerActiveListings(
   sb: SupabaseClient,
   sellerId: string,
   limit: number
 ): Promise<Listing[]> {
+  const nowIso = new Date().toISOString();
   const { data, error } = await withListingSelectFallback((sel) =>
     sb
       .from("listings")
       .select(sel)
       .eq("seller_id", sellerId)
       .eq("status", "active")
+      .gt("expires_at", nowIso)
       .order("created_at", { ascending: false })
       .limit(limit)
   );
@@ -289,12 +316,14 @@ export async function fetchPublicActiveListingsForSeller(
   sb: SupabaseClient,
   sellerId: string
 ): Promise<Listing[]> {
+  const nowIso = new Date().toISOString();
   const { data, error } = await withListingSelectFallback((sel) =>
     sb
       .from("listings")
       .select(sel)
       .eq("seller_id", sellerId)
       .eq("status", "active")
+      .gt("expires_at", nowIso)
       .order("created_at", { ascending: false })
   );
 
@@ -354,6 +383,7 @@ export type ListingForEdit = {
   /** Sıralı galeri (kapak = ilk öğe) */
   galleryImages: { id: string; imageUrl: string }[];
   status?: Listing["status"];
+  expiresAt?: string;
 };
 
 type ListingEditRowRaw = {
@@ -371,6 +401,7 @@ type ListingEditRowRaw = {
   listing_images:
     | { id: string; image_url: string; sort_order: number }[]
     | null;
+  expires_at?: string;
 };
 
 export async function fetchListingForEdit(
@@ -414,6 +445,7 @@ export async function fetchListingForEdit(
     categoryKey,
     coverImageUrl: images[0]?.image_url ?? FALLBACK_IMAGE,
     galleryImages,
-    status: row.status as Listing["status"] | undefined
+    status: row.status as Listing["status"] | undefined,
+    expiresAt: row.expires_at ?? undefined
   };
 }

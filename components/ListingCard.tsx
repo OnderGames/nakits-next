@@ -4,8 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   formatListingCategoryLineCity,
-  formatPrice
+  formatPrice,
+  formatPriceInputDisplay,
+  parsePriceInput
 } from "@/lib/categories";
+import { formatListingExpiryShort } from "@/lib/listing-policy";
 import type { Listing } from "@/lib/types";
 
 const STATUS_LABEL: Record<NonNullable<Listing["status"]>, string> = {
@@ -17,8 +20,18 @@ const STATUS_LABEL: Record<NonNullable<Listing["status"]>, string> = {
 
 type OwnerToolbar = {
   editHref: string;
-  onDelete: () => void;
+  onDelete?: () => void;
+  /** Yayındaki ilan için: vitrinden kaldırır (satıldı) */
+  onMarkSold?: () => void;
+  markSoldBusy?: boolean;
   busy?: boolean;
+  /** Onay bekleyen / yayındaki ilanlarda karttan hızlı fiyat güncelleme */
+  priceQuickEdit?: {
+    value: string;
+    onChange: (value: string) => void;
+    onSave: () => void;
+    saving?: boolean;
+  };
 };
 
 type Props = {
@@ -27,6 +40,11 @@ type Props = {
 };
 
 export default function ListingCard({ listing, ownerToolbar }: Props) {
+  const expiryLine =
+    listing.status === "pending" || listing.status === "active"
+      ? formatListingExpiryShort(listing.expiresAt)
+      : null;
+
   return (
     <article className="card">
       <Link href={`/listings/${listing.id}`}>
@@ -65,6 +83,7 @@ export default function ListingCard({ listing, ownerToolbar }: Props) {
               {STATUS_LABEL[listing.status] ?? listing.status}
             </p>
           )}
+          {expiryLine && <p className="meta">{expiryLine}</p>}
           <p className="meta">{listing.createdAt}</p>
         </div>
       </Link>
@@ -97,23 +116,113 @@ export default function ListingCard({ listing, ownerToolbar }: Props) {
           >
             Düzenle
           </Link>
-          <button
-            type="button"
-            className="btn btn-outline"
+          {listing.status === "active" && ownerToolbar.onMarkSold && (
+            <button
+              type="button"
+              className="btn btn-outline"
+              style={{
+                fontSize: 14,
+                padding: "8px 14px",
+                borderColor: "#bbf7d0",
+                color: "#166534"
+              }}
+              disabled={Boolean(ownerToolbar.busy || ownerToolbar.markSoldBusy)}
+              onClick={(e) => {
+                e.preventDefault();
+                ownerToolbar.onMarkSold?.();
+              }}
+            >
+              {ownerToolbar.markSoldBusy ? "İşleniyor…" : "Satıldı"}
+            </button>
+          )}
+          {ownerToolbar.onDelete && (
+            <button
+              type="button"
+              className="btn btn-outline"
+              style={{
+                fontSize: 14,
+                padding: "8px 14px",
+                color: "#b91c1c",
+                borderColor: "#fecaca"
+              }}
+              disabled={ownerToolbar.busy}
+              onClick={(e) => {
+                e.preventDefault();
+                ownerToolbar.onDelete?.();
+              }}
+            >
+              {ownerToolbar.busy ? "Siliniyor…" : "Sil"}
+            </button>
+          )}
+        </div>
+      )}
+      {ownerToolbar?.priceQuickEdit && (
+        <div
+          style={{
+            padding: "12px 12px 14px",
+            borderTop: "1px solid var(--border)",
+            background: "var(--surface-muted, rgba(0,0,0,0.02))"
+          }}
+        >
+          <label
+            htmlFor={`quick-price-${listing.id}`}
+            className="meta"
+            style={{ display: "block", marginBottom: 6 }}
+          >
+            Fiyatı güncelle (TL)
+          </label>
+          <div
             style={{
-              fontSize: 14,
-              padding: "8px 14px",
-              color: "#b91c1c",
-              borderColor: "#fecaca"
-            }}
-            disabled={ownerToolbar.busy}
-            onClick={(e) => {
-              e.preventDefault();
-              ownerToolbar.onDelete();
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              alignItems: "center"
             }}
           >
-            {ownerToolbar.busy ? "Siliniyor…" : "Sil"}
-          </button>
+            <input
+              id={`quick-price-${listing.id}`}
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              value={ownerToolbar.priceQuickEdit.value}
+              onChange={(e) =>
+                ownerToolbar.priceQuickEdit?.onChange(e.target.value)
+              }
+              onBlur={() => {
+                const q = ownerToolbar.priceQuickEdit;
+                if (!q) return;
+                const n = parsePriceInput(q.value);
+                if (Number.isFinite(n) && n >= 0) {
+                  q.onChange(formatPriceInputDisplay(n));
+                }
+              }}
+              disabled={Boolean(ownerToolbar.priceQuickEdit.saving)}
+              placeholder="Örn: 1.500"
+              style={{
+                flex: "1 1 140px",
+                minWidth: 120,
+                maxWidth: "100%"
+              }}
+            />
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ fontSize: 14, padding: "8px 16px" }}
+              disabled={Boolean(
+                ownerToolbar.busy ||
+                  ownerToolbar.priceQuickEdit.saving ||
+                  ownerToolbar.markSoldBusy
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                ownerToolbar.priceQuickEdit?.onSave();
+              }}
+            >
+              {ownerToolbar.priceQuickEdit.saving
+                ? "Kaydediliyor…"
+                : "Fiyatı kaydet"}
+            </button>
+          </div>
         </div>
       )}
     </article>

@@ -30,6 +30,7 @@ import {
   TURKEY_PROVINCE_COUNT,
   TURKEY_PROVINCES
 } from "@/lib/turkish-provinces";
+import { formatListingExpiryShort } from "@/lib/listing-policy";
 import { MAX_LISTING_PHOTOS } from "@/lib/listing-photos";
 import { resizeListingImageForUpload } from "@/lib/resize-listing-image";
 
@@ -494,6 +495,12 @@ export default function EditListingPage() {
     return fromData;
   })();
 
+  const expiryShort =
+    (listing.status === "pending" || listing.status === "active") &&
+    listing.expiresAt
+      ? formatListingExpiryShort(listing.expiresAt)
+      : null;
+
   return (
     <main className="container">
       <h1 className="section-title">İlan düzenle</h1>
@@ -512,6 +519,12 @@ export default function EditListingPage() {
                   : listing.status === "rejected"
                     ? "Yayınlanmadı"
                     : listing.status}
+            {expiryShort && (
+              <>
+                {" "}
+                · {expiryShort}
+              </>
+            )}
           </>
         )}
       </p>
@@ -549,6 +562,13 @@ export default function EditListingPage() {
                 placeholder="Örn: 875 veya 1.500 veya 750.000"
                 disabled={submitting}
               />
+              <p className="meta" style={{ marginTop: 6 }}>
+                Aynı fiyatı{" "}
+                <Link href="/ilanlarim" style={{ textDecoration: "underline" }}>
+                  İlanlarım
+                </Link>{" "}
+                listesindeki «Fiyatı kaydet» ile de güncelleyebilirsiniz.
+              </p>
             </div>
           </div>
 

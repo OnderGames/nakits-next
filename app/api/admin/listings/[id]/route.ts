@@ -3,6 +3,7 @@ import {
   getServiceRoleMissingMessage,
   verifyAdminFromRequest
 } from "@/lib/admin-auth";
+import { listingExpiresAtIsoFromNow } from "@/lib/listing-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,9 +42,14 @@ export async function PATCH(
     );
   }
 
+  const patch: Record<string, unknown> = { status };
+  if (status === "active") {
+    patch.expires_at = listingExpiresAtIsoFromNow();
+  }
+
   const { data, error } = await adminSb
     .from("listings")
-    .update({ status })
+    .update(patch)
     .eq("id", id)
     .select("id")
     .maybeSingle();

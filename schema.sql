@@ -35,7 +35,8 @@ create table if not exists listings (
   show_phone_on_listing boolean not null default true,
   status text not null default 'pending' check (status in ('pending', 'active', 'sold', 'rejected')),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  expires_at timestamptz not null default (now() + interval '30 days')
 );
 
 create or replace function public.set_updated_at()
@@ -99,6 +100,7 @@ create index if not exists idx_conversation_reads_profile on conversation_reads(
 alter table conversation_reads enable row level security;
 
 create index if not exists idx_listings_status_created_at on listings(status, created_at desc);
+create index if not exists idx_listings_expires_at on listings(expires_at);
 create index if not exists idx_listings_category on listings(category_id);
 create index if not exists idx_listings_city on listings(city);
 create index if not exists idx_messages_conversation on messages(conversation_id, created_at);

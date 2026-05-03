@@ -4,6 +4,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import ListingCard from "@/components/ListingCard";
+import {
+  formatPriceInputDisplay,
+  parsePriceInput
+} from "@/lib/categories";
 import { fetchMyListings } from "@/lib/listings-data";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
@@ -29,6 +33,9 @@ export default function MyListingsPage() {
   const [items, setItems] = useState<Listing[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [markingSoldId, setMarkingSoldId] = useState<string | null>(null);
+  const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
+  const [savingPriceId, setSavingPriceId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
@@ -63,6 +70,83 @@ export default function MyListingsPage() {
       .then(setItems)
       .finally(() => setLoaded(true));
   }, [userId]);
+
+  const handleSavePrice = useCallback(
+    async (listingId: string) => {
+      if (!userId) return;
+      const sb = getSupabaseBrowser();
+      if (!sb) return;
+      const listing = items.find((x) => x.id === listingId);
+      if (!listing) return;
+      const raw =
+        priceDrafts[listingId] ?? formatPriceInputDisplay(listing.price);
+      const price = parsePriceInput(raw);
+      if (!Number.isFinite(price) || price < 0) {
+        setDeleteError("Geçerli bir fiyat girin.");
+        return;
+      }
+      setDeleteError("");
+      setSavingPriceId(listingId);
+      try {
+        const { error } = await sb
+          .from("listings")
+          .update({ price })
+          .eq("id", listingId)
+          .eq("seller_id", userId);
+        if (error) {
+          setDeleteError(error.message);
+          return;
+        }
+        setItems((prev) =>
+          prev.map((x) => (x.id === listingId ? { ...x, price } : x))
+        );
+        setPriceDrafts((prev) => {
+          const next = { ...prev };
+          delete next[listingId];
+          return next;
+        });
+      } finally {
+        setSavingPriceId(null);
+      }
+    },
+    [userId, items, priceDrafts]
+  );
+
+  const handleMarkSold = useCallback(
+    async (listingId: string) => {
+      if (!userId) return;
+      if (
+        !window.confirm(
+          "Bu ilanı «satıldı» olarak işaretlemek istiyor musunuz? İlan vitrinden kalkacak; silinmez, istediğiniz zaman ilanlarımdan silebilirsiniz."
+        )
+      ) {
+        return;
+      }
+      const sb = getSupabaseBrowser();
+      if (!sb) return;
+      setDeleteError("");
+      setMarkingSoldId(listingId);
+      try {
+        const { error } = await sb
+          .from("listings")
+          .update({ status: "sold" })
+          .eq("id", listingId)
+          .eq("seller_id", userId);
+        if (error) {
+          setDeleteError(error.message);
+          return;
+        }
+        setItems((prev) =>
+          prev.map((x) =>
+            x.id === listingId ? { ...x, status: "sold" } : x
+          )
+        );
+      } finally {
+        setMarkingSoldId(null);
+      }
+    },
+    [userId]
+  );
 
   const handleDeleteListing = useCallback(
     async (listingId: string) => {
@@ -137,7 +221,11 @@ export default function MyListingsPage() {
     <main className="container">
       <h1 className="section-title">İlanlarım</h1>
       <p className="meta" style={{ marginBottom: 14 }}>
-        Onay bekleyen ilanlar yayına alınınca herkes tarafından görülebilir.
+        Hesabınızda en fazla <strong>3</strong> onay bekleyen veya yayındaki ilan
+        olabilir. Yayında kalan ilanlar <strong>30 gün</strong> sonra otomatik
+        silinir (satıldı veya reddedilenler bu süreye göre silinmez). Onay
+        bekleyen veya yayındaki ilanlarda fiyatı karttan veya düzenle sayfasından
+        güncelleyebilirsiniz.
       </p>
       {deleteError && (
         <p
@@ -168,7 +256,25 @@ export default function MyListingsPage() {
               ownerToolbar={{
                 editHref: `/ilanlarim/${listing.id}/duzenle`,
                 onDelete: () => void handleDeleteListing(listing.id),
-                busy: deletingId === listing.id
+                onMarkSold: () => void handleMarkSold(listing.id),
+                markSoldBusy: markingSoldId === listing.id,
+                busy: deletingId === listing.id,
+                ...(listing.status === "pending" || listing.status === "active"
+                  ? {
+                      priceQuickEdit: {
+                        value:
+                          priceDrafts[listing.id] ??
+                          formatPriceInputDisplay(listing.price),
+                        onChange: (v) =>
+                          setPriceDrafts((prev) => ({
+                            ...prev,
+                            [listing.id]: v
+                          })),
+                        onSave: () => void handleSavePrice(listing.id),
+                        saving: savingPriceId === listing.id
+                      }
+                    }
+                  : {})
               }}
             />
           ))}

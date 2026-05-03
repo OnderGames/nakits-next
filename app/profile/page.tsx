@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import ListingCard from "@/components/ListingCard";
 import { fetchSellerActiveListings } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
@@ -28,6 +28,8 @@ export default function ProfilePage() {
   const [saveNotice, setSaveNotice] = useState("");
   const [publicCode, setPublicCode] = useState<string | null>(null);
   const [profileChecked, setProfileChecked] = useState(false);
+  const [markingSoldId, setMarkingSoldId] = useState<string | null>(null);
+  const [listingActionError, setListingActionError] = useState("");
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -60,7 +62,7 @@ export default function ProfilePage() {
     }
     const sb = getSupabaseBrowser();
     if (!sb) return;
-    void fetchSellerActiveListings(sb, userId, 2).then(setActiveListings);
+    void fetchSellerActiveListings(sb, userId, 6).then(setActiveListings);
   }, [userId]);
 
   useEffect(() => {
@@ -139,8 +141,42 @@ export default function ProfilePage() {
       return;
     }
     setSaveNotice("Profilin kaydedildi.");
-    void fetchSellerActiveListings(sb, userId, 2).then(setActiveListings);
+    void fetchSellerActiveListings(sb, userId, 6).then(setActiveListings);
   }
+
+  const handleMarkSoldFromProfile = useCallback(
+    async (listingId: string) => {
+      if (!userId) return;
+      if (
+        !window.confirm(
+          "İlanı «satıldı» olarak işaretlemek istiyor musunuz? Vitrinden kalkar."
+        )
+      ) {
+        return;
+      }
+      const sb = getSupabaseBrowser();
+      if (!sb) return;
+      setListingActionError("");
+      setMarkingSoldId(listingId);
+      try {
+        const { error } = await sb
+          .from("listings")
+          .update({ status: "sold" })
+          .eq("id", listingId)
+          .eq("seller_id", userId);
+        if (error) {
+          setListingActionError(error.message);
+          return;
+        }
+        setActiveListings((prev) =>
+          prev.filter((x) => x.id !== listingId)
+        );
+      } finally {
+        setMarkingSoldId(null);
+      }
+    },
+    [userId]
+  );
 
   if (!ready) {
     return (
@@ -287,14 +323,40 @@ export default function ProfilePage() {
       </section>
 
       <h2 className="section-title">Yayındaki ilanlarım</h2>
+      <p className="meta" style={{ marginBottom: 12 }}>
+        En fazla 3 onay bekleyen/yayındaki ilanınız olabilir; süresi dolanlar
+        otomatik silinir. Alıcıyla anlaştıysanız «Satıldı» ile vitrinden
+        kaldırabilirsiniz.
+      </p>
+      {listingActionError && (
+        <p
+          className="notice"
+          style={{
+            marginBottom: 12,
+            background: "#fee2e2",
+            borderColor: "#fecaca",
+            color: "#7f1d1d"
+          }}
+        >
+          {listingActionError}
+        </p>
+      )}
       {hasSupabaseConfig && shown.length === 0 && (
         <p className="meta">
-          Henüz yayındaki ilanın yok (onay bekleyenler dahil değil).
+          Henüz yayındaki ilanın yok (onay bekleyenler burada listelenmez).
         </p>
       )}
       <section className="cards">
         {shown.map((listing) => (
-          <ListingCard key={listing.id} listing={listing} />
+          <ListingCard
+            key={listing.id}
+            listing={listing}
+            ownerToolbar={{
+              editHref: `/ilanlarim/${listing.id}/duzenle`,
+              onMarkSold: () => void handleMarkSoldFromProfile(listing.id),
+              markSoldBusy: markingSoldId === listing.id
+            }}
+          />
         ))}
       </section>
       <p className="meta" style={{ marginTop: 20 }}>
