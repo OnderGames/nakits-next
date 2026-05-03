@@ -5,6 +5,7 @@ import Link from "next/link";
 import FavoriteHeartButton from "@/components/FavoriteHeartButton";
 import {
   formatListingCategoryLineCity,
+  formatListingPlaceLine,
   formatPrice,
   formatPriceInputDisplay,
   parsePriceInput
@@ -83,6 +84,9 @@ export default function ListingCard({
             </div>
             <div className="card-body">
               <h3 className="card--vitrin__title">{listing.title}</h3>
+              <p className="card--vitrin__place">
+                {formatListingPlaceLine(listing.city, listing.district)}
+              </p>
               <p className="price price--vitrin">{formatPrice(listing.price)}</p>
             </div>
           </Link>

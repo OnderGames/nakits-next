@@ -165,16 +165,23 @@ export function formatCategoryDisplay(key: string): string {
   return `${parsed.group.emoji} ${parsed.group.name} › ${parsed.sub.name}`;
 }
 
+/** Sadece konum: "İl · ilçe" (ilçe yoksa il). */
+export function formatListingPlaceLine(
+  city: string,
+  district?: string | null
+): string {
+  const c = city.trim() || "Konum belirtilmedi";
+  const d = district?.trim();
+  return d ? `${c} · ${d}` : c;
+}
+
 /** Kartta kısa: şehir (ve isteğe bağlı ilçe) + kategori özeti */
 export function formatListingCategoryLineCity(
   city: string,
   categoryKey: string,
   district?: string | null
 ): string {
-  const place =
-    district && district.trim()
-      ? `${city} · ${district.trim()}`
-      : city;
+  const place = formatListingPlaceLine(city, district);
   const parsed = parseCategoryKey(categoryKey);
   if (!parsed) return `${place} · ${categoryKey}`;
   return `${place} · ${parsed.group.name} › ${parsed.sub.name}`;
