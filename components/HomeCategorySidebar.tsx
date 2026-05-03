@@ -18,12 +18,9 @@ export default function HomeCategorySidebar({ counts }: Props) {
         Kategoriler
       </h2>
       <ul className="home-category-sidebar__list">
-        {CATEGORY_GROUPS.map((group, idx) => (
+        {CATEGORY_GROUPS.map((group) => (
           <li key={group.slug}>
-            <details
-              className="home-category-sidebar__details"
-              open={idx === 0}
-            >
+            <details className="home-category-sidebar__details">
               <summary className="home-category-sidebar__summary">
                 <span className="home-category-sidebar__emoji" aria-hidden>
                   {group.emoji}
