@@ -30,7 +30,7 @@ export default function ListingCardPublic({ listing, vitrin }: Props) {
   if (vitrin) {
     return (
       <article className="card card--vitrin">
-        <Link href={href}>
+        <Link href={href} className="card--vitrin__link">
           <div className="card--vitrin__media">
             <Image
               src={listing.image}

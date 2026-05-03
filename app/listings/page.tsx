@@ -283,7 +283,7 @@ function ListingsPageInner() {
         </p>
       )}
 
-      <section className="cards" style={{ marginTop: 14 }}>
+      <section className="cards cards--browse" style={{ marginTop: 14 }}>
         {filtered.map((listing) => (
           <ListingCard key={listing.id} listing={listing} />
         ))}

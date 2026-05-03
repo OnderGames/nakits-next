@@ -79,7 +79,7 @@ export default async function PublicUserProfilePage({ params }: Props) {
       {listings.length === 0 ? (
         <p className="meta">Bu üyenin şu an yayındaki ilanı yok.</p>
       ) : (
-        <section className="cards">
+        <section className="cards cards--browse">
           {listings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} />
           ))}
