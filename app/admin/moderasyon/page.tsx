@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
-import type { HomepageTheme } from "@/lib/site-settings";
+import {
+  HOMEPAGE_THEME_LABEL,
+  HOMEPAGE_THEMES,
+  isHomepageTheme,
+  type HomepageTheme
+} from "@/lib/site-settings";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
@@ -146,7 +151,7 @@ export default function AdminModerationPage() {
         setHomepageThemeLoaded(true);
         return;
       }
-      if (json.homepage_theme === "classic" || json.homepage_theme === "v2") {
+      if (isHomepageTheme(json.homepage_theme)) {
         setHomepageTheme(json.homepage_theme);
       }
       setHomepageThemeLoaded(true);
@@ -297,7 +302,11 @@ export default function AdminModerationPage() {
           >
             {themeError}{" "}
             <code style={{ fontSize: 12 }}>sql/migration_site_settings.sql</code>{" "}
-            dosyasını Supabase SQL Editor&apos;da çalıştırdınız mı?
+            ve gerekirse{" "}
+            <code style={{ fontSize: 12 }}>
+              sql/migration_site_settings_expand_themes.sql
+            </code>{" "}
+            dosyalarını Supabase SQL Editor&apos;da çalıştırdınız mı?
           </p>
         )}
         <label htmlFor="admin-homepage-theme" style={{ display: "block", marginBottom: 8 }}>
@@ -310,10 +319,13 @@ export default function AdminModerationPage() {
           onChange={(e) =>
             setHomepageTheme(e.target.value as HomepageTheme)
           }
-          style={{ maxWidth: 360, marginBottom: 12 }}
+          style={{ maxWidth: 420, marginBottom: 12 }}
         >
-          <option value="v2">Modern (koyu üst bölüm, turuncu vurgu)</option>
-          <option value="classic">Klasik (yeşil spotlight, alıntı metin)</option>
+          {HOMEPAGE_THEMES.map((id) => (
+            <option key={id} value={id}>
+              {HOMEPAGE_THEME_LABEL[id]}
+            </option>
+          ))}
         </select>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
           <button

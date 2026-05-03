@@ -4,7 +4,12 @@ import {
   getServiceRoleMissingMessage,
   verifyAdminFromRequest
 } from "@/lib/admin-auth";
-import type { HomepageTheme } from "@/lib/site-settings";
+import {
+  HOMEPAGE_THEME_DEFAULT,
+  HOMEPAGE_THEMES,
+  isHomepageTheme,
+  type HomepageTheme
+} from "@/lib/site-settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,12 +40,12 @@ export async function GET(request: Request) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 
-  const theme =
-    (data as { homepage_theme?: string } | null)?.homepage_theme === "classic"
-      ? "classic"
-      : "v2";
+  const raw = (data as { homepage_theme?: string } | null)?.homepage_theme;
+  const theme: HomepageTheme = isHomepageTheme(raw)
+    ? raw
+    : HOMEPAGE_THEME_DEFAULT;
 
-  return Response.json({ homepage_theme: theme as HomepageTheme });
+  return Response.json({ homepage_theme: theme });
 }
 
 export async function PATCH(request: Request) {
@@ -62,9 +67,11 @@ export async function PATCH(request: Request) {
   }
 
   const t = body.homepage_theme;
-  if (t !== "classic" && t !== "v2") {
+  if (!isHomepageTheme(t)) {
     return Response.json(
-      { error: "homepage_theme yalnızca classic veya v2 olabilir." },
+      {
+        error: `homepage_theme şunlardan biri olmalı: ${HOMEPAGE_THEMES.join(", ")}.`
+      },
       { status: 400 }
     );
   }

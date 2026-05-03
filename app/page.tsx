@@ -21,8 +21,12 @@ export default async function HomePage() {
   const shown =
     fetched !== null ? fetched.slice(0, 3) : mockListings.slice(0, 3);
 
-  const mainClass =
-    theme === "v2" ? "container home--v2" : "container home--classic";
+  const mainClass = `container home--${theme}`;
+
+  const listingsHeadingClass =
+    theme === "classic"
+      ? "section-title"
+      : `section-title home-listings-title`;
 
   return (
     <main className={mainClass}>
@@ -35,14 +39,8 @@ export default async function HomePage() {
         </p>
       )}
 
-      <h2
-        className={
-          theme === "v2"
-            ? "section-title home-listings-title"
-            : "section-title"
-        }
-      >
-        {theme === "v2" ? "Öne çıkan ilanlar" : "Öne Çıkan İlanlar"}
+      <h2 className={listingsHeadingClass}>
+        {theme === "classic" ? "Öne Çıkan İlanlar" : "Öne çıkan ilanlar"}
       </h2>
       {fetched !== null && shown.length === 0 && (
         <p className="meta">
@@ -55,7 +53,12 @@ export default async function HomePage() {
         ))}
       </section>
 
-      <p className="meta" style={{ marginTop: 24 }}>
+      <p
+        className={
+          theme === "classic" ? "meta" : "meta home-more-link"
+        }
+        style={{ marginTop: 24 }}
+      >
         <Link href="/listings">Tüm ilanları gör</Link> — şehir ve ilçe filtresi
         burada.
       </p>

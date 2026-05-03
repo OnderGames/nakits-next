@@ -248,7 +248,16 @@ on conflict (slug) do nothing;
 create table if not exists site_settings (
   id smallint primary key default 1,
   homepage_theme text not null default 'v2'
-    check (homepage_theme in ('classic', 'v2')),
+    check (
+      homepage_theme in (
+        'classic',
+        'v2',
+        'aurora',
+        'sunrise',
+        'minimal',
+        'slate'
+      )
+    ),
   updated_at timestamptz not null default now()
 );
 insert into site_settings (id, homepage_theme) values (1, 'v2') on conflict (id) do nothing;
