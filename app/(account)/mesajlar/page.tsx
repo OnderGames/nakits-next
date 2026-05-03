@@ -122,11 +122,12 @@ export default function MessagesInboxPage() {
     return (
       <div className="account-page">
         <h1 className="section-title">Mesajlarım</h1>
-        <section className="panel">
-          <p>Mesajlarını görmek için giriş yap.</p>
+        <section className="panel account-empty-panel">
+          <p className="account-empty-panel__text">
+            Mesajlarını görmek için giriş yap.
+          </p>
           <Link
-            className="btn btn-primary"
-            style={{ display: "inline-block", marginTop: 12 }}
+            className="btn btn-primary account-empty-panel__cta"
             href="/login?next=/mesajlar"
           >
             Giriş yap
@@ -150,9 +151,11 @@ export default function MessagesInboxPage() {
       {loading ? (
         <p className="meta">Yükleniyor…</p>
       ) : items.length === 0 ? (
-        <section className="panel">
-          <p>Henüz mesajın yok. Bir ilan sayfasından satıcıya yazabilirsin.</p>
-          <Link className="btn btn-primary" style={{ marginTop: 12 }} href="/listings">
+        <section className="panel account-empty-panel">
+          <p className="account-empty-panel__text">
+            Henüz mesajın yok. Bir ilan sayfasından satıcıya yazabilirsin.
+          </p>
+          <Link className="btn btn-primary account-empty-panel__cta" href="/listings">
             İlanlara git
           </Link>
         </section>

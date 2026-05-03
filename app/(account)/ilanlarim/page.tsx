@@ -295,9 +295,12 @@ export default function MyListingsPage() {
         </p>
       )}
       {items.length === 0 ? (
-        <section className="panel">
-          <p>Henüz ilan vermedin.</p>
-          <Link className="btn btn-primary" style={{ display: "inline-block", marginTop: 12 }} href="/add-listing">
+        <section className="panel account-empty-panel">
+          <p className="account-empty-panel__text">Henüz ilan vermedin.</p>
+          <Link
+            className="btn btn-primary account-empty-panel__cta"
+            href="/add-listing"
+          >
             İlan ver
           </Link>
         </section>
@@ -332,12 +335,20 @@ export default function MyListingsPage() {
             </button>
           </div>
           {displayedListings.length === 0 ? (
-            <section className="panel">
-              <p className="meta" style={{ margin: 0 }}>
+            <section className="panel account-empty-panel">
+              <p className="account-empty-panel__text">
                 {listingTab === "on"
                   ? "Şu an yayındaki ilanın yok (onay bekleyen veya satıldı / süresi dolmuş ilanlar «Yayında olmayan» sekmesinde)."
                   : "Bu grupta ilan yok."}
               </p>
+              {listingTab === "off" ? (
+                <Link
+                  className="btn btn-outline account-empty-panel__cta"
+                  href="/add-listing"
+                >
+                  Yeni ilan ver
+                </Link>
+              ) : null}
             </section>
           ) : (
         <section className="cards">

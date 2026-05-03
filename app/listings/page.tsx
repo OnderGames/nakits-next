@@ -8,6 +8,7 @@ import {
   useRef,
   useState
 } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import HomeCategorySidebar from "@/components/HomeCategorySidebar";
 import ListingCard from "@/components/ListingCard";
@@ -290,11 +291,16 @@ function ListingsPageInner() {
       </section>
 
       {filtered.length === 0 && (
-        <p className="meta" style={{ marginTop: 14 }}>
-          {hasSupabaseConfig
-            ? "Henüz yayındaki ilan yok veya filtreye uygun ilan bulunamadı."
-            : "Filtreye uygun ilan yok."}
-        </p>
+        <section className="panel account-empty-panel" style={{ marginTop: 14 }}>
+          <p className="account-empty-panel__text">
+            {hasSupabaseConfig
+              ? "Henüz yayındaki ilan yok veya filtreye uygun ilan bulunamadı."
+              : "Filtreye uygun ilan yok."}
+          </p>
+          <Link className="btn btn-outline account-empty-panel__cta" href="/add-listing">
+            İlan ver
+          </Link>
+        </section>
       )}
 
       <section className="cards cards--browse" style={{ marginTop: 14 }}>

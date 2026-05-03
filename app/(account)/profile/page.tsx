@@ -378,9 +378,14 @@ export default function ProfilePage() {
         </p>
       )}
       {hasSupabaseConfig && shown.length === 0 && (
-        <p className="meta">
-          Henüz yayındaki ilanın yok (onay bekleyenler burada listelenmez).
-        </p>
+        <section className="panel account-empty-panel">
+          <p className="account-empty-panel__text">
+            Henüz yayındaki ilanın yok (onay bekleyenler burada listelenmez).
+          </p>
+          <Link className="btn btn-outline account-empty-panel__cta" href="/ilanlarim">
+            Tüm ilanlarımı aç
+          </Link>
+        </section>
       )}
       <section className="cards">
         {shown.map((listing) => (

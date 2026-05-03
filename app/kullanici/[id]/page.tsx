@@ -77,7 +77,14 @@ export default async function PublicUserProfilePage({ params }: Props) {
 
       <h2 className="section-title">Yayındaki ilanlar</h2>
       {listings.length === 0 ? (
-        <p className="meta">Bu üyenin şu an yayındaki ilanı yok.</p>
+        <section className="panel account-empty-panel">
+          <p className="account-empty-panel__text">
+            Bu üyenin şu an yayındaki ilanı yok.
+          </p>
+          <Link href="/listings" className="btn btn-outline account-empty-panel__cta">
+            İlanlara git
+          </Link>
+        </section>
       ) : (
         <section className="cards cards--browse">
           {listings.map((listing) => (

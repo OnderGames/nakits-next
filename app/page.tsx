@@ -52,9 +52,17 @@ export default async function HomePage() {
           </div>
 
           {fetched !== null && shown.length === 0 && (
-            <p className="meta">
-              Henüz yayındaki ilan yok. İlk ilanı sen verebilirsin.
-            </p>
+            <section
+              className="panel account-empty-panel"
+              style={{ marginBottom: 14 }}
+            >
+              <p className="account-empty-panel__text">
+                Henüz yayındaki ilan yok. İlk ilanı sen verebilirsin.
+              </p>
+              <Link href="/add-listing" className="btn btn-primary account-empty-panel__cta">
+                İlan ver
+              </Link>
+            </section>
           )}
 
           <section className="cards cards--vitrin">

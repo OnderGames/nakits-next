@@ -339,7 +339,9 @@ export default function ConversationPage() {
           }}
         >
           {messages.length === 0 ? (
-            <p className="meta">Henüz mesaj yok. İlk mesajı sen gönder.</p>
+            <p className="account-empty-panel__text" style={{ margin: 0 }}>
+              Henüz mesaj yok. İlk mesajı sen gönder.
+            </p>
           ) : (
             messages.map((m) => {
               const mine = m.senderId === userId;

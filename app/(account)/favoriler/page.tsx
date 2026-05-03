@@ -77,12 +77,17 @@ export default function FavorilerPage() {
     return (
       <div className="account-page">
         <h1 className="section-title">Favorilerim</h1>
-        <p className="meta" style={{ marginBottom: 16 }}>
-          Favori ilanlarını görmek için giriş yapmalısın.
-        </p>
-        <Link className="btn btn-primary" href="/login?next=/favoriler">
-          Giriş yap
-        </Link>
+        <section className="panel account-empty-panel">
+          <p className="account-empty-panel__text">
+            Favori ilanlarını görmek için giriş yapmalısın.
+          </p>
+          <Link
+            className="btn btn-primary account-empty-panel__cta"
+            href="/login?next=/favoriler"
+          >
+            Giriş yap
+          </Link>
+        </section>
       </div>
     );
   }
@@ -91,10 +96,15 @@ export default function FavorilerPage() {
     <div className="account-page">
       <h1 className="section-title">Favorilerim</h1>
       {listings.length === 0 ? (
-        <p className="meta">
-          Henüz favori ilanın yok. İlan kartlarındaki kalbe tıklayarak
-          ekleyebilirsin.
-        </p>
+        <section className="panel account-empty-panel">
+          <p className="account-empty-panel__text">
+            Henüz favori ilanın yok. İlan kartlarındaki kalbe tıklayarak
+            ekleyebilirsin.
+          </p>
+          <Link className="btn btn-outline account-empty-panel__cta" href="/listings">
+            İlanlara git
+          </Link>
+        </section>
       ) : (
         <section className="cards cards--browse" style={{ marginTop: 14 }}>
           {listings.map((listing) => (

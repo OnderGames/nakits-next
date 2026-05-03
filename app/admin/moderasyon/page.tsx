@@ -424,8 +424,8 @@ export default function AdminModerationPage() {
       </p>
 
       {rows.length === 0 ? (
-        <section className="panel">
-          <p>Bu filtrede ilan yok.</p>
+        <section className="panel account-empty-panel">
+          <p className="account-empty-panel__text">Bu filtrede ilan yok.</p>
         </section>
       ) : (
         <section className="cards cards--browse admin-moderation-browse">
