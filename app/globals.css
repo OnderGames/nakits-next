@@ -2222,36 +2222,20 @@ form .row {
   margin-top: 22px;
 }
 
+/* Vitrin: kartları dar sütunda sıkıştırmayı azaltır (uzun fiyat tek satırda kalsın diye daha geniş hücre) */
 .cards--vitrin {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-@media (min-width: 640px) {
-  .cards--vitrin {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 900px) {
-  .cards--vitrin {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1200px) {
-  .cards--vitrin {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+  gap: 14px;
 }
 
 @media (max-width: 899px) {
   .cards.cards--vitrin {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px;
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 520px) {
   .cards.cards--vitrin {
     grid-template-columns: 1fr !important;
   }
@@ -2281,7 +2265,7 @@ form .row {
 }
 
 .card--vitrin img {
-  height: 118px;
+  height: 132px;
 }
 
 .card--vitrin .card-body {
@@ -2289,7 +2273,8 @@ form .row {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 10px 10px 12px;
+  min-width: 0;
+  padding: 11px 11px 13px;
   background: linear-gradient(180deg, #f0fdf9 0%, #ecfdf5 52%, #e6fffa 100%);
   border-top: 1px solid rgba(45, 212, 191, 0.22);
 }
@@ -2414,8 +2399,12 @@ form .row {
   margin: 0 !important;
   margin-top: auto !important;
   padding-top: 2px;
-  font-size: 15px;
+  font-size: clamp(12px, 1vw + 11px, 16px);
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.022em;
+  line-height: 1.25;
+  white-space: nowrap;
   color: var(--vitrin-orange) !important;
 }
 
