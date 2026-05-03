@@ -99,9 +99,14 @@ function ListingsPageInner() {
         : null;
 
     return data.filter((item) => {
+      const titleHit =
+        !qLower || item.title.toLowerCase().includes(qLower);
+      const sellerHit =
+        !qLower ||
+        item.seller.toLowerCase().includes(qLower);
       const matchQ = codeExact
         ? item.listingCode === codeExact
-        : !qLower || item.title.toLowerCase().includes(qLower);
+        : titleHit || sellerHit;
       const matchCity = !city || item.city === city;
       const matchDistrict =
         !district ||
@@ -154,10 +159,9 @@ function ListingsPageInner() {
       <section className="panel">
         <p className="meta" style={{ margin: "0 0 12px" }}>
           Filtreler adres çubuğuna yazılır; sayfa bağlantısını kopyalayarak aynı
-          aramayı paylaşabilirsiniz. Üst menüden arama da bu parametrelerle açılır.
-          Önce <strong>il</strong> seçin; ardından <strong>ilçe</strong> menüsü
-          dolar. <strong>6–9 haneli ilan numarası</strong> ile doğrudan eşleşme
-          yapılır.
+          aramayı paylaşabilirsiniz. Arama: başlık, <strong>satıcı adı</strong> veya
+          <strong> 6–9 haneli ilan no</strong>. Önce <strong>il</strong> seçin;
+          ardından <strong>ilçe</strong> menüsü dolar.
         </p>
         <div className="listings-filter-grid">
           <div className="filter-field">
@@ -170,7 +174,7 @@ function ListingsPageInner() {
                 setQ(v);
                 scheduleSearchUrl(v);
               }}
-              placeholder="Başlık veya ilan no (6–9 hane)…"
+              placeholder="Başlık, satıcı adı veya ilan no (6–9 hane)…"
             />
           </div>
           <div className="filter-field">

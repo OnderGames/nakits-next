@@ -46,7 +46,7 @@ function HeaderSearchBar() {
       aria-label="İlan ara"
     >
       <label htmlFor="header-search-q" className="nav-header-search__label">
-        Kelime veya ilan no ile ara
+        Kelime, ilan no veya satıcı / mağaza adı ile ara
       </label>
       <input
         id="header-search-q"
@@ -200,46 +200,12 @@ export default function Header() {
     <header className="topbar">
       <div className="container nav">
         <div className="nav__leading">
-          <Link className="brand-mark" href="/" aria-label="Nakits — ana sayfa">
-            <span className="brand-mark__icon" aria-hidden>
-              <svg
-                className="brand-mark__svg"
-                viewBox="0 0 32 32"
-                width="32"
-                height="32"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect
-                  width="32"
-                  height="32"
-                  rx="10"
-                  fill="url(#nakitsBrandMarkGrad)"
-                />
-                <path
-                  d="M10 24V8M10 8l12 16M22 8v16"
-                  stroke="white"
-                  strokeWidth="3.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <defs>
-                  <linearGradient
-                    id="nakitsBrandMarkGrad"
-                    x1="2"
-                    y1="2"
-                    x2="32"
-                    y2="32"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop stopColor="#4f46e5" />
-                    <stop offset="0.55" stopColor="#4f39f6" />
-                    <stop offset="1" stopColor="#2563eb" />
-                  </linearGradient>
-                </defs>
-              </svg>
+          <Link className="brand-mark" href="/" aria-label="Nakits.com — ana sayfa">
+            <span className="brand-mark__text">
+              <span className="brand-mark__nakit">Nakit</span>
+              <span className="brand-mark__accent">s</span>
+              <span className="brand-mark__domain">.com</span>
             </span>
-            <span className="brand-mark__word">Nakits</span>
           </Link>
 
           <div className="nav-mobile-bar">
