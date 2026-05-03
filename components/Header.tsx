@@ -263,10 +263,16 @@ export default function Header() {
         </Suspense>
 
         <Link
-          href="/listings"
+          href={
+            !hasSupabaseConfig
+              ? "/listings"
+              : loggedIn
+                ? "/favoriler"
+                : "/login?next=/favoriler"
+          }
           className="nav-fav"
-          title="Tüm ilanlara göz at"
-          aria-label="Tüm ilanlara göz at"
+          title={hasSupabaseConfig ? "Favorilerim" : "İlanlar"}
+          aria-label={hasSupabaseConfig ? "Favorilerim" : "İlanlar"}
         >
           <svg
             width="24"
@@ -309,6 +315,15 @@ export default function Header() {
           <Link className="nav-pill" href="/listings">
             İlanlar
           </Link>
+          {hasSupabaseConfig && (
+            <Link
+              className="nav-pill"
+              href={loggedIn ? "/favoriler" : "/login?next=/favoriler"}
+              onClick={() => setMenuOpen(false)}
+            >
+              Favorilerim
+            </Link>
+          )}
           {loggedIn && (
             <Link
               className="nav-pill nav-pill--badged"

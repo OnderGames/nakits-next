@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import FavoriteHeartButton from "@/components/FavoriteHeartButton";
 import {
   formatListingCategoryLineCity,
   formatPrice,
@@ -64,6 +65,13 @@ export default function ListingCard({ listing, ownerToolbar }: Props) {
       <Link href={listingDetailHref(listing)}>
         <div style={{ position: "relative" }}>
           <Image src={listing.image} alt={listing.title} width={500} height={280} />
+          {!ownerToolbar && (
+            <FavoriteHeartButton
+              listingId={listing.id}
+              sellerId={listing.sellerId}
+              variant="browse"
+            />
+          )}
           {(listing.imageUrls?.length ?? 0) > 1 && (
             <span
               style={{

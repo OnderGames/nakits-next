@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import FavoriteHeartButton from "@/components/FavoriteHeartButton";
 import {
   formatListingCategoryLineCity,
   formatPrice
@@ -30,41 +31,32 @@ export default function ListingCardPublic({ listing, vitrin }: Props) {
   if (vitrin) {
     return (
       <article className="card card--vitrin">
-        <Link href={href} className="card--vitrin__link">
-          <div className="card--vitrin__media">
-            <Image
-              src={listing.image}
-              alt={listing.title}
-              width={500}
-              height={280}
-            />
-            <span className="card--vitrin__fav" aria-hidden>
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 21s-6.716-4.432-9-8.5C.89 9.732 2.14 6 6 6c2.352 0 3.638 1.352 4 2 .362-.648 1.648-2 4-2 3.86 0 5.11 3.732 3 6.5C16.716 16.568 12 21 12 21z"
-                  stroke="#ea580c"
-                  strokeWidth="1.75"
-                  fill="rgba(255,255,255,0.85)"
-                />
-              </svg>
-            </span>
-            {(listing.imageUrls?.length ?? 0) > 1 && (
-              <span className="card--vitrin__badge">
-                {listing.imageUrls!.length} fotoğraf
-              </span>
-            )}
-          </div>
-          <div className="card-body">
-            <h3 className="card--vitrin__title">{listing.title}</h3>
-            <p className="price price--vitrin">{formatPrice(listing.price)}</p>
-          </div>
-        </Link>
+        <div className="card--vitrin__shell">
+          <Link href={href} className="card--vitrin__link">
+            <div className="card--vitrin__media">
+              <Image
+                src={listing.image}
+                alt={listing.title}
+                width={500}
+                height={280}
+              />
+              {(listing.imageUrls?.length ?? 0) > 1 && (
+                <span className="card--vitrin__badge">
+                  {listing.imageUrls!.length} fotoğraf
+                </span>
+              )}
+            </div>
+            <div className="card-body">
+              <h3 className="card--vitrin__title">{listing.title}</h3>
+              <p className="price price--vitrin">{formatPrice(listing.price)}</p>
+            </div>
+          </Link>
+          <FavoriteHeartButton
+            listingId={listing.id}
+            sellerId={listing.sellerId}
+            variant="vitrin"
+          />
+        </div>
       </article>
     );
   }

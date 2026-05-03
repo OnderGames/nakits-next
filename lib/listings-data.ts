@@ -251,6 +251,36 @@ export async function fetchPublicListings(
   });
 }
 
+/** Favoriler sırasına göre id listesi — yalnızca yayındaki ve süresi dolmamış ilanlar döner */
+export async function fetchPublicListingsByIds(
+  sb: SupabaseClient,
+  idsOrdered: string[]
+): Promise<Listing[]> {
+  if (idsOrdered.length === 0) return [];
+  const nowIso = new Date().toISOString();
+  const { data, error } = await withListingSelectFallback((sel) =>
+    sb
+      .from("listings")
+      .select(sel)
+      .in("id", idsOrdered)
+      .eq("status", "active")
+      .gt("expires_at", nowIso)
+  );
+
+  if (error || !data) return [];
+  const order = new Map(idsOrdered.map((id, i) => [id, i]));
+  const rows = data.map((raw) => {
+    const item = mapRowToListing(normalizeListingRow(raw));
+    const { status, ...rest } = item;
+    void status;
+    return rest;
+  });
+  rows.sort(
+    (a, b) => (order.get(a.id) ?? 9999) - (order.get(b.id) ?? 9999)
+  );
+  return rows;
+}
+
 export async function fetchListingById(
   sb: SupabaseClient,
   id: string

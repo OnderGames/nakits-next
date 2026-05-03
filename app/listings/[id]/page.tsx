@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ListingDetailFavoriteBar from "@/components/ListingDetailFavoriteBar";
 import ListingGalleryCarousel from "@/components/ListingGalleryCarousel";
 import ListingMessagePanel from "@/components/ListingMessagePanel";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
@@ -39,7 +40,13 @@ export default async function ListingDetailPage({ params }: Props) {
       <section className="grid-2">
         <div className="panel">
           <ListingGalleryCarousel images={gallery} title={listing.title} />
-          <h2>{listing.title}</h2>
+          <div className="listing-detail-title-row">
+            <h2>{listing.title}</h2>
+            <ListingDetailFavoriteBar
+              listingId={listing.id}
+              sellerId={listing.sellerId}
+            />
+          </div>
           <p className="price">{formatPrice(listing.price)}</p>
           <p>
             {listing.district?.trim()

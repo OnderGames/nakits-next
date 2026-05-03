@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { FavoritesProvider } from "@/components/FavoritesProvider";
 import Header from "@/components/Header";
 import "./globals.css";
 
@@ -24,8 +25,10 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body>
-        <Header />
-        {children}
+        <FavoritesProvider>
+          <Header />
+          {children}
+        </FavoritesProvider>
       </body>
     </html>
   );

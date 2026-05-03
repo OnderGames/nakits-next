@@ -2033,6 +2033,14 @@ form .row {
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
+.card--vitrin__shell {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .card--vitrin__link {
   display: flex;
   flex-direction: column;
@@ -2059,19 +2067,78 @@ form .row {
   position: relative;
 }
 
-.card--vitrin__fav {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  display: flex;
+/* Favori kalbi — kart overlay / liste / detay */
+.favorite-heart {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 34px;
   height: 34px;
+  padding: 0;
+  border: none;
   border-radius: 999px;
+  cursor: pointer;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-  pointer-events: none;
+  color: #ea580c;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.favorite-heart:hover:not(:disabled) {
+  transform: scale(1.06);
+  background: #fff;
+}
+
+.favorite-heart:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.favorite-heart--active {
+  color: #ea580c;
+}
+
+.favorite-heart--vitrin {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 4;
+}
+
+.favorite-heart--browse {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 4;
+}
+
+.favorite-heart--detail {
+  position: relative;
+  width: 42px;
+  height: 42px;
+}
+
+.listing-detail-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 14px 0 10px;
+}
+
+.listing-detail-title-row h2 {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+  line-height: 1.3;
+}
+
+.listing-detail-fav {
+  flex-shrink: 0;
 }
 
 .card--vitrin__badge {
