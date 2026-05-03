@@ -100,9 +100,46 @@ export default function Header() {
   return (
     <header className="topbar">
       <div className="container nav">
-        <Link className="nav-pill nav-pill--login brand-mark" href="/">
-          <span className="brand-mark__letter">N</span>
-          <span className="brand-mark__rest">akits</span>
+        <Link className="brand-mark" href="/" aria-label="Nakits — ana sayfa">
+          <span className="brand-mark__icon" aria-hidden>
+            <svg
+              className="brand-mark__svg"
+              viewBox="0 0 32 32"
+              width="32"
+              height="32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect
+                width="32"
+                height="32"
+                rx="10"
+                fill="url(#nakitsBrandMarkGrad)"
+              />
+              <path
+                d="M10 24V8M10 8l12 16M22 8v16"
+                stroke="white"
+                strokeWidth="3.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <defs>
+                <linearGradient
+                  id="nakitsBrandMarkGrad"
+                  x1="2"
+                  y1="2"
+                  x2="32"
+                  y2="32"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop stopColor="#4f46e5" />
+                  <stop offset="0.55" stopColor="#4f39f6" />
+                  <stop offset="1" stopColor="#2563eb" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </span>
+          <span className="brand-mark__word">Nakits</span>
         </Link>
         <nav className="menu">
           <Link className="nav-pill" href="/listings">
