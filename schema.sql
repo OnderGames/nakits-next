@@ -243,3 +243,14 @@ values
   ('is-sanayi_el-aletleri', 'El aletleri'),
   ('is-sanayi_ofis-malzemeleri', 'Ofis malzemeleri')
 on conflict (slug) do nothing;
+
+-- Site tercihleri (anasayfa teması; ayrıntı: sql/migration_site_settings.sql)
+create table if not exists site_settings (
+  id smallint primary key default 1,
+  homepage_theme text not null default 'v2'
+    check (homepage_theme in ('classic', 'v2')),
+  updated_at timestamptz not null default now()
+);
+insert into site_settings (id, homepage_theme) values (1, 'v2') on conflict (id) do nothing;
+alter table site_settings enable row level security;
+create policy "site_settings read all" on site_settings for select using (true);

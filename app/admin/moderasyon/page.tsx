@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
+import type { HomepageTheme } from "@/lib/site-settings";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
@@ -45,6 +46,11 @@ export default function AdminModerationPage() {
   const [rows, setRows] = useState<AdminListingRow[]>([]);
   const [loadError, setLoadError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [homepageTheme, setHomepageTheme] = useState<HomepageTheme>("v2");
+  const [homepageThemeLoaded, setHomepageThemeLoaded] = useState(false);
+  const [themeSaving, setThemeSaving] = useState(false);
+  const [themeMessage, setThemeMessage] = useState("");
+  const [themeError, setThemeError] = useState("");
 
   const authHeaders = useCallback(async () => {
     const sb = getSupabaseBrowser();
@@ -121,6 +127,57 @@ export default function AdminModerationPage() {
     if (!isAdmin || !checkedAdmin) return;
     void loadListings(filter);
   }, [filter, isAdmin, checkedAdmin, loadListings]);
+
+  useEffect(() => {
+    if (!isAdmin || !checkedAdmin) return;
+    let cancelled = false;
+    void (async () => {
+      setThemeError("");
+      const h = await authHeaders();
+      if (!h || cancelled) return;
+      const res = await fetch("/api/admin/site-settings", { headers: h });
+      const json = (await res.json()) as {
+        homepage_theme?: HomepageTheme;
+        error?: string;
+      };
+      if (cancelled) return;
+      if (!res.ok) {
+        setThemeError(json.error ?? "Anasayfa ayarı okunamadı.");
+        setHomepageThemeLoaded(true);
+        return;
+      }
+      if (json.homepage_theme === "classic" || json.homepage_theme === "v2") {
+        setHomepageTheme(json.homepage_theme);
+      }
+      setHomepageThemeLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, checkedAdmin, authHeaders]);
+
+  async function saveHomepageTheme() {
+    setThemeMessage("");
+    setThemeError("");
+    const h = await authHeaders();
+    if (!h) return;
+    setThemeSaving(true);
+    try {
+      const res = await fetch("/api/admin/site-settings", {
+        method: "PATCH",
+        headers: { ...h, "Content-Type": "application/json" },
+        body: JSON.stringify({ homepage_theme: homepageTheme })
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setThemeError(json.error ?? "Kaydedilemedi.");
+        return;
+      }
+      setThemeMessage("Anasayfa görünümü güncellendi. Ana sayfayı yenileyin.");
+    } finally {
+      setThemeSaving(false);
+    }
+  }
 
   async function setStatus(id: string, status: "active" | "rejected") {
     setBusyId(id);
@@ -219,6 +276,64 @@ export default function AdminModerationPage() {
         Tüm ilanları filtreleyebilir, onay bekleyenleri yayına alabilir veya
         reddedebilir, istediğiniz ilanı kalıcı olarak silebilirsiniz.
       </p>
+
+      <section className="panel" style={{ marginBottom: 20 }}>
+        <h2 className="section-title" style={{ marginTop: 0, fontSize: 18 }}>
+          Anasayfa görünümü
+        </h2>
+        <p className="meta" style={{ marginBottom: 12 }}>
+          Ziyaretçilerin gördüğü üst bölüm (kahraman alanı). Değişiklikten sonra
+          anasayfayı yenileyin.
+        </p>
+        {themeError && (
+          <p
+            className="notice"
+            style={{
+              marginBottom: 12,
+              background: "#fef3c7",
+              borderColor: "#fcd34d",
+              color: "#78350f"
+            }}
+          >
+            {themeError}{" "}
+            <code style={{ fontSize: 12 }}>sql/migration_site_settings.sql</code>{" "}
+            dosyasını Supabase SQL Editor&apos;da çalıştırdınız mı?
+          </p>
+        )}
+        <label htmlFor="admin-homepage-theme" style={{ display: "block", marginBottom: 8 }}>
+          Tema
+        </label>
+        <select
+          id="admin-homepage-theme"
+          value={homepageTheme}
+          disabled={!homepageThemeLoaded || themeSaving}
+          onChange={(e) =>
+            setHomepageTheme(e.target.value as HomepageTheme)
+          }
+          style={{ maxWidth: 360, marginBottom: 12 }}
+        >
+          <option value="v2">Modern (koyu üst bölüm, turuncu vurgu)</option>
+          <option value="classic">Klasik (yeşil spotlight, alıntı metin)</option>
+        </select>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!homepageThemeLoaded || themeSaving}
+            onClick={() => void saveHomepageTheme()}
+          >
+            {themeSaving ? "Kaydediliyor…" : "Temayı kaydet"}
+          </button>
+          <Link className="meta" href="/" target="_blank" rel="noreferrer">
+            Anasayfayı yeni sekmede aç →
+          </Link>
+        </div>
+        {themeMessage && (
+          <p className="notice" style={{ marginTop: 12, marginBottom: 0 }}>
+            {themeMessage}
+          </p>
+        )}
+      </section>
 
       {loadError && (
         <p
