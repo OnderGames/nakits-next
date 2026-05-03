@@ -30,3 +30,22 @@ export function formatListingExpiryShort(iso: string | undefined): string | null
   if (days === 1) return "1 gün kaldı";
   return `${days} gün kaldı`;
 }
+
+/** Satıcı / ilan sahibi: tam bitiş zamanı + kalan gün (profil, ilanlarım) */
+export function formatListingExpiryDetailTr(iso: string | undefined): string | null {
+  if (!iso) return null;
+  const end = new Date(iso);
+  const t = end.getTime();
+  if (Number.isNaN(t)) return null;
+  const datePart = end.toLocaleString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+  const short = formatListingExpiryShort(iso);
+  return short
+    ? `Yayından kalkma: ${datePart} · ${short}`
+    : `Yayından kalkma: ${datePart}`;
+}

@@ -9,6 +9,7 @@ import {
   parsePriceInput
 } from "@/lib/categories";
 import {
+  formatListingExpiryDetailTr,
   formatListingExpiryShort,
   listingCanRepublishFromSold
 } from "@/lib/listing-policy";
@@ -46,12 +47,15 @@ type Props = {
 };
 
 export default function ListingCard({ listing, ownerToolbar }: Props) {
+  const showExpiryForStatus =
+    listing.status === "pending" ||
+    listing.status === "active" ||
+    listing.status === "sold";
   const expiryLine =
-    listing.expiresAt &&
-    (listing.status === "pending" ||
-      listing.status === "active" ||
-      listing.status === "sold")
-      ? formatListingExpiryShort(listing.expiresAt)
+    listing.expiresAt && (ownerToolbar ? true : showExpiryForStatus)
+      ? ownerToolbar
+        ? formatListingExpiryDetailTr(listing.expiresAt)
+        : formatListingExpiryShort(listing.expiresAt)
       : null;
 
   return (

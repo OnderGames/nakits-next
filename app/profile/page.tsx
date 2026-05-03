@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import ListingCard from "@/components/ListingCard";
+import { LISTING_DURATION_DAYS } from "@/lib/listing-policy";
 import { fetchSellerActiveListings } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
@@ -324,9 +325,17 @@ export default function ProfilePage() {
 
       <h2 className="section-title">Yayındaki ilanlarım</h2>
       <p className="meta" style={{ marginBottom: 12 }}>
-        En fazla 3 onay bekleyen/yayındaki ilanınız olabilir; süresi dolanlar
-        otomatik silinir. Alıcıyla anlaştıysanız «Satıldı» ile vitrinden
-        kaldırabilirsiniz.
+        Yayındaki her ilan <strong>{LISTING_DURATION_DAYS} gün</strong> süreyle
+        listelenir; aşağıdaki
+        kartlarda <strong>yayından kalkma tarihi</strong> ve kalan gün
+        bilgisini görebilirsiniz. Süre dolunca ilan otomatik silinir. En fazla 3
+        onay bekleyen veya yayındaki ilanınız olabilir. Alıcıyla anlaştıysanız
+        «Satıldı» ile vitrinden kaldırabilirsiniz. Onay bekleyen ilanlar bu
+        özetde yok;{" "}
+        <Link href="/ilanlarim" style={{ color: "var(--primary)" }}>
+          tüm ilanlarım
+        </Link>{" "}
+        sayfasından takip edebilirsiniz.
       </p>
       {listingActionError && (
         <p

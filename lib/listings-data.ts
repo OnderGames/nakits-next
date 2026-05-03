@@ -303,12 +303,7 @@ export async function fetchSellerActiveListings(
   );
 
   if (error || !data) return [];
-  return data.map((raw) => {
-    const item = mapRowToListing(normalizeListingRow(raw));
-    const { status, ...rest } = item;
-    void status;
-    return rest;
-  });
+  return data.map((raw) => mapRowToListing(normalizeListingRow(raw)));
 }
 
 /** Herkese açık üye sayfası: yayındaki ilanlar */
