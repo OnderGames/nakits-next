@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState
@@ -81,6 +82,7 @@ type Props = {
 };
 
 export default function HeaderAccountMenu({ user, onCloseDrawer }: Props) {
+  const desktopPanelId = useId();
   const pathname = usePathname();
   const router = useRouter();
   const [desktopOpen, setDesktopOpen] = useState(false);
@@ -225,7 +227,7 @@ export default function HeaderAccountMenu({ user, onCloseDrawer }: Props) {
           className={`nav-account__desk-trigger ${desktopOpen ? "nav-account__desk-trigger--open" : ""}`}
           aria-expanded={desktopOpen}
           aria-haspopup="true"
-          aria-controls="nav-account-desktop-panel"
+          aria-controls={desktopPanelId}
           onClick={() => setDesktopOpen((o) => !o)}
         >
           <span className="nav-account__avatar nav-account__avatar--desk">
@@ -255,7 +257,7 @@ export default function HeaderAccountMenu({ user, onCloseDrawer }: Props) {
 
         {desktopOpen ? (
           <div
-            id="nav-account-desktop-panel"
+            id={desktopPanelId}
             className="nav-account__dropdown"
             role="menu"
           >

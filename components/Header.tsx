@@ -125,6 +125,10 @@ export default function Header() {
   }, [pathname]);
 
   useEffect(() => {
+    if (user) setMenuOpen(false);
+  }, [user]);
+
+  useEffect(() => {
     if (!menuOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -137,7 +141,9 @@ export default function Header() {
 
   return (
     <header className="topbar">
-      <div className="container nav">
+      <div
+        className={`container nav${loggedIn && user ? " nav--auth-mobile-tray" : ""}`}
+      >
         <div className="nav__leading">
           <Link className="brand-mark" href="/" aria-label="Nakits.com — ana sayfa">
             <span className="brand-mark__text">
@@ -146,7 +152,21 @@ export default function Header() {
             </span>
           </Link>
 
-          <div className="nav-mobile-bar">
+          <div
+            className={`nav-mobile-bar${loggedIn && user ? " nav-mobile-bar--auth" : ""}`}
+          >
+            {ready && loggedIn && user ? (
+              <div className="nav-user-cluster nav-user-cluster--toolbar-mobile">
+                <HeaderNotificationsBell
+                  userId={user.id}
+                  onCloseDrawer={() => setMenuOpen(false)}
+                />
+                <HeaderAccountMenu
+                  user={user}
+                  onCloseDrawer={() => setMenuOpen(false)}
+                />
+              </div>
+            ) : null}
             <Link
               className="nav-cta nav-cta--orange nav-cta--toolbar"
               href="/add-listing"
@@ -154,45 +174,47 @@ export default function Header() {
             >
               İlan Ver
             </Link>
-            <button
-              type="button"
-              className="nav-toggle"
-              aria-expanded={menuOpen}
-              aria-controls="site-menu"
-              aria-label={menuOpen ? "Menüyü kapat" : "Menüyü aç"}
-              onClick={() => setMenuOpen((o) => !o)}
-            >
-              {menuOpen ? (
-                <svg
-                  className="nav-toggle__svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                >
-                  <path
-                    fill="currentColor"
-                    d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1L10.6 12l-4.9 4.9a1 1 0 1 0 1.4 1.4L12 13.4l4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="nav-toggle__svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                >
-                  <path
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    d="M4 7h16M4 12h16M4 17h16"
-                  />
-                </svg>
-              )}
-            </button>
+            {!(loggedIn && user) ? (
+              <button
+                type="button"
+                className="nav-toggle"
+                aria-expanded={menuOpen}
+                aria-controls="site-menu"
+                aria-label={menuOpen ? "Menüyü kapat" : "Menüyü aç"}
+                onClick={() => setMenuOpen((o) => !o)}
+              >
+                {menuOpen ? (
+                  <svg
+                    className="nav-toggle__svg"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    aria-hidden
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1L10.6 12l-4.9 4.9a1 1 0 1 0 1.4 1.4L12 13.4l4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="nav-toggle__svg"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    aria-hidden
+                  >
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      d="M4 7h16M4 12h16M4 17h16"
+                    />
+                  </svg>
+                )}
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -227,7 +249,7 @@ export default function Header() {
           ) : loggedIn ? (
             <>
               {user ? (
-                <div className="nav-user-cluster">
+                <div className="nav-user-cluster nav-user-cluster--desktop-only">
                   <HeaderNotificationsBell
                     userId={user.id}
                     onCloseDrawer={() => setMenuOpen(false)}
