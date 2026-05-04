@@ -3193,7 +3193,7 @@ span.listing-seller__name--plain {
   color: #1e293b;
 }
 
-/* ——— Üye paneli: içerik + sağ menü şeridi ——— */
+/* ——— Üye paneli kabuğu (navigasyon üst çubukta) ——— */
 
 .account-shell {
   background: var(--bg);
@@ -3227,22 +3227,10 @@ span.listing-seller__name--plain {
   flex-shrink: 0;
 }
 
-.account-shell__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-  align-items: start;
-}
-
-@media (min-width: 900px) {
-  .account-shell__grid {
-    grid-template-columns: minmax(0, 1fr) minmax(268px, 300px);
-    gap: 28px 36px;
-  }
-}
-
 .account-shell__main {
   min-width: 0;
+  width: 100%;
+  max-width: none;
 }
 
 .account-page {
@@ -3333,179 +3321,6 @@ span.listing-seller__name--plain {
   padding: 0 0 12px;
 }
 
-/* Sağ şerit: profil + ikonlu menü */
-.account-shell__rail {
-  position: relative;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 0;
-  overflow: hidden;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px rgba(15, 23, 42, 0.06);
-}
-
-@media (min-width: 900px) {
-  .account-shell__rail {
-    position: sticky;
-    top: calc(var(--nav-height) + 12px);
-    align-self: start;
-    max-height: calc(100vh - var(--nav-height) - 24px);
-    overflow: auto;
-  }
-}
-
-.account-shell__identity {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  padding: 18px 18px 16px;
-  background: linear-gradient(
-    145deg,
-    rgba(234, 88, 12, 0.09) 0%,
-    rgba(251, 146, 60, 0.06) 45%,
-    transparent 100%
-  );
-  border-bottom: 1px solid rgba(229, 231, 235, 0.9);
-}
-
-.account-shell__avatar {
-  flex-shrink: 0;
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color: #fff;
-  background: linear-gradient(145deg, #ea580c 0%, #f97316 50%, #fb923c 100%);
-  box-shadow:
-    0 2px 8px rgba(234, 88, 12, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.account-shell__identity-text {
-  min-width: 0;
-  flex: 1;
-}
-
-.account-shell__identity-name {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1.25;
-  word-break: break-word;
-}
-
-.account-shell__identity-badge {
-  margin: 6px 0 0;
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: #c2410c;
-  background: rgba(234, 88, 12, 0.12);
-  border: 1px solid rgba(234, 88, 12, 0.2);
-}
-
-.account-shell__identity-email {
-  margin: 10px 0 0;
-  font-size: 12px;
-  color: var(--muted);
-  word-break: break-all;
-  line-height: 1.35;
-}
-
-.account-shell__rail-nav {
-  padding: 10px 10px 14px;
-}
-
-.account-shell__rail-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.account-shell__rail-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 12px;
-  margin-bottom: 4px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #475569;
-  transition:
-    background 0.14s ease,
-    color 0.14s ease,
-    box-shadow 0.14s ease;
-}
-
-.account-shell__rail-link:last-child {
-  margin-bottom: 0;
-}
-
-.account-shell__rail-link:hover {
-  background: rgba(234, 88, 12, 0.07);
-  color: var(--vitrin-orange);
-}
-
-.account-shell__rail-link--active {
-  background: rgba(234, 88, 12, 0.11);
-  color: var(--vitrin-orange);
-  box-shadow: inset 3px 0 0 var(--vitrin-orange);
-}
-
-.account-shell__rail-link-icon {
-  display: flex;
-  flex-shrink: 0;
-  color: #94a3b8;
-  transition: color 0.14s ease;
-}
-
-.account-shell__rail-link:hover .account-shell__rail-link-icon,
-.account-shell__rail-link--active .account-shell__rail-link-icon {
-  color: var(--vitrin-orange);
-}
-
-.account-shell__signout {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: calc(100% - 20px);
-  margin: 0 10px 14px;
-  padding: 11px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: linear-gradient(180deg, #fafafa 0%, #f4f4f5 100%);
-  font-size: 13px;
-  font-weight: 700;
-  color: #64748b;
-  cursor: pointer;
-  transition:
-    background 0.14s ease,
-    color 0.14s ease,
-    border-color 0.14s ease,
-    box-shadow 0.14s ease;
-}
-
-.account-shell__signout:hover {
-  background: #fef2f2;
-  color: #b91c1c;
-  border-color: #fecaca;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.08);
-}
-
 /* İlan yönetimi sekmeleri */
 .account-tabs {
   display: flex;
@@ -3538,24 +3353,6 @@ span.listing-seller__name--plain {
   border-color: var(--vitrin-orange);
   color: var(--vitrin-orange);
   box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.15);
-}
-
-@media (max-width: 899px) {
-  .account-shell__grid {
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Mobil: yan menü üst bardaki Hesabım’a taşındı — içerik tam genişlik */
-  .account-shell__rail {
-    display: none;
-  }
-
-  .account-shell__main {
-    order: 1;
-    width: 100%;
-    max-width: none;
-  }
 }
 
 /* Adım adım / Miller sütunları — ilan ver & düzenle kategori */
