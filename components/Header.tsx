@@ -95,6 +95,8 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  /** null: henüz ölçülmedi (SSR / ilk boyama ile uyum için menüde küme) */
+  const [isMobileNav, setIsMobileNav] = useState<boolean | null>(null);
 
   const refresh = useCallback(async () => {
     const sb = getSupabaseBrowser();
@@ -137,12 +139,25 @@ export default function Header() {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 959px)");
+    const sync = () => setIsMobileNav(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const loggedIn = Boolean(user);
+  /** Mobil + giriş: tek küme üst çubukta; çift bildirim/h hesap mount önlenir */
+  const authMobileToolbar =
+    Boolean(user) && ready && isMobileNav === true;
+  const showUserClusterToolbar = authMobileToolbar;
+  const showUserClusterMenu = Boolean(user) && ready && !authMobileToolbar;
 
   return (
     <header className="topbar">
       <div
-        className={`container nav${loggedIn && user ? " nav--auth-mobile-tray" : ""}`}
+        className={`container nav${authMobileToolbar ? " nav--auth-mobile-tray" : ""}`}
       >
         <div className="nav__leading">
           <Link className="brand-mark" href="/" aria-label="Nakits.com — ana sayfa">
@@ -153,9 +168,9 @@ export default function Header() {
           </Link>
 
           <div
-            className={`nav-mobile-bar${loggedIn && user ? " nav-mobile-bar--auth" : ""}`}
+            className={`nav-mobile-bar${authMobileToolbar ? " nav-mobile-bar--auth" : ""}`}
           >
-            {ready && loggedIn && user ? (
+            {showUserClusterToolbar && user ? (
               <div className="nav-user-cluster nav-user-cluster--toolbar-mobile">
                 <HeaderNotificationsBell
                   userId={user.id}
@@ -174,7 +189,7 @@ export default function Header() {
             >
               İlan Ver
             </Link>
-            {!(loggedIn && user) ? (
+            {!authMobileToolbar ? (
               <button
                 type="button"
                 className="nav-toggle"
@@ -248,7 +263,7 @@ export default function Header() {
             <span className="meta menu__loading">…</span>
           ) : loggedIn ? (
             <>
-              {user ? (
+              {showUserClusterMenu && user ? (
                 <div className="nav-user-cluster nav-user-cluster--desktop-only">
                   <HeaderNotificationsBell
                     userId={user.id}

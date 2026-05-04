@@ -25,8 +25,8 @@ function userInitials(displayName: string, email: string | null): string {
   if (t) {
     const parts = t.split(/\s+/).filter(Boolean);
     if (parts.length >= 2) {
-      const a = parts[0][0];
-      const b = parts[1][0];
+      const a = parts[0]?.[0];
+      const b = parts[1]?.[0];
       if (a && b) return `${a}${b}`.toUpperCase();
     }
     return t.slice(0, 2).toUpperCase() || "Ü";

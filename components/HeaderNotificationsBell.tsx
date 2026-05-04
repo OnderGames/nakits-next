@@ -84,29 +84,33 @@ export default function HeaderNotificationsBell({
       void load();
     };
     const filter = `profile_id=eq.${userId}`;
-    channel = sb
-      .channel(`nakits-header-notif:${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter
-        },
-        onNotifDb
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "notifications",
-          filter
-        },
-        onNotifDb
-      )
-      .subscribe();
+    try {
+      channel = sb
+        .channel(`nakits-header-notif:${userId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter
+          },
+          onNotifDb
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "notifications",
+            filter
+          },
+          onNotifDb
+        )
+        .subscribe();
+    } catch {
+      channel = null;
+    }
 
     const tick = window.setInterval(() => {
       if (!open && document.visibilityState === "visible") void load();
