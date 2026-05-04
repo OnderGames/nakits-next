@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import Header from "@/components/Header";
+import MessagesPeekDock from "@/components/MessagesPeekDock";
 import "./globals.css";
 
 const fontSans = Inter({
@@ -45,6 +46,7 @@ export default function RootLayout({
         <FavoritesProvider>
           <Header />
           {children}
+          <MessagesPeekDock />
         </FavoritesProvider>
       </body>
     </html>

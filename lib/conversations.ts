@@ -445,6 +445,49 @@ export async function fetchMyConversations(
   return enriched;
 }
 
+/** Sohbet önizlemesi (kenar dokü): görüşme başına en son mesaj metni — N görüşme için tek sorgu */
+export async function fetchLastMessageSnippetByConversations(
+  sb: SupabaseClient,
+  conversationIds: string[],
+  snippetMaxChars = 120
+): Promise<Record<string, string>> {
+  if (conversationIds.length === 0) return {};
+
+  function clipBody(raw: string): string {
+    const t = (raw ?? "").trim();
+    if (!t.length) return "Mesaj…";
+    if (t.length <= snippetMaxChars) return t;
+    return `${t.slice(0, snippetMaxChars)}…`;
+  }
+
+  const fetchLimit = Math.min(
+    Math.max(conversationIds.length * 10, 32),
+    300
+  );
+  const { data, error } = await sb
+    .from("messages")
+    .select("conversation_id, body, created_at")
+    .in("conversation_id", conversationIds)
+    .order("created_at", { ascending: false })
+    .limit(fetchLimit);
+
+  const out: Record<string, string> = {};
+  if (error || !data?.length) return out;
+
+  const seen = new Set<string>();
+  for (const row of data as {
+    conversation_id: string;
+    body: string | null;
+  }[]) {
+    const cid = row.conversation_id;
+    if (seen.has(cid)) continue;
+    seen.add(cid);
+    out[cid] = clipBody(row.body ?? "");
+    if (seen.size >= conversationIds.length) break;
+  }
+  return out;
+}
+
 export type ConversationParticipantsInfo = {
   buyerId: string;
   sellerId: string;
