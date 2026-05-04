@@ -278,7 +278,7 @@ export default function HomeCategorySidebar({
             </span>
             <SummaryCount n={gmTotals.isyeri} />
           </summary>
-          <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
+          <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves home-category-sidebar__nest-list--emlak-sat-kir">
             {KONUT_LISTING_KINDS.map((txn) => {
               const subSlug = `isyeri-ofis-${txn.slug}`;
               const compositeKey = compositeCategoryKey(GM, subSlug);
@@ -297,7 +297,7 @@ export default function HomeCategorySidebar({
             </span>
             <SummaryCount n={gmTotals.arsa} />
           </summary>
-          <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
+          <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves home-category-sidebar__nest-list--emlak-sat-kir">
             {KONUT_LISTING_KINDS.map((txn) => {
               const subSlug = `arsa-${txn.slug}`;
               const compositeKey = compositeCategoryKey(GM, subSlug);
@@ -319,7 +319,7 @@ export default function HomeCategorySidebar({
             </span>
             <SummaryCount n={gmTotals.toprak} />
           </summary>
-          <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
+          <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves home-category-sidebar__nest-list--emlak-sat-kir">
             {KONUT_LISTING_KINDS.map((txn) => {
               const subSlug = `toprak-${txn.slug}`;
               const compositeKey = compositeCategoryKey(GM, subSlug);
@@ -338,7 +338,7 @@ export default function HomeCategorySidebar({
             </span>
             <SummaryCount n={gmTotals.depo} />
           </summary>
-          <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
+          <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves home-category-sidebar__nest-list--emlak-sat-kir">
             {KONUT_LISTING_KINDS.map((txn) => {
               const subSlug = `depo-garaj-${txn.slug}`;
               const compositeKey = compositeCategoryKey(GM, subSlug);

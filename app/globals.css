@@ -2219,6 +2219,17 @@ form .row {
   font-size: 12px;
 }
 
+/* İş yeri / arsa / toprak / depo: Satılık–Kiralık satırları Konut iç özetleriyle aynı kalınlık */
+.home-category-sidebar__nest-list--emlak-sat-kir > li > .home-category-sidebar__sub-link {
+  padding: 6px 6px 6px 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.home-category-sidebar__nest-list--emlak-sat-kir > li > .home-category-sidebar__sub-link--active {
+  font-weight: 700;
+}
+
 .home-category-sidebar__sub-link {
   display: flex;
   justify-content: space-between;
