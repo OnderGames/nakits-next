@@ -25,4 +25,6 @@ export type Listing = {
   sellerPublicCode?: string;
   /** Bitiş zamanı (ISO); süre dolunca sistem ilanı kaldırır */
   expiresAt?: string;
+  /** Favoriye ekleyen sayısı (DB tetikleyici; satıcı özeti için) */
+  favoriteCount?: number;
 };

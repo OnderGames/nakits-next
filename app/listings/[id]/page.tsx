@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ListingDetailFavoriteBar from "@/components/ListingDetailFavoriteBar";
+import ListingOwnerFavoriteStat from "@/components/ListingOwnerFavoriteStat";
 import ListingGalleryCarousel from "@/components/ListingGalleryCarousel";
 import ListingMessagePanel from "@/components/ListingMessagePanel";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
@@ -60,6 +61,10 @@ export default async function ListingDetailPage({ params }: Props) {
               İlan no: <strong>{listing.listingCode}</strong>
             </p>
           )}
+          <ListingOwnerFavoriteStat
+            sellerId={listing.sellerId}
+            favoriteCount={listing.favoriteCount}
+          />
           <p className="meta">İlan tarihi: {listing.createdAt}</p>
           <div className="listing-seller listing-seller--detail">
             <span className="listing-seller__label">Satıcı</span>

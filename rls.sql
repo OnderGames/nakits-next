@@ -5,6 +5,7 @@ alter table categories enable row level security;
 alter table listings enable row level security;
 alter table listing_images enable row level security;
 alter table favorites enable row level security;
+alter table notifications enable row level security;
 alter table conversations enable row level security;
 alter table conversation_reads enable row level security;
 alter table messages enable row level security;
@@ -207,3 +208,15 @@ with check (
       and auth.uid() in (c.buyer_id, c.seller_id)
   )
 );
+
+-- Notifications (satıcı bildirimleri; satır ekleme yalnızca DB tetikleyicileri / servis)
+drop policy if exists "notifications select own" on notifications;
+create policy "notifications select own"
+on notifications for select
+using (auth.uid() = profile_id);
+
+drop policy if exists "notifications update own" on notifications;
+create policy "notifications update own"
+on notifications for update
+using (auth.uid() = profile_id)
+with check (auth.uid() = profile_id);

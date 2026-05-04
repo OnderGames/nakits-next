@@ -37,6 +37,8 @@ create table if not exists listings (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   expires_at timestamptz not null default (now() + interval '30 days'),
+  /** Favori sayısı (tetikleyici ile güncellenir) */
+  favorite_count int not null default 0 check (favorite_count >= 0),
   /** Tarayıcıda görünen ilan no (6–9 hane, benzersiz); paylaşım ve arama için */
   listing_code text not null,
   constraint listings_listing_code_digits check (listing_code ~ '^[0-9]{6,9}$'),
@@ -73,6 +75,21 @@ create table if not exists favorites (
   created_at timestamptz not null default now(),
   primary key (profile_id, listing_id)
 );
+
+create table if not exists notifications (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references profiles(id) on delete cascade,
+  type text not null,
+  listing_id uuid references listings(id) on delete set null,
+  actor_profile_id uuid references profiles(id) on delete set null,
+  payload jsonb not null default '{}',
+  body text not null,
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_notifications_profile_created on notifications(profile_id, created_at desc);
+create index if not exists idx_notifications_unread on notifications(profile_id) where read_at is null;
 
 create table if not exists conversations (
   id uuid primary key default gen_random_uuid(),
@@ -291,6 +308,74 @@ values
   ('is-sanayi_el-aletleri', 'El aleti'),
   ('is-sanayi_ofis-malzemeleri', 'Ofis')
 on conflict (slug) do nothing;
+
+create or replace function public.trg_favorites_after_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_seller_id uuid;
+  v_actor_name text;
+begin
+  update public.listings
+  set favorite_count = favorite_count + 1
+  where id = new.listing_id;
+
+  select l.seller_id into v_seller_id
+  from public.listings l
+  where l.id = new.listing_id;
+
+  if v_seller_id is null or v_seller_id = new.profile_id then
+    return new;
+  end if;
+
+  select coalesce(nullif(trim(p.full_name), ''), '')
+  into v_actor_name
+  from public.profiles p
+  where p.id = new.profile_id;
+
+  insert into public.notifications (profile_id, type, listing_id, actor_profile_id, body)
+  values (
+    v_seller_id,
+    'favorite_added',
+    new.listing_id,
+    new.profile_id,
+    case
+      when length(v_actor_name) > 0 then v_actor_name || ' ilanınızı favorilerine ekledi.'
+      else 'Bir üye ilanınızı favorilerine ekledi.'
+    end
+  );
+
+  return new;
+end;
+$$;
+
+create or replace function public.trg_favorites_after_delete()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.listings
+  set favorite_count = greatest(0, favorite_count - 1)
+  where id = old.listing_id;
+
+  return old;
+end;
+$$;
+
+drop trigger if exists trg_favorites_after_insert on public.favorites;
+create trigger trg_favorites_after_insert
+after insert on public.favorites
+for each row execute function public.trg_favorites_after_insert();
+
+drop trigger if exists trg_favorites_after_delete on public.favorites;
+create trigger trg_favorites_after_delete
+after delete on public.favorites
+for each row execute function public.trg_favorites_after_delete();
 
 -- Site tercihleri (anasayfa teması; ayrıntı: sql/migration_site_settings.sql)
 create table if not exists site_settings (

@@ -15,6 +15,7 @@ import {
   useState
 } from "react";
 import HeaderAccountMenu from "@/components/HeaderAccountMenu";
+import HeaderNotificationsBell from "@/components/HeaderNotificationsBell";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 function HeaderSearchBar() {
@@ -226,10 +227,16 @@ export default function Header() {
           ) : loggedIn ? (
             <>
               {user ? (
-                <HeaderAccountMenu
-                  user={user}
-                  onCloseDrawer={() => setMenuOpen(false)}
-                />
+                <div className="nav-user-cluster">
+                  <HeaderNotificationsBell
+                    userId={user.id}
+                    onCloseDrawer={() => setMenuOpen(false)}
+                  />
+                  <HeaderAccountMenu
+                    user={user}
+                    onCloseDrawer={() => setMenuOpen(false)}
+                  />
+                </div>
               ) : null}
               <Link
                 className="nav-cta nav-cta--orange"

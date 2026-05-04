@@ -171,6 +171,11 @@ export default function ListingCard({
           {listing.listingCode && (
             <p className="meta">İlan no: {listing.listingCode}</p>
           )}
+          {ownerToolbar && listing.favoriteCount !== undefined ? (
+            <p className="meta listing-card-fav-count">
+              <span aria-hidden>♥</span> {listing.favoriteCount} favori
+            </p>
+          ) : null}
           {expiryLine && <p className="meta">{expiryLine}</p>}
           <p className="meta">{listing.createdAt}</p>
         </div>

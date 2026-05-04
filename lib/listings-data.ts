@@ -39,6 +39,7 @@ type ListingRow = {
   expires_at?: string;
   status?: string;
   description?: string | null;
+  favorite_count?: number | string | null;
   categories: CategoryEmbed;
   profiles: ProfileEmbed;
   listing_images: ImageRow[] | null;
@@ -82,6 +83,10 @@ function normalizeListingRow(raw: unknown): ListingRow {
       r.expires_at != null ? String(r.expires_at) : undefined,
     status: r.status as string | undefined,
     description: (r.description as string | null | undefined) ?? null,
+    favorite_count:
+      r.favorite_count != null && r.favorite_count !== ""
+        ? (r.favorite_count as number | string)
+        : undefined,
     categories,
     profiles,
     listing_images
@@ -101,6 +106,13 @@ function mapRowToListing(row: ListingRow): Listing {
   const price =
     typeof row.price === "string" ? parseFloat(row.price) : row.price;
   const status = row.status as Listing["status"] | undefined;
+  const fcRaw = row.favorite_count;
+  let favoriteCount: number | undefined;
+  if (fcRaw != null && fcRaw !== "") {
+    const n =
+      typeof fcRaw === "string" ? parseInt(fcRaw, 10) : fcRaw;
+    if (Number.isFinite(n) && n >= 0) favoriteCount = n;
+  }
   return {
     id: row.id,
     listingCode: row.listing_code?.trim() || undefined,
@@ -117,11 +129,45 @@ function mapRowToListing(row: ListingRow): Listing {
     description: row.description ?? undefined,
     sellerId: row.seller_id,
     sellerPublicCode: row.profiles?.public_code?.trim() || undefined,
-    expiresAt: row.expires_at ?? undefined
+    expiresAt: row.expires_at ?? undefined,
+    favoriteCount
   };
 }
 
 /** Eski veritabanlarında district yoksa ilk select hata verir; district'siz tekrarlanır */
+const listSelectNoDistrictNoFav = `
+  id,
+  listing_code,
+  seller_id,
+  title,
+  city,
+  price,
+  created_at,
+  expires_at,
+  status,
+  description,
+  categories ( slug ),
+  profiles!seller_id ( full_name, public_code ),
+  listing_images ( image_url, sort_order )
+`;
+
+const listSelectNoFavCount = `
+  id,
+  listing_code,
+  seller_id,
+  title,
+  city,
+  district,
+  price,
+  created_at,
+  expires_at,
+  status,
+  description,
+  categories ( slug ),
+  profiles!seller_id ( full_name, public_code ),
+  listing_images ( image_url, sort_order )
+`;
+
 const listSelectNoDistrict = `
   id,
   listing_code,
@@ -133,6 +179,7 @@ const listSelectNoDistrict = `
   expires_at,
   status,
   description,
+  favorite_count,
   categories ( slug ),
   profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
@@ -150,6 +197,7 @@ const listSelect = `
   expires_at,
   status,
   description,
+  favorite_count,
   categories ( slug ),
   profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
@@ -163,15 +211,29 @@ function isMissingDistrictColumnError(error: PostgrestError | null): boolean {
   return m.includes("district");
 }
 
+function isMissingFavoriteCountColumnError(error: PostgrestError | null): boolean {
+  if (!error?.message) return false;
+  const m =
+    `${error.message} ${(error as { details?: string }).details ?? ""}`.toLowerCase();
+  return m.includes("favorite_count");
+}
+
 async function withListingSelectFallback<T>(
   run: (
     selectStr: string
   ) => PromiseLike<{ data: T; error: PostgrestError | null }>
 ): Promise<{ data: T; error: PostgrestError | null }> {
-  const first = await run(listSelect);
+  let sel = listSelect;
+  let first = await run(sel);
+  if (first.error && isMissingFavoriteCountColumnError(first.error)) {
+    sel = listSelectNoFavCount;
+    first = await run(sel);
+  }
   if (!first.error) return first;
   if (!isMissingDistrictColumnError(first.error)) return first;
-  return run(listSelectNoDistrict);
+  const secondSel =
+    sel === listSelectNoFavCount ? listSelectNoDistrictNoFav : listSelectNoDistrict;
+  return run(secondSel);
 }
 
 const listingEditSelect = `
