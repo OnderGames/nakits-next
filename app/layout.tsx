@@ -20,9 +20,18 @@ export const viewport: Viewport = {
   viewportFit: "cover"
 };
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+  "https://www.nakits.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Nakits",
-  description: "Nakits — ilan platformu (MVP)."
+  description: "Nakits — ilan platformu (MVP).",
+  icons: {
+    icon: [{ url: "/icon.png", type: "image/png" }],
+    apple: [{ url: "/icon.png", type: "image/png" }]
+  }
 };
 
 export default function RootLayout({
