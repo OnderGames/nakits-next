@@ -14,7 +14,9 @@ import {
   parsePriceInput,
   sqlCategorySlugFromKey
 } from "@/lib/categories";
-import CategoryMillerPicker from "@/components/CategoryMillerPicker";
+import CategoryMillerPicker, {
+  GAYRIMENKUL_KONUT_DRAFT_KEY
+} from "@/components/CategoryMillerPicker";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 import { getDistrictsForProvince } from "@/lib/turkish-districts";
@@ -233,6 +235,12 @@ export default function AddListingPage() {
     }
     if (!detailCategoryKey) {
       setError("Ana ve alt kategori seçin.");
+      return;
+    }
+    if (detailCategoryKey === GAYRIMENKUL_KONUT_DRAFT_KEY) {
+      setError(
+        "Emlak › Konut için Satılık veya Kiralık ile konut tipini (Daire, Villa vb.) seçmelisiniz."
+      );
       return;
     }
 

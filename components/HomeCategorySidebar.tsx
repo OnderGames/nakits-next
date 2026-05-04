@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {
   CATEGORY_GROUPS,
-  compositeCategoryKey,
+  leafRowsForCategoryGroup,
   parseCategoryKey
 } from "@/lib/categories";
 import { formatListingCountTr } from "@/lib/category-counts";
@@ -103,24 +103,23 @@ export default function HomeCategorySidebar({
                 </span>
               </summary>
               <ul className="home-category-sidebar__subs">
-                {group.subs.map((sub) => {
-                  const catKey = compositeCategoryKey(group.slug, sub.slug);
-                  const n = counts[catKey] ?? 0;
-                  const active = selectedCategoryKey === catKey;
+                {leafRowsForCategoryGroup(group).map((row) => {
+                  const n = counts[row.compositeKey] ?? 0;
+                  const active = selectedCategoryKey === row.compositeKey;
                   return (
-                    <li key={sub.slug}>
+                    <li key={row.reactKey}>
                       <Link
                         className={
                           active
                             ? "home-category-sidebar__sub-link home-category-sidebar__sub-link--active"
                             : "home-category-sidebar__sub-link"
                         }
-                        href={buildCategoryHref(catKey, preserveParams)}
+                        href={buildCategoryHref(row.compositeKey, preserveParams)}
                         aria-current={active ? "page" : undefined}
                       >
                         <span className="home-category-sidebar__sub-label">
                           <span className="home-category-sidebar__sub-name">
-                            {sub.name}
+                            {row.label}
                           </span>{" "}
                           <span className="home-category-sidebar__count">
                             ({formatListingCountTr(n)})

@@ -16,7 +16,7 @@ import { buildListingCountsByCategoryKey } from "@/lib/category-counts";
 import {
   CATEGORY_GROUPS,
   categoryKeyMatchesListingSearch,
-  compositeCategoryKey
+  leafRowsForCategoryGroup
 } from "@/lib/categories";
 import { listingPlaceMatchesFreeTextQuery } from "@/lib/listing-place-search";
 import { isListingCodeQuery } from "@/lib/listing-code";
@@ -288,12 +288,9 @@ function ListingsPageInner() {
               <option value="">Tüm kategoriler</option>
               {CATEGORY_GROUPS.map((group) => (
                 <optgroup key={group.slug} label={`${group.emoji} ${group.name}`}>
-                  {group.subs.map((sub) => (
-                    <option
-                      key={sub.slug}
-                      value={compositeCategoryKey(group.slug, sub.slug)}
-                    >
-                      {sub.name}
+                  {leafRowsForCategoryGroup(group).map((row) => (
+                    <option key={row.reactKey} value={row.compositeKey}>
+                      {row.label}
                     </option>
                   ))}
                 </optgroup>
