@@ -3103,3 +3103,144 @@ span.listing-seller__name--plain {
     order: 2;
   }
 }
+
+/* Adım adım / Miller sütunları — ilan ver & düzenle kategori */
+.category-miller {
+  margin-top: 10px;
+  padding: 14px 14px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: 0 1px 3px rgba(24, 26, 37, 0.06);
+}
+
+.category-miller__head {
+  margin-bottom: 12px;
+}
+
+.category-miller__title {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.category-miller__crumb {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.category-miller__columns {
+  display: flex;
+  gap: 0;
+  max-height: min(52vh, 340px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fafbfe;
+  -webkit-overflow-scrolling: touch;
+}
+
+.category-miller__col {
+  flex: 1 1 180px;
+  min-width: min(200px, 42vw);
+  max-width: 280px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.category-miller__col:last-child {
+  border-right: none;
+}
+
+.category-miller__col--active {
+  background: #e8f4ff;
+}
+
+.category-miller__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.category-miller__item {
+  margin: 0;
+  border-bottom: 1px solid rgba(229, 232, 240, 0.9);
+}
+
+.category-miller__item:last-child {
+  border-bottom: none;
+}
+
+.category-miller__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.category-miller__row:hover:not(:disabled) {
+  background: rgba(59, 91, 255, 0.06);
+}
+
+.category-miller__row:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.category-miller__row--selected {
+  background: rgba(0, 0, 0, 0.06);
+  font-weight: 700;
+}
+
+.category-miller__col--active .category-miller__row--selected {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.category-miller__row-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.category-miller__chevron {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.category-miller__ok {
+  flex-shrink: 0;
+  color: var(--success);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.category-miller__placeholder {
+  margin: 0;
+  padding: 20px 14px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.category-miller__hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+}

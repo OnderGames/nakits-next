@@ -10,12 +10,11 @@ import {
   useState
 } from "react";
 import {
-  CATEGORY_GROUPS,
-  compositeCategoryKey,
   formatPriceInputDisplay,
   parsePriceInput,
   sqlCategorySlugFromKey
 } from "@/lib/categories";
+import CategoryMillerPicker from "@/components/CategoryMillerPicker";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 import { getDistrictsForProvince } from "@/lib/turkish-districts";
@@ -408,8 +407,6 @@ export default function AddListingPage() {
     event.currentTarget.reset();
   };
 
-  const selectedGroup = CATEGORY_GROUPS.find((g) => g.slug === groupSlug);
-
   if (!authReady) {
     return (
       <main className="container">
@@ -500,48 +497,14 @@ export default function AddListingPage() {
             </div>
           </div>
 
-          <div className="row" style={{ marginTop: 10 }}>
-            <div>
-              <label>Ana kategori</label>
-              <select
-                required
-                value={groupSlug}
-                disabled={submitting}
-                onChange={(event) => {
-                  setGroupSlug(event.target.value);
-                  setDetailCategoryKey("");
-                }}
-              >
-                <option value="">Seçiniz</option>
-                {CATEGORY_GROUPS.map((group) => (
-                  <option key={group.slug} value={group.slug}>
-                    {group.emoji} {group.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label>Alt kategori</label>
-              <select
-                required
-                disabled={!groupSlug || submitting}
-                value={detailCategoryKey}
-                onChange={(event) => setDetailCategoryKey(event.target.value)}
-              >
-                <option value="">Seçiniz</option>
-                {(selectedGroup?.subs ?? []).map((sub) => (
-                  <option
-                    key={sub.slug}
-                    value={compositeCategoryKey(
-                      selectedGroup!.slug,
-                      sub.slug
-                    )}
-                  >
-                    {sub.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div style={{ marginTop: 12 }}>
+            <CategoryMillerPicker
+              groupSlug={groupSlug}
+              detailCategoryKey={detailCategoryKey}
+              disabled={submitting}
+              onGroupChange={setGroupSlug}
+              onCategoryKeyChange={setDetailCategoryKey}
+            />
           </div>
 
           <div className="row" style={{ marginTop: 10 }}>
