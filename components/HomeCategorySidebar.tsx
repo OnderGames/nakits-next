@@ -11,7 +11,10 @@ import {
   leafRowsForCategoryGroup,
   parseCategoryKey
 } from "@/lib/categories";
-import { formatListingCountTr } from "@/lib/category-counts";
+import {
+  formatListingCountTr,
+  sumListingCountsWhere
+} from "@/lib/category-counts";
 import {
   useCallback,
   useEffect,
@@ -93,6 +96,57 @@ export default function HomeCategorySidebar({
 
   const legacyRows = useMemo(() => gayrimenkulLegacyLeafSidebarRows(), []);
 
+  /** Ana grup başlığı: o gruba ait tüm ilanlar (gayrimenkul’da legacy + tüm altlar) */
+  const groupTotals = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const g of CATEGORY_GROUPS) {
+      m[g.slug] = sumListingCountsWhere(counts, (k) =>
+        k.startsWith(`${g.slug}.`)
+      );
+    }
+    return m;
+  }, [counts]);
+
+  const gmTotals = useMemo(
+    () => ({
+      konut: sumListingCountsWhere(
+        counts,
+        (k) =>
+          k === `${GM}.konut` ||
+          k.startsWith(`${GM}.konut-`)
+      ),
+      konutSatilik: sumListingCountsWhere(counts, (k) =>
+        k.startsWith(`${GM}.konut-satilik-`)
+      ),
+      konutKiralik: sumListingCountsWhere(counts, (k) =>
+        k.startsWith(`${GM}.konut-kiralik-`)
+      ),
+      isyeri: sumListingCountsWhere(counts, (k) =>
+        k.startsWith(`${GM}.isyeri-ofis-`)
+      ),
+      arsa: sumListingCountsWhere(counts, (k) =>
+        k.startsWith(`${GM}.arsa-`)
+      ),
+      toprak: sumListingCountsWhere(counts, (k) =>
+        k.startsWith(`${GM}.toprak-`)
+      ),
+      depo: sumListingCountsWhere(counts, (k) =>
+        k.startsWith(`${GM}.depo-garaj-`)
+      ),
+      legacy: sumListingCountsWhere(
+        counts,
+        (k) => legacyRows.some((r) => r.compositeKey === k)
+      )
+    }),
+    [counts, legacyRows]
+  );
+
+  const SummaryCount = ({ n }: { n: number }) => (
+    <span className="home-category-sidebar__summary-count">
+      ({formatListingCountTr(n)})
+    </span>
+  );
+
   const konutRef = useRef<HTMLDetailsElement>(null);
   const konutSatRef = useRef<HTMLDetailsElement>(null);
   const konutKirRef = useRef<HTMLDetailsElement>(null);
@@ -167,7 +221,10 @@ export default function HomeCategorySidebar({
           className="home-category-sidebar__nest-details"
         >
           <summary className="home-category-sidebar__nest-summary">
-            Konut
+            <span className="home-category-sidebar__nest-summary-label">
+              Konut
+            </span>
+            <SummaryCount n={gmTotals.konut} />
           </summary>
           <ul className="home-category-sidebar__nest-list">
             {KONUT_LISTING_KINDS.map((txn) => {
@@ -180,7 +237,16 @@ export default function HomeCategorySidebar({
                     className="home-category-sidebar__nest-details"
                   >
                     <summary className="home-category-sidebar__nest-summary">
-                      {txn.name}
+                      <span className="home-category-sidebar__nest-summary-label">
+                        {txn.name}
+                      </span>
+                      <SummaryCount
+                        n={
+                          txn.slug === "satilik"
+                            ? gmTotals.konutSatilik
+                            : gmTotals.konutKiralik
+                        }
+                      />
                     </summary>
                     <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
                       {KONUT_PROPERTY_TYPES.map((prop) => {
@@ -207,7 +273,10 @@ export default function HomeCategorySidebar({
           className="home-category-sidebar__nest-details"
         >
           <summary className="home-category-sidebar__nest-summary">
-            İş yeri
+            <span className="home-category-sidebar__nest-summary-label">
+              İş yeri
+            </span>
+            <SummaryCount n={gmTotals.isyeri} />
           </summary>
           <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
             {KONUT_LISTING_KINDS.map((txn) => {
@@ -222,7 +291,12 @@ export default function HomeCategorySidebar({
       </li>
       <li>
         <details ref={arsaRef} className="home-category-sidebar__nest-details">
-          <summary className="home-category-sidebar__nest-summary">Arsa</summary>
+          <summary className="home-category-sidebar__nest-summary">
+            <span className="home-category-sidebar__nest-summary-label">
+              Arsa
+            </span>
+            <SummaryCount n={gmTotals.arsa} />
+          </summary>
           <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
             {KONUT_LISTING_KINDS.map((txn) => {
               const subSlug = `arsa-${txn.slug}`;
@@ -240,7 +314,10 @@ export default function HomeCategorySidebar({
           className="home-category-sidebar__nest-details"
         >
           <summary className="home-category-sidebar__nest-summary">
-            Toprak & tarla
+            <span className="home-category-sidebar__nest-summary-label">
+              Toprak & tarla
+            </span>
+            <SummaryCount n={gmTotals.toprak} />
           </summary>
           <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
             {KONUT_LISTING_KINDS.map((txn) => {
@@ -256,7 +333,10 @@ export default function HomeCategorySidebar({
       <li>
         <details ref={depoRef} className="home-category-sidebar__nest-details">
           <summary className="home-category-sidebar__nest-summary">
-            Depo & garaj
+            <span className="home-category-sidebar__nest-summary-label">
+              Depo & garaj
+            </span>
+            <SummaryCount n={gmTotals.depo} />
           </summary>
           <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
             {KONUT_LISTING_KINDS.map((txn) => {
@@ -275,7 +355,10 @@ export default function HomeCategorySidebar({
           className="home-category-sidebar__nest-details"
         >
           <summary className="home-category-sidebar__nest-summary">
-            Eski etiket (daire / villa / ev)
+            <span className="home-category-sidebar__nest-summary-label">
+              Eski etiket (daire / villa / ev)
+            </span>
+            <SummaryCount n={gmTotals.legacy} />
           </summary>
           <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
             {legacyRows.map((row) => (
@@ -314,6 +397,7 @@ export default function HomeCategorySidebar({
                 <span className="home-category-sidebar__group-name">
                   {group.name}
                 </span>
+                <SummaryCount n={groupTotals[group.slug] ?? 0} />
               </summary>
               {group.slug === "gayrimenkul" ? (
                 renderGayrimenkulNested()

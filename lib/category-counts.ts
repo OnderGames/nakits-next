@@ -20,3 +20,14 @@ export function buildListingCountsByCategoryKey(
 export function formatListingCountTr(n: number): string {
   return new Intl.NumberFormat("tr-TR").format(n);
 }
+
+export function sumListingCountsWhere(
+  counts: Record<string, number>,
+  test: (categoryKey: string) => boolean
+): number {
+  let t = 0;
+  for (const [key, n] of Object.entries(counts)) {
+    if (test(key)) t += n;
+  }
+  return t;
+}
