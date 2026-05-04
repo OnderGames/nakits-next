@@ -40,7 +40,7 @@ export default function ListingOwnerFavoriteStat({
         <>Henüz kimse ilanınızı favoriye eklemedi.</>
       ) : (
         <>
-          Bu ilana <strong>{favoriteCount}</strong> kişi favoriye ekledi.
+          Bu ilanı <strong>{favoriteCount}</strong> kişi favoriye ekledi.
         </>
       )}
     </p>
