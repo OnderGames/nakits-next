@@ -266,26 +266,23 @@ export default function MessagesInboxPage() {
                     </button>
                   </div>
                 </div>
-                <p
-                  className="meta"
-                  style={{
-                    margin: 0,
-                    padding: "0 14px 14px",
-                    borderTop: "1px solid var(--border)"
-                  }}
-                >
-                  {c.role === "buyer" ? "Satıcı" : "Alıcı"}:{" "}
+                <div className="messages-inbox-card__party">
+                  <span className="messages-inbox-card__party-label">
+                    {c.role === "buyer" ? "Satıcı" : "Alıcı"}:
+                  </span>
                   {c.otherPartyPublicCode ? (
                     <Link
                       href={`/kullanici/${c.otherPartyPublicCode}`}
-                      style={{ color: "var(--primary)", textDecoration: "underline" }}
+                      className="messages-inbox-card__party-link"
                     >
                       {c.otherPartyName}
                     </Link>
                   ) : (
-                    c.otherPartyName
+                    <span className="messages-inbox-card__party-name-plain">
+                      {c.otherPartyName}
+                    </span>
                   )}
-                </p>
+                </div>
               </div>
             </li>
           ))}
