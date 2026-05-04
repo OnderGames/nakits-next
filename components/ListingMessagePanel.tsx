@@ -152,17 +152,17 @@ export default function ListingMessagePanel({
       className="listing-message-form"
       style={{ position: "relative", zIndex: 1 }}
     >
-      <div className="listing-seller">
-        <span className="listing-seller__label">Satıcı</span>
+      <div className="messages-inbox-card__party messages-inbox-card__party--bare">
+        <span className="messages-inbox-card__party-label">Satıcı:</span>
         {sellerPublicCode ? (
           <Link
             href={`/kullanici/${sellerPublicCode}`}
-            className="listing-seller__name"
+            className="messages-inbox-card__party-link"
           >
             {sellerLabel}
           </Link>
         ) : (
-          <span className="listing-seller__name listing-seller__name--plain">
+          <span className="messages-inbox-card__party-name-plain">
             {sellerLabel}
           </span>
         )}

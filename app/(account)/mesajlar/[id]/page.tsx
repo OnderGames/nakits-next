@@ -284,39 +284,38 @@ export default function ConversationPage() {
       <h1 className="section-title" style={{ fontSize: 22 }}>
         {convMeta?.listingTitle || "Mesaj"}
       </h1>
-      {convMeta && userId && (
-        <p className="meta" style={{ marginBottom: 14 }}>
+      {convMeta && userId ? (
+        <div className="messages-inbox-card__party messages-inbox-card__party--thread">
+          <span className="messages-inbox-card__party-label">
+            {userId === convMeta.buyerId ? "Satıcı" : "Alıcı"}:
+          </span>
           {userId === convMeta.buyerId ? (
-            <>
-              Satıcı:{" "}
-              {convMeta.sellerPublicCode ? (
-                <Link
-                  href={`/kullanici/${convMeta.sellerPublicCode}`}
-                  style={{ color: "var(--primary)", textDecoration: "underline" }}
-                >
-                  {convMeta.sellerName}
-                </Link>
-              ) : (
-                convMeta.sellerName
-              )}
-            </>
+            convMeta.sellerPublicCode ? (
+              <Link
+                href={`/kullanici/${convMeta.sellerPublicCode}`}
+                className="messages-inbox-card__party-link"
+              >
+                {convMeta.sellerName}
+              </Link>
+            ) : (
+              <span className="messages-inbox-card__party-name-plain">
+                {convMeta.sellerName}
+              </span>
+            )
+          ) : convMeta.buyerPublicCode ? (
+            <Link
+              href={`/kullanici/${convMeta.buyerPublicCode}`}
+              className="messages-inbox-card__party-link"
+            >
+              {convMeta.buyerName}
+            </Link>
           ) : (
-            <>
-              Alıcı:{" "}
-              {convMeta.buyerPublicCode ? (
-                <Link
-                  href={`/kullanici/${convMeta.buyerPublicCode}`}
-                  style={{ color: "var(--primary)", textDecoration: "underline" }}
-                >
-                  {convMeta.buyerName}
-                </Link>
-              ) : (
-                convMeta.buyerName
-              )}
-            </>
+            <span className="messages-inbox-card__party-name-plain">
+              {convMeta.buyerName}
+            </span>
           )}
-        </p>
-      )}
+        </div>
+      ) : null}
 
       <section
         className="panel"

@@ -2691,13 +2691,6 @@ span.listing-seller__name--plain {
   background: transparent;
 }
 
-.listing-message-form > .listing-seller {
-  padding: 0 0 12px;
-  margin-bottom: 4px;
-  border-top: none;
-  background: transparent;
-}
-
 /* Moderasyon: kompakt liste (açıklama yok) */
 .admin-moderation-list-panel {
   padding: 0;
@@ -3011,6 +3004,17 @@ span.listing-seller__name--plain {
   font-size: 15px;
   color: var(--text);
   word-break: break-word;
+}
+
+/* Kart dışı: sohbet sayfası + ilan mesaj formu üst satırı */
+.messages-inbox-card__party--thread {
+  border-top: none;
+  padding: 0 0 14px;
+}
+
+.messages-inbox-card__party--bare {
+  border-top: none;
+  padding: 0 0 12px;
 }
 
 /* Sağ şerit: profil + ikonlu menü */
