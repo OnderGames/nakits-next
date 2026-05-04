@@ -14,6 +14,7 @@ import {
   useEffect,
   useState
 } from "react";
+import HeaderAccountMenu from "@/components/HeaderAccountMenu";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 function HeaderSearchBar() {
@@ -131,13 +132,6 @@ export default function Header() {
     };
   }, [menuOpen]);
 
-  async function handleSignOut() {
-    setMenuOpen(false);
-    const sb = getSupabaseBrowser();
-    if (sb) await sb.auth.signOut();
-    setUser(null);
-  }
-
   const loggedIn = Boolean(user);
 
   return (
@@ -231,13 +225,12 @@ export default function Header() {
             <span className="meta menu__loading">…</span>
           ) : loggedIn ? (
             <>
-              <Link
-                className="nav-pill"
-                href="/profile"
-                onClick={() => setMenuOpen(false)}
-              >
-                Profilim
-              </Link>
+              {user ? (
+                <HeaderAccountMenu
+                  user={user}
+                  onCloseDrawer={() => setMenuOpen(false)}
+                />
+              ) : null}
               <Link
                 className="nav-cta nav-cta--orange"
                 href="/add-listing"
@@ -245,13 +238,6 @@ export default function Header() {
               >
                 İlan Ver
               </Link>
-              <button
-                type="button"
-                className="nav-pill nav-pill--quiet"
-                onClick={() => void handleSignOut()}
-              >
-                Çıkış yap
-              </button>
             </>
           ) : (
             <>

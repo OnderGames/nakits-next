@@ -436,6 +436,322 @@ main.container {
   }
 }
 
+/* Üst çubuk: girişli kullanıcı · avatar ile açılır hesap menüsü */
+.nav-account {
+  display: contents;
+}
+
+.nav-account__mobile-wrap {
+  display: none;
+}
+
+.nav-account__desktop-wrap {
+  position: relative;
+  display: none;
+}
+
+@media (max-width: 959px) {
+  .menu .nav-account {
+    display: block;
+    width: 100%;
+  }
+
+  .nav-account__mobile-wrap {
+    display: block;
+    width: 100%;
+    margin-bottom: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: linear-gradient(
+      165deg,
+      rgba(249, 250, 251, 1) 0%,
+      rgba(255, 255, 255, 1) 100%
+    );
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  }
+
+  .nav-account__mobile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    list-style: none;
+    padding: 11px 12px;
+    font: inherit;
+    color: inherit;
+    width: 100%;
+    margin: 0;
+    transition: background 0.14s ease;
+  }
+
+  .nav-account__mobile-trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .nav-account__mobile-wrap[open] .nav-account__chevron {
+    transform: rotate(90deg);
+  }
+
+  .nav-account__chevron {
+    margin-left: auto;
+    flex-shrink: 0;
+    color: #94a3b8;
+    font-weight: 400;
+    font-size: 1.35rem;
+    line-height: 1;
+    transition: transform 0.18s ease;
+  }
+
+  .nav-account__mobile-text {
+    min-width: 0;
+    text-align: left;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .nav-account__hint {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+  }
+
+  .nav-account__mobile-body {
+    border-top: 1px solid var(--border);
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.8);
+  }
+}
+
+@media (min-width: 960px) {
+  .menu .nav-account {
+    display: block;
+  }
+
+  .nav-account__mobile-wrap {
+    display: none !important;
+  }
+
+  .nav-account__desktop-wrap {
+    display: block;
+  }
+
+  .nav-account__desk-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 5px 8px 5px 5px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(148, 163, 184, 0.6);
+    background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+
+  .nav-account__desk-trigger:hover,
+  .nav-account__desk-trigger--open {
+    border-color: rgba(234, 88, 12, 0.45);
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 0 0 1px rgba(234, 88, 12, 0.12);
+  }
+
+  .nav-account__desk-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding-right: 6px;
+    max-width: min(148px, 24vw);
+  }
+
+  .nav-account__name-short {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    text-align: left;
+  }
+
+  .nav-account__caret {
+    flex-shrink: 0;
+    color: #64748b;
+    transition: transform 0.18s ease;
+  }
+
+  .nav-account__desk-trigger--open .nav-account__caret {
+    transform: rotate(180deg);
+  }
+
+  .nav-account__dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(300px, 85vw);
+    padding: 8px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    box-shadow:
+      0 8px 32px rgba(15, 23, 42, 0.12),
+      0 2px 8px rgba(15, 23, 42, 0.06);
+    z-index: 56;
+    animation: nav-account-dropdown-in 0.16s ease;
+  }
+
+  @keyframes nav-account-dropdown-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .nav-account__dropdown-meta {
+    margin: 0;
+    padding: 8px 10px 6px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--muted);
+    font-weight: 600;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+    margin-bottom: 4px;
+  }
+
+  .nav-account__email-mini {
+    font-weight: 500;
+    word-break: break-all;
+    color: #64748b;
+  }
+}
+
+.nav-account__avatar,
+.nav-account__avatar--desk {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: linear-gradient(145deg, #ea580c 0%, #f97316 50%, #fb923c 100%);
+  flex-shrink: 0;
+  box-shadow:
+    0 2px 8px rgba(234, 88, 12, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.nav-account__avatar--desk {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.nav-account__name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-account__link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-account__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  text-decoration: none;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+
+.nav-account__link:hover {
+  background: rgba(234, 88, 12, 0.07);
+  color: var(--vitrin-orange);
+}
+
+.nav-account__link--active {
+  background: rgba(234, 88, 12, 0.11);
+  color: var(--vitrin-orange);
+}
+
+.nav-account__link-icon {
+  display: inline-flex;
+  color: inherit;
+}
+
+.nav-account__signout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.9);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.9);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    border-color 0.14s ease,
+    background 0.14s ease,
+    color 0.14s ease;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-account__signout-btn:hover {
+  border-color: #cbd5e1;
+  background: #fff;
+  color: var(--text);
+}
+
+.nav-account__signout-btn--dropdown {
+  margin-top: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-account__dropdown {
+    animation: none;
+  }
+}
+
 /* Mor–lavanta: İlanlar, giriş sonrası Profil / Moderasyon */
 .nav-pill {
   display: inline-flex;
@@ -3230,13 +3546,15 @@ span.listing-seller__name--plain {
     flex-direction: column;
   }
 
-  /* Menü şeridi önce: kaydırmadan hesaba/menüye ulaşılsın */
+  /* Mobil: yan menü üst bardaki Hesabım’a taşındı — içerik tam genişlik */
   .account-shell__rail {
-    order: 1;
+    display: none;
   }
 
   .account-shell__main {
-    order: 2;
+    order: 1;
+    width: 100%;
+    max-width: none;
   }
 }
 
