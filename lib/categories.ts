@@ -1,8 +1,8 @@
 export type SubcategoryDef = {
   slug: string;
   name: string;
-  /** Emlak › Konut için ek sütunlar (Satılık/Kiralık + konut tipi) */
-  drilldown?: "konut";
+  /** Konut: Satılık/Kiralık + yapı tipi; diğer emlak dalları: yalnız Satılık/Kiralık */
+  drilldown?: "konut" | "emlak-listing-kind";
 };
 
 export type CategoryGroupDef = {
@@ -100,10 +100,18 @@ export const CATEGORY_GROUPS: CategoryGroupDef[] = [
     name: "Emlak",
     subs: [
       { slug: "konut", name: "Konut", drilldown: "konut" },
-      { slug: "isyeri-ofis", name: "İş yeri" },
-      { slug: "arsa", name: "Arsa" },
-      { slug: "toprak", name: "Toprak & tarla" },
-      { slug: "depo-garaj", name: "Depo & garaj" }
+      { slug: "isyeri-ofis", name: "İş yeri", drilldown: "emlak-listing-kind" },
+      { slug: "arsa", name: "Arsa", drilldown: "emlak-listing-kind" },
+      {
+        slug: "toprak",
+        name: "Toprak & tarla",
+        drilldown: "emlak-listing-kind"
+      },
+      {
+        slug: "depo-garaj",
+        name: "Depo & garaj",
+        drilldown: "emlak-listing-kind"
+      }
     ]
   },
   {
@@ -174,6 +182,58 @@ export const CATEGORY_GROUPS: CategoryGroupDef[] = [
   }
 ];
 
+/**
+ * `isyeri-ofis-satilik`, `depo-garaj-kiralik` vb. (Konut dallarıyla çakışmaz).
+ */
+export function tryParseGayrimenkulSatKirLeafSubSlug(subSlug: string): {
+  baseSlug: string;
+  baseLabel: string;
+  txn: (typeof KONUT_LISTING_KINDS)[number]["slug"];
+} | null {
+  if (tryParseKonutLeafSubSlug(subSlug)) return null;
+  if (subSlug.startsWith(KONUT_DRILL_SUB_PREFIX)) return null;
+
+  const gm = CATEGORY_GROUPS.find((g) => g.slug === "gayrimenkul");
+  const mids =
+    gm?.subs.filter((s) => s.drilldown === "emlak-listing-kind") ?? [];
+  const bases = mids.map((m) => m.slug).sort((a, b) => b.length - a.length);
+
+  for (const k of KONUT_LISTING_KINDS) {
+    const suf = `-${k.slug}`;
+    if (!subSlug.endsWith(suf)) continue;
+    const base = subSlug.slice(0, -suf.length);
+    if (!bases.includes(base)) continue;
+    const def = mids.find((m) => m.slug === base);
+    if (!def) continue;
+    return { baseSlug: base, baseLabel: def.name, txn: k.slug };
+  }
+  return null;
+}
+
+export function labelGayrimenkulSatKirLeaf(baseLabel: string, txn: string): string {
+  const k = KONUT_LISTING_KINDS.find((x) => x.slug === txn);
+  return `${baseLabel} › ${k?.name ?? txn}`;
+}
+
+/** Yeni ilan: ara adım (Konut ara hattı için veritabanı slug’ına gitmemeli) */
+export const GAYRIMENKUL_KONUT_INTERMEDIATE_KEY = "gayrimenkul.konut";
+
+/** `gayrimenkul.konut` veya düz `gayrimenkul.isyeri-ofis` gibi ara anahtar — yeni kayıtta yasak */
+export function isIntermediateGayrimenkulListingKey(key: string): boolean {
+  if (key === GAYRIMENKUL_KONUT_INTERMEDIATE_KEY) return true;
+  const gm = CATEGORY_GROUPS.find((g) => g.slug === "gayrimenkul");
+  if (!gm?.subs.length || !key.startsWith(`${gm.slug}.`)) return false;
+  const subSlug = key.slice(gm.slug.length + 1);
+  if (
+    tryParseKonutLeafSubSlug(subSlug) ||
+    tryParseGayrimenkulSatKirLeafSubSlug(subSlug)
+  ) {
+    return false;
+  }
+  const mid = gm.subs.find((s) => s.slug === subSlug && s.drilldown);
+  return Boolean(mid);
+}
+
 export type ParsedCategorySlug = {
   group: CategoryGroupDef;
   sub: SubcategoryDef;
@@ -206,6 +266,18 @@ export function leafRowsForCategoryGroup(group: CategoryGroupDef): ReadonlyArray
       }
       continue;
     }
+    if (sub.drilldown === "emlak-listing-kind") {
+      for (const txn of KONUT_LISTING_KINDS) {
+        const subSlug = `${sub.slug}-${txn.slug}`;
+        const compositeKey = compositeCategoryKey(group.slug, subSlug);
+        rows.push({
+          reactKey: compositeKey,
+          compositeKey,
+          label: `${sub.name} › ${txn.name}`
+        });
+      }
+      continue;
+    }
     const compositeKey = compositeCategoryKey(group.slug, sub.slug);
     rows.push({
       reactKey: sub.slug,
@@ -234,6 +306,16 @@ export function parseCategoryKey(key: string): ParsedCategorySlug | null {
           sub: {
             slug: subSlug,
             name: labelKonutLeafCategory(konutLeaf.txn, konutLeaf.prop)
+          }
+        };
+      }
+      const satKirLeaf = tryParseGayrimenkulSatKirLeafSubSlug(subSlug);
+      if (satKirLeaf) {
+        return {
+          group,
+          sub: {
+            slug: subSlug,
+            name: labelGayrimenkulSatKirLeaf(satKirLeaf.baseLabel, satKirLeaf.txn)
           }
         };
       }
@@ -320,6 +402,9 @@ export function sqlCategorySlugToKey(sqlSlug: string): string | null {
 
     if (group.slug === "gayrimenkul") {
       if (tryParseKonutLeafSubSlug(subSlug)) {
+        return compositeCategoryKey(group.slug, subSlug);
+      }
+      if (tryParseGayrimenkulSatKirLeafSubSlug(subSlug)) {
         return compositeCategoryKey(group.slug, subSlug);
       }
       if (subSlug === "konut") {
