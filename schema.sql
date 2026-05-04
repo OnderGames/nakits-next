@@ -229,7 +229,7 @@ execute procedure public.handle_new_user();
 -- Alt kategori satirlari (slug: grup_alt, name: liste etiketi; lib/categories ile uyumlu)
 insert into categories (slug, name)
 values
-  ('tasitlar_otomobil', 'Araç'),
+  ('tasitlar_otomobil', 'Otomobil'),
   ('tasitlar_motosiklet', 'Motosiklet'),
   ('tasitlar_bisiklet', 'Bisiklet'),
   ('tasitlar_ticari-araclar', 'Ticari araç'),

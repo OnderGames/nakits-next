@@ -20,7 +20,7 @@ export const CATEGORY_GROUPS: CategoryGroupDef[] = [
     emoji: "🚗",
     name: "Vasıta",
     subs: [
-      { slug: "otomobil", name: "Araç" },
+      { slug: "otomobil", name: "Otomobil" },
       { slug: "motosiklet", name: "Motosiklet" },
       { slug: "ticari-araclar", name: "Ticari araç" },
       { slug: "bisiklet", name: "Bisiklet" },

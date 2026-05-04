@@ -7,7 +7,7 @@ values
   ('gayrimenkul_toprak', 'Toprak & tarla')
 on conflict (slug) do nothing;
 
-update categories set name = 'Araç' where slug = 'tasitlar_otomobil';
+update categories set name = 'Otomobil' where slug = 'tasitlar_otomobil';
 update categories set name = 'Ticari araç' where slug = 'tasitlar_ticari-araclar';
 update categories set name = 'Deniz aracı (tekne, yat)' where slug = 'tasitlar_deniz-tasitlari';
 update categories set name = 'Müstakil ev' where slug = 'gayrimenkul_ev';

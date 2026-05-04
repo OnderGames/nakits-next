@@ -3,7 +3,7 @@
 
 insert into categories (slug, name)
 values
-  ('tasitlar_otomobil', 'Araç'),
+  ('tasitlar_otomobil', 'Otomobil'),
   ('tasitlar_motosiklet', 'Motosiklet'),
   ('tasitlar_bisiklet', 'Bisiklet'),
   ('tasitlar_ticari-araclar', 'Ticari araç'),
