@@ -11,14 +11,17 @@ import {
   useRef,
   useState
 } from "react";
+import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import {
   fetchLastMessageSnippetByConversations,
   fetchMyConversations,
+  fetchMessages,
   fetchTotalUnreadMessages,
   markConversationRead,
   markIncomingMessagesAsRead,
   notifyUnreadRefresh,
   sendMessage,
+  type ChatMessage,
   type ConversationSummary
 } from "@/lib/conversations";
 import { formatRelativeTimeTr } from "@/lib/listings-data";
@@ -42,7 +45,15 @@ export default function MessagesPeekDock() {
   const [replyDraft, setReplyDraft] = useState("");
   const [replySending, setReplySending] = useState(false);
   const [replyErr, setReplyErr] = useState("");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const rowsRef = useRef(rows);
   const panelRef = useRef<HTMLDivElement>(null);
+  const threadBottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    rowsRef.current = rows;
+  }, [rows]);
 
   const selectedRow = useMemo(
     () => rows.find((r) => r.id === selectedId) ?? null,
@@ -163,8 +174,112 @@ export default function MessagesPeekDock() {
       setReplyErr("");
       setReplySending(false);
       setSelectedId(null);
+      setChatMessages([]);
+      setChatLoading(false);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !userId || !selectedId || !hasSupabaseConfig) {
+      if (!selectedId || !open) setChatMessages([]);
+      return;
+    }
+
+    const peekSb = getSupabaseBrowser();
+    if (!peekSb) return;
+    const db: SupabaseClient = peekSb;
+    const conversationId = selectedId;
+    const viewerId = userId;
+
+    let cancelled = false;
+    setChatMessages([]);
+
+    async function pullThread() {
+      const row = rowsRef.current.find((r) => r.id === conversationId);
+      if (!row) return;
+      const msgs = await fetchMessages(
+        db,
+        conversationId,
+        viewerId,
+        row.otherPartyId
+      );
+      if (cancelled) return;
+      setChatMessages(msgs);
+      try {
+        await markIncomingMessagesAsRead(
+          db,
+          conversationId,
+          viewerId,
+          row.otherPartyId
+        );
+        await markConversationRead(db, conversationId);
+        notifyUnreadRefresh();
+      } catch {
+        /* özeti yine güncellenir */
+      }
+    }
+
+    async function bootstrap() {
+      const row = rowsRef.current.find((r) => r.id === conversationId);
+      if (!row) {
+        setChatLoading(false);
+        return;
+      }
+      setChatLoading(true);
+      await pullThread();
+      if (!cancelled) setChatLoading(false);
+    }
+
+    void bootstrap();
+
+    let channel: RealtimeChannel | null = null;
+
+    channel = db
+      .channel(`nakits-msg-peek:${conversationId}:${viewerId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`
+        },
+        async () => {
+          if (document.visibilityState !== "visible") return;
+          await pullThread();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "message_reads"
+        },
+        async () => {
+          if (document.visibilityState !== "visible") return;
+          await pullThread();
+        }
+      )
+      .subscribe();
+
+    const intervalMs = 12000;
+    const tick = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      void pullThread();
+    }, intervalMs);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(tick);
+      if (channel) void db.removeChannel(channel);
+    };
+  }, [open, selectedId, userId]);
+
+  useEffect(() => {
+    if (!selectedId || !open) return;
+    threadBottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [chatMessages, selectedId, open]);
 
   const handleReplySubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
@@ -199,6 +314,14 @@ export default function MessagesPeekDock() {
       } catch {
         /* okunma güncellemesi başarısız olsa da mesaj gitti */
       }
+
+      const nextMsgs = await fetchMessages(
+        sb,
+        selectedRow.id,
+        userId,
+        selectedRow.otherPartyId
+      );
+      setChatMessages(nextMsgs);
 
       setReplyDraft("");
       setReplySending(false);
@@ -279,7 +402,63 @@ export default function MessagesPeekDock() {
 
         <div className="msg-peek__panel-mid">
           <div className="msg-peek__scroll">
-            {loading && rows.length === 0 ? (
+            {selectedRow ? (
+              <>
+                <div className="msg-peek__thread-head">
+                  <button
+                    type="button"
+                    className="msg-peek__thread-back"
+                    onClick={() => setSelectedId(null)}
+                  >
+                    ← Görüşmeler
+                  </button>
+                  <span className="msg-peek__thread-party">
+                    {selectedRow.role === "buyer" ? "Satıcı" : "Alıcı"}:{" "}
+                    {selectedRow.otherPartyName}
+                  </span>
+                </div>
+                <div className="msg-peek__thread">
+                  <p className="msg-peek__thread-listing-title">
+                    {selectedRow.listingTitle}
+                  </p>
+                  {chatLoading && chatMessages.length === 0 ? (
+                    <p className="msg-peek__thread-empty">
+                      Mesajlar yükleniyor…
+                    </p>
+                  ) : chatMessages.length === 0 ? (
+                    <p className="msg-peek__thread-empty">
+                      Henüz mesaj yok; aşağıdan yazabilirsiniz.
+                    </p>
+                  ) : (
+                    chatMessages.map((m) => {
+                      const mine = m.senderId === userId;
+                      return (
+                        <div
+                          key={m.id}
+                          className={
+                            mine
+                              ? "msg-peek__bubble msg-peek__bubble--mine"
+                              : "msg-peek__bubble msg-peek__bubble--theirs"
+                          }
+                        >
+                          <p className="msg-peek__bubble-body">{m.body}</p>
+                          <time className="msg-peek__bubble-time">
+                            {formatRelativeTimeTr(m.createdAt)}
+                          </time>
+                          {mine && m.readByOtherAt ? (
+                            <p className="msg-peek__bubble-read">
+                              Görüldü ·{" "}
+                              {formatRelativeTimeTr(m.readByOtherAt)}
+                            </p>
+                          ) : null}
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={threadBottomRef} className="msg-peek__thread-end" />
+                </div>
+              </>
+            ) : loading && rows.length === 0 ? (
               <p className="msg-peek__empty">Yükleniyor…</p>
             ) : rows.length === 0 ? (
               <p className="msg-peek__empty">
@@ -362,19 +541,13 @@ export default function MessagesPeekDock() {
           <div className="msg-peek__reply">
             {selectedRow ? (
               <form onSubmit={(ev) => void handleReplySubmit(ev)}>
-                <p className="msg-peek__reply-label">
-                  <span className="msg-peek__reply-label-tag">Cevap</span>
-                  <span className="msg-peek__reply-label-title">
-                    {selectedRow.listingTitle}
-                  </span>
-                </p>
                 <textarea
                   className="msg-peek__reply-input"
                   rows={2}
                   value={replyDraft}
                   disabled={replySending}
                   onChange={(e) => setReplyDraft(e.target.value)}
-                  placeholder="Mesajınızı yazın…"
+                  placeholder={`${selectedRow.otherPartyName} kişisine yazın…`}
                   maxLength={4000}
                   enterKeyHint="send"
                 />
