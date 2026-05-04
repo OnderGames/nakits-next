@@ -91,10 +91,8 @@ function HeaderSearchFallback() {
 }
 
 export default function Header() {
-  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   /** null: henüz ölçülmedi (SSR / ilk boyama ile uyum için menüde küme) */
   const [isMobileNav, setIsMobileNav] = useState<boolean | null>(null);
 
@@ -123,23 +121,6 @@ export default function Header() {
   }, [refresh]);
 
   useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (user) setMenuOpen(false);
-  }, [user]);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [menuOpen]);
-
-  useEffect(() => {
     const mq = window.matchMedia("(max-width: 959px)");
     const sync = () => setIsMobileNav(mq.matches);
     sync();
@@ -153,11 +134,13 @@ export default function Header() {
     Boolean(user) && ready && isMobileNav === true;
   const showUserClusterToolbar = authMobileToolbar;
   const showUserClusterMenu = Boolean(user) && ready && !authMobileToolbar;
+  /** Mobil: giriş yokken çekmece yerine üst bardaki Giriş / Üye Ol */
+  const guestMobileInline = ready && !user;
 
   return (
     <header className="topbar">
       <div
-        className={`container nav${authMobileToolbar ? " nav--auth-mobile-tray" : ""}`}
+        className={`container nav${authMobileToolbar ? " nav--auth-mobile-tray" : ""}${guestMobileInline ? " nav-mobile-inline-guest" : ""}`}
       >
         <div className="nav__leading">
           <Link className="brand-mark" href="/" aria-label="Nakits.com — ana sayfa">
@@ -170,66 +153,31 @@ export default function Header() {
           <div
             className={`nav-mobile-bar${authMobileToolbar ? " nav-mobile-bar--auth" : ""}`}
           >
+            {guestMobileInline ? (
+              <>
+                <Link
+                  className="nav-pill nav-pill--login nav-mobile-bar__guest-pill"
+                  href="/login"
+                >
+                  Giriş Yap
+                </Link>
+                <Link
+                  className="nav-pill nav-pill--join nav-mobile-bar__guest-pill"
+                  href="/register"
+                >
+                  Üye Ol
+                </Link>
+              </>
+            ) : null}
             {showUserClusterToolbar && user ? (
               <div className="nav-user-cluster nav-user-cluster--toolbar-mobile">
-                <HeaderNotificationsBell
-                  userId={user.id}
-                  onCloseDrawer={() => setMenuOpen(false)}
-                />
-                <HeaderAccountMenu
-                  user={user}
-                  onCloseDrawer={() => setMenuOpen(false)}
-                />
+                <HeaderNotificationsBell userId={user.id} />
+                <HeaderAccountMenu user={user} />
               </div>
             ) : null}
-            <Link
-              className="nav-cta nav-cta--orange nav-cta--toolbar"
-              href="/add-listing"
-              onClick={() => setMenuOpen(false)}
-            >
+            <Link className="nav-cta nav-cta--orange nav-cta--toolbar" href="/add-listing">
               İlan Ver
             </Link>
-            {!authMobileToolbar ? (
-              <button
-                type="button"
-                className="nav-toggle"
-                aria-expanded={menuOpen}
-                aria-controls="site-menu"
-                aria-label={menuOpen ? "Menüyü kapat" : "Menüyü aç"}
-                onClick={() => setMenuOpen((o) => !o)}
-              >
-                {menuOpen ? (
-                  <svg
-                    className="nav-toggle__svg"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    aria-hidden
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1L10.6 12l-4.9 4.9a1 1 0 1 0 1.4 1.4L12 13.4l4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="nav-toggle__svg"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    aria-hidden
-                  >
-                    <path
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      d="M4 7h16M4 12h16M4 17h16"
-                    />
-                  </svg>
-                )}
-              </button>
-            ) : null}
           </div>
         </div>
 
@@ -237,88 +185,35 @@ export default function Header() {
           <HeaderSearchBar />
         </Suspense>
 
-        <nav
-          id="site-menu"
-          className={`menu ${menuOpen ? "menu--open" : ""}`}
-          aria-label="Site menüsü"
-        >
-          <div className="menu__header">
-            <span className="menu__title">Menü</span>
-            <button
-              type="button"
-              className="menu__close"
-              aria-label="Menüyü kapat"
-              onClick={() => setMenuOpen(false)}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
-                <path
-                  fill="currentColor"
-                  d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1L10.6 12l-4.9 4.9a1 1 0 1 0 1.4 1.4L12 13.4l4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"
-                />
-              </svg>
-            </button>
-          </div>
-
+        <nav id="site-menu" className="menu" aria-label="Site menüsü">
           {!ready ? (
             <span className="meta menu__loading">…</span>
           ) : loggedIn ? (
             <>
               {showUserClusterMenu && user ? (
                 <div className="nav-user-cluster nav-user-cluster--desktop-only">
-                  <HeaderNotificationsBell
-                    userId={user.id}
-                    onCloseDrawer={() => setMenuOpen(false)}
-                  />
-                  <HeaderAccountMenu
-                    user={user}
-                    onCloseDrawer={() => setMenuOpen(false)}
-                  />
+                  <HeaderNotificationsBell userId={user.id} />
+                  <HeaderAccountMenu user={user} />
                 </div>
               ) : null}
-              <Link
-                className="nav-cta nav-cta--orange"
-                href="/add-listing"
-                onClick={() => setMenuOpen(false)}
-              >
+              <Link className="nav-cta nav-cta--orange" href="/add-listing">
                 İlan Ver
               </Link>
             </>
           ) : (
             <>
-              <Link
-                className="nav-pill nav-pill--login"
-                href="/login"
-                onClick={() => setMenuOpen(false)}
-              >
+              <Link className="nav-pill nav-pill--login" href="/login">
                 Giriş Yap
               </Link>
-              <Link
-                className="nav-pill nav-pill--join"
-                href="/register"
-                onClick={() => setMenuOpen(false)}
-              >
+              <Link className="nav-pill nav-pill--join" href="/register">
                 Üye Ol
               </Link>
-              <Link
-                className="nav-cta nav-cta--orange"
-                href="/add-listing"
-                onClick={() => setMenuOpen(false)}
-              >
+              <Link className="nav-cta nav-cta--orange" href="/add-listing">
                 İlan Ver
               </Link>
             </>
           )}
         </nav>
-
-        {menuOpen ? (
-          <button
-            type="button"
-            className="nav-backdrop"
-            tabIndex={-1}
-            aria-hidden
-            onClick={() => setMenuOpen(false)}
-          />
-        ) : null}
       </div>
     </header>
   );

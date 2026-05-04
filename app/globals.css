@@ -454,6 +454,19 @@ main.container {
     display: none !important;
   }
 
+  /* Giriş yokken mobil: Giriş / Üye Ol üst satırda; çekmece menüsü kapalı */
+  .nav-mobile-inline-guest .menu {
+    display: none !important;
+  }
+
+  .nav-mobile-bar__guest-pill {
+    padding: 7px 11px !important;
+    font-size: 12px !important;
+    min-height: 38px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
   .nav-user-cluster--toolbar-mobile {
     flex: 1;
     justify-content: flex-end;
