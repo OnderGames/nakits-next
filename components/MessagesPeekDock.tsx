@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
+  FormEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -14,6 +15,10 @@ import {
   fetchLastMessageSnippetByConversations,
   fetchMyConversations,
   fetchTotalUnreadMessages,
+  markConversationRead,
+  markIncomingMessagesAsRead,
+  notifyUnreadRefresh,
+  sendMessage,
   type ConversationSummary
 } from "@/lib/conversations";
 import { formatRelativeTimeTr } from "@/lib/listings-data";
@@ -33,7 +38,16 @@ export default function MessagesPeekDock() {
   const [rows, setRows] = useState<ConversationSummary[]>([]);
   const [snippets, setSnippets] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [replyDraft, setReplyDraft] = useState("");
+  const [replySending, setReplySending] = useState(false);
+  const [replyErr, setReplyErr] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
+
+  const selectedRow = useMemo(
+    () => rows.find((r) => r.id === selectedId) ?? null,
+    [rows, selectedId]
+  );
 
   const hideForRoute = useMemo(() => {
     if (!pathname) return true;
@@ -143,6 +157,63 @@ export default function MessagesPeekDock() {
     void loadAll();
   }, [open, userId, loadAll]);
 
+  useEffect(() => {
+    if (!open) {
+      setReplyDraft("");
+      setReplyErr("");
+      setReplySending(false);
+      setSelectedId(null);
+    }
+  }, [open]);
+
+  const handleReplySubmit = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (!hasSupabaseConfig || !userId || !selectedRow) return;
+      const text = replyDraft.trim();
+      if (!text || replySending) return;
+
+      const sb = getSupabaseBrowser();
+      if (!sb) {
+        setReplyErr("Bağlantı yok.");
+        return;
+      }
+
+      setReplyErr("");
+      setReplySending(true);
+      const res = await sendMessage(sb, selectedRow.id, text);
+      if (res.error) {
+        setReplyErr(res.error);
+        setReplySending(false);
+        return;
+      }
+
+      try {
+        await markIncomingMessagesAsRead(
+          sb,
+          selectedRow.id,
+          userId,
+          selectedRow.otherPartyId
+        );
+        await markConversationRead(sb, selectedRow.id);
+      } catch {
+        /* okunma güncellemesi başarısız olsa da mesaj gitti */
+      }
+
+      setReplyDraft("");
+      setReplySending(false);
+      notifyUnreadRefresh();
+      void loadAll();
+    },
+    [
+      userId,
+      selectedRow,
+      replyDraft,
+      replySending,
+      loadAll
+    ]
+  );
+
   /** Esc ile kapat */
   useEffect(() => {
     if (!open) return;
@@ -206,59 +277,128 @@ export default function MessagesPeekDock() {
           </button>
         </div>
 
-        <div className="msg-peek__panel-body">
-          {loading && rows.length === 0 ? (
-            <p className="msg-peek__empty">Yükleniyor…</p>
-          ) : rows.length === 0 ? (
-            <p className="msg-peek__empty">
-              Henüz görüşmeniz yok. İlanlardan yazışmaya başlayın.
-            </p>
-          ) : (
-            <ul className="msg-peek__list">
-              {rows.map((c) => {
-                const snip = snippets[c.id] ?? "…";
-                const roleLabel =
-                  c.role === "buyer" ? "Satıcı" : "Alıcı";
+        <div className="msg-peek__panel-mid">
+          <div className="msg-peek__scroll">
+            {loading && rows.length === 0 ? (
+              <p className="msg-peek__empty">Yükleniyor…</p>
+            ) : rows.length === 0 ? (
+              <p className="msg-peek__empty">
+                Henüz görüşmeniz yok. İlanlardan yazışmaya başlayın.
+              </p>
+            ) : (
+              <ul className="msg-peek__list">
+                {rows.map((c) => {
+                  const snip = snippets[c.id] ?? "…";
+                  const roleLabel =
+                    c.role === "buyer" ? "Satıcı" : "Alıcı";
+                  const selected = selectedId === c.id;
 
-                return (
-                  <li key={c.id} className="msg-peek__item">
-                    <Link
-                      href={`/mesajlar/${c.id}`}
-                      className="msg-peek__link"
-                      onClick={() => setOpen(false)}
+                  return (
+                    <li
+                      key={c.id}
+                      className={
+                        selected
+                          ? "msg-peek__item msg-peek__item--selected"
+                          : "msg-peek__item"
+                      }
                     >
-                      <Image
-                        src={c.listingImage}
-                        alt=""
-                        width={48}
-                        height={48}
-                        className="msg-peek__thumb"
-                      />
-                      <div className="msg-peek__text">
-                        <div className="msg-peek__row1">
-                          <span className="msg-peek__listing">
-                            {c.listingTitle}
-                          </span>
-                          {(c.unreadCount ?? 0) > 0 ? (
-                            <span className="msg-peek__badge">
-                              {c.unreadCount! > 99 ? "99+" : c.unreadCount}
+                      <div className="msg-peek__item-row">
+                        <button
+                          type="button"
+                          className="msg-peek__select"
+                          onClick={() =>
+                            setSelectedId((prev) =>
+                              prev === c.id ? null : c.id
+                            )
+                          }
+                          aria-pressed={selected}
+                        >
+                          <Image
+                            src={c.listingImage}
+                            alt=""
+                            width={48}
+                            height={48}
+                            className="msg-peek__thumb"
+                          />
+                          <div className="msg-peek__text">
+                            <div className="msg-peek__row1">
+                              <span className="msg-peek__listing">
+                                {c.listingTitle}
+                              </span>
+                              {(c.unreadCount ?? 0) > 0 ? (
+                                <span className="msg-peek__badge">
+                                  {c.unreadCount! > 99
+                                    ? "99+"
+                                    : c.unreadCount}
+                                </span>
+                              ) : null}
+                            </div>
+                            <span className="msg-peek__party-line">
+                              {roleLabel}: {c.otherPartyName}
                             </span>
-                          ) : null}
-                        </div>
-                        <span className="msg-peek__party-line">
-                          {roleLabel}: {c.otherPartyName}
-                        </span>
-                        <p className="msg-peek__snippet">{snip}</p>
-                        <time className="msg-peek__time">
-                          {formatRelativeTimeTr(c.sortAt)}
-                        </time>
+                            <p className="msg-peek__snippet">{snip}</p>
+                            <time className="msg-peek__time">
+                              {formatRelativeTimeTr(c.sortAt)}
+                            </time>
+                          </div>
+                        </button>
+                        <Link
+                          href={`/mesajlar/${c.id}`}
+                          className="msg-peek__open-thread"
+                          title="Tam sohbet"
+                          aria-label="Tam sohbeti aç"
+                          onClick={() => setOpen(false)}
+                        >
+                          ↗
+                        </Link>
                       </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          <div className="msg-peek__reply">
+            {selectedRow ? (
+              <form onSubmit={(ev) => void handleReplySubmit(ev)}>
+                <p className="msg-peek__reply-label">
+                  <span className="msg-peek__reply-label-tag">Cevap</span>
+                  <span className="msg-peek__reply-label-title">
+                    {selectedRow.listingTitle}
+                  </span>
+                </p>
+                <textarea
+                  className="msg-peek__reply-input"
+                  rows={2}
+                  value={replyDraft}
+                  disabled={replySending}
+                  onChange={(e) => setReplyDraft(e.target.value)}
+                  placeholder="Mesajınızı yazın…"
+                  maxLength={4000}
+                  enterKeyHint="send"
+                />
+                {replyErr ? (
+                  <p className="msg-peek__reply-error" role="alert">
+                    {replyErr}
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  className="msg-peek__reply-submit"
+                  disabled={
+                    replySending || replyDraft.trim().length === 0
+                  }
+                >
+                  {replySending ? "Gönderiliyor…" : "Gönder"}
+                </button>
+              </form>
+            ) : (
+              <p className="msg-peek__reply-hint">
+                Cevap yazmak için yukarıdan bir görüşmeye dokunun.
+              </p>
+            )}
+          </div>
         </div>
 
         <Link
