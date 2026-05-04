@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   CATEGORY_GROUPS,
   compositeCategoryKey,
-  gayrimenkulLegacyLeafSidebarRows,
   KONUT_LISTING_KINDS,
   KONUT_PROPERTY_TYPES,
   konutLeafCategorySubSlug,
@@ -94,9 +93,7 @@ export default function HomeCategorySidebar({
     });
   }, []);
 
-  const legacyRows = useMemo(() => gayrimenkulLegacyLeafSidebarRows(), []);
-
-  /** Ana grup başlığı: o gruba ait tüm ilanlar (gayrimenkul’da legacy + tüm altlar) */
+  /** Ana grup başlığı: o gruba ait tüm ilanlar */
   const groupTotals = useMemo(() => {
     const m: Record<string, number> = {};
     for (const g of CATEGORY_GROUPS) {
@@ -132,13 +129,9 @@ export default function HomeCategorySidebar({
       ),
       depo: sumListingCountsWhere(counts, (k) =>
         k.startsWith(`${GM}.depo-garaj-`)
-      ),
-      legacy: sumListingCountsWhere(
-        counts,
-        (k) => legacyRows.some((r) => r.compositeKey === k)
       )
     }),
-    [counts, legacyRows]
+    [counts]
   );
 
   const SummaryCount = ({ n }: { n: number }) => (
@@ -154,7 +147,6 @@ export default function HomeCategorySidebar({
   const arsaRef = useRef<HTMLDetailsElement>(null);
   const toprakRef = useRef<HTMLDetailsElement>(null);
   const depoRef = useRef<HTMLDetailsElement>(null);
-  const legacyRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
     const sub = gayrimenkulSubFromKey(selectedCategoryKey);
@@ -180,12 +172,7 @@ export default function HomeCategorySidebar({
       depoRef.current,
       sub === "depo-garaj" || sub.startsWith("depo-garaj-")
     );
-
-    const legacySubs = new Set(
-      legacyRows.map((r) => r.compositeKey.slice(GM.length + 1))
-    );
-    setOpen(legacyRef.current, legacySubs.has(sub));
-  }, [selectedCategoryKey, legacyRows]);
+  }, [selectedCategoryKey]);
 
   const renderSubLink = (compositeKey: string, label: string) => {
     const n = counts[compositeKey] ?? 0;
@@ -346,26 +333,6 @@ export default function HomeCategorySidebar({
                 <li key={subSlug}>{renderSubLink(compositeKey, txn.name)}</li>
               );
             })}
-          </ul>
-        </details>
-      </li>
-      <li>
-        <details
-          ref={legacyRef}
-          className="home-category-sidebar__nest-details"
-        >
-          <summary className="home-category-sidebar__nest-summary">
-            <span className="home-category-sidebar__nest-summary-label">
-              Eski etiket (daire / villa / ev)
-            </span>
-            <SummaryCount n={gmTotals.legacy} />
-          </summary>
-          <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
-            {legacyRows.map((row) => (
-              <li key={row.compositeKey}>
-                {renderSubLink(row.compositeKey, row.label)}
-              </li>
-            ))}
           </ul>
         </details>
       </li>

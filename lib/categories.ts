@@ -244,17 +244,6 @@ export function compositeCategoryKey(groupSlug: string, subSlug: string): string
   return `${groupSlug}.${subSlug}`;
 }
 
-/** Ana sayfa kenarı: düz seçim ilanları (gayrimenkul.daire vb.) için link üretimi */
-export function gayrimenkulLegacyLeafSidebarRows(): ReadonlyArray<{
-  compositeKey: string;
-  label: string;
-}> {
-  return GAYRIMENKUL_LEGACY_LEAF_SUBS.map((s) => ({
-    compositeKey: compositeCategoryKey("gayrimenkul", s.slug),
-    label: s.name
-  }));
-}
-
 /** Kenar çubukları / liste filtresi: her satır seçilebilir yaprak kategori */
 export function leafRowsForCategoryGroup(group: CategoryGroupDef): ReadonlyArray<{
   reactKey: string;
