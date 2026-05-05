@@ -11,7 +11,6 @@ import {
 } from "react";
 import {
   formatCategoryDisplay,
-  formatPriceInputDisplay,
   isIntermediateGayrimenkulListingKey,
   getTasitlarOtomobilBrandSlugAwaitingModel,
   isIntermediateTasitlarOtomobilListingKey,
@@ -19,6 +18,7 @@ import {
   parsePriceInput,
   sqlCategorySlugFromKey
 } from "@/lib/categories";
+import { useLiveTrPriceInput } from "@/lib/use-live-tr-price-input";
 import AddListingMainCategoryGrid from "@/components/AddListingMainCategoryGrid";
 import CategoryMillerPicker from "@/components/CategoryMillerPicker";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
@@ -127,6 +127,7 @@ export default function AddListingPage() {
   const [listingCity, setListingCity] = useState("");
   const [listingDistrict, setListingDistrict] = useState("");
   const [priceText, setPriceText] = useState("");
+  const livePriceInput = useLiveTrPriceInput(priceText, setPriceText);
   const [photosNormalizing, setPhotosNormalizing] = useState(false);
   const [phase, setPhase] = useState<AddListingPhase>("main");
   const skipSubAutoAdvanceRef = useRef(false);
@@ -619,19 +620,15 @@ export default function AddListingPage() {
             <div>
               <label htmlFor="listing-price">Fiyat (TL)</label>
               <input
+                ref={livePriceInput.inputRef}
                 id="listing-price"
                 type="text"
                 inputMode="decimal"
                 autoComplete="off"
                 required
                 value={priceText}
-                onChange={(e) => setPriceText(e.target.value)}
-                onBlur={() => {
-                  const n = parsePriceInput(priceText);
-                  if (Number.isFinite(n) && n >= 0) {
-                    setPriceText(formatPriceInputDisplay(n));
-                  }
-                }}
+                onChange={livePriceInput.onChange}
+                onBlur={livePriceInput.onBlur}
                 placeholder="Örn: 875 veya 1.500 veya 250.000"
                 disabled={submitting}
               />

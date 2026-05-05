@@ -22,6 +22,7 @@ import {
   parsePriceInput,
   sqlCategorySlugFromKey
 } from "@/lib/categories";
+import { useLiveTrPriceInput } from "@/lib/use-live-tr-price-input";
 import AddListingMainCategoryGrid from "@/components/AddListingMainCategoryGrid";
 import CategoryMillerPicker from "@/components/CategoryMillerPicker";
 import {
@@ -131,6 +132,7 @@ export default function EditListingPage() {
   const [editCity, setEditCity] = useState("");
   const [editDistrict, setEditDistrict] = useState("");
   const [editPriceText, setEditPriceText] = useState("");
+  const livePriceInput = useLiveTrPriceInput(editPriceText, setEditPriceText);
   const [phase, setPhase] = useState<EditListingPhase>("main");
   const skipSubAutoAdvanceRef = useRef(false);
   const prevCategoryReadyRef = useRef(false);
@@ -696,19 +698,15 @@ export default function EditListingPage() {
             <div>
               <label htmlFor="edit-price">Fiyat (TL)</label>
               <input
+                ref={livePriceInput.inputRef}
                 id="edit-price"
                 required
                 type="text"
                 inputMode="decimal"
                 autoComplete="off"
                 value={editPriceText}
-                onChange={(e) => setEditPriceText(e.target.value)}
-                onBlur={() => {
-                  const n = parsePriceInput(editPriceText);
-                  if (Number.isFinite(n) && n >= 0) {
-                    setEditPriceText(formatPriceInputDisplay(n));
-                  }
-                }}
+                onChange={livePriceInput.onChange}
+                onBlur={livePriceInput.onBlur}
                 placeholder="Örn: 875 veya 1.500 veya 750.000"
                 disabled={submitting}
               />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   CATEGORY_GROUPS,
   GAYRIMENKUL_KONUT_INTERMEDIATE_KEY,
@@ -55,6 +55,8 @@ export default function CategoryMillerPicker({
   const [txnDraft, setTxnDraft] = useState<
     (typeof KONUT_LISTING_KINDS)[number]["slug"] | ""
   >("");
+
+  const columnsScrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!detailCategoryKey.trim()) {
@@ -250,6 +252,42 @@ export default function CategoryMillerPicker({
 
   const showOtomobilModelColumn = Boolean(brandSlugAwaitingModel);
 
+  /** Mobil: çoklu sütun taşinca son (aktif) sütunu yatayda görünür kılar */
+  useLayoutEffect(() => {
+    const strip = columnsScrollerRef.current;
+    if (!strip) return;
+
+    const scrollLastColumnIntoView = (): void => {
+      if (strip.scrollWidth <= strip.clientWidth + 8) return;
+      const cols = strip.querySelectorAll(".category-miller__col");
+      const last = cols.item(cols.length - 1);
+      if (!(last instanceof HTMLElement)) return;
+      const reduced =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      last.scrollIntoView({
+        behavior: reduced ? "auto" : "smooth",
+        block: "nearest",
+        inline: "end"
+      });
+    };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(scrollLastColumnIntoView);
+    });
+  }, [
+    detailCategoryKey,
+    groupSlug,
+    hideMainGroupColumn,
+    txnDraft,
+    konutFlow,
+    satKirFlowBase,
+    showSatKirColumn,
+    showKonutPropColumn,
+    showOtomobilMarkaColumn,
+    showOtomobilModelColumn
+  ]);
+
   function renderSecondColumnSubRow(sub: SubcategoryDef) {
     if (!selectedGroup) return null;
     const keyLeaf = compositeCategoryKey(selectedGroup.slug, sub.slug);
@@ -380,7 +418,12 @@ export default function CategoryMillerPicker({
           {crumbText}
         </p>
       </div>
-      <div className="category-miller__columns" role="group" aria-label="Kategori sütunları">
+      <div
+        ref={columnsScrollerRef}
+        className="category-miller__columns"
+        role="group"
+        aria-label="Kategori sütunları"
+      >
         {!hideMainGroupColumn ? (
           <div className="category-miller__col">
             <ul

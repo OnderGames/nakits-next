@@ -1,15 +1,15 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import FavoriteHeartButton from "@/components/FavoriteHeartButton";
 import {
   formatListingCategoryLineCity,
   formatListingPlaceLine,
-  formatPrice,
-  formatPriceInputDisplay,
-  parsePriceInput
+  formatPrice
 } from "@/lib/categories";
+import { useLiveTrPriceInput } from "@/lib/use-live-tr-price-input";
 import { listingDetailHref } from "@/lib/listing-code";
 import {
   formatListingExpiryDetailTr,
@@ -25,6 +25,42 @@ const STATUS_LABEL: Record<NonNullable<Listing["status"]>, string> = {
   sold: "Satıldı",
   rejected: "Yayınlanmadı"
 };
+
+function OwnerQuickPriceInput({
+  id,
+  value,
+  onValueChange,
+  disabled,
+  placeholder,
+  style
+}: {
+  id: string;
+  value: string;
+  onValueChange: (next: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
+  style?: CSSProperties;
+}) {
+  const { inputRef, onChange, onBlur } = useLiveTrPriceInput(
+    value,
+    onValueChange
+  );
+  return (
+    <input
+      ref={inputRef}
+      id={id}
+      type="text"
+      inputMode="decimal"
+      autoComplete="off"
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      disabled={disabled}
+      placeholder={placeholder}
+      style={style}
+    />
+  );
+}
 
 type OwnerToolbar = {
   editHref: string;
@@ -285,23 +321,10 @@ export default function ListingCard({
               alignItems: "center"
             }}
           >
-            <input
+            <OwnerQuickPriceInput
               id={`quick-price-${listing.id}`}
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
               value={ownerToolbar.priceQuickEdit.value}
-              onChange={(e) =>
-                ownerToolbar.priceQuickEdit?.onChange(e.target.value)
-              }
-              onBlur={() => {
-                const q = ownerToolbar.priceQuickEdit;
-                if (!q) return;
-                const n = parsePriceInput(q.value);
-                if (Number.isFinite(n) && n >= 0) {
-                  q.onChange(formatPriceInputDisplay(n));
-                }
-              }}
+              onValueChange={ownerToolbar.priceQuickEdit.onChange}
               disabled={Boolean(ownerToolbar.priceQuickEdit.saving)}
               placeholder="Örn: 1.500"
               style={{

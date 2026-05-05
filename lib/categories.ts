@@ -961,3 +961,30 @@ export function parsePriceInput(raw: string): number {
   }
   return parseFloat(s.replace(/\./g, ""));
 }
+
+/** İmleçten önce kaç rakam var (live format ile eşlemek için) */
+export function countPriceDigitsPrefix(
+  raw: string,
+  caretExclusive: number
+): number {
+  const end = Math.max(0, Math.min(Math.floor(caretExclusive), raw.length));
+  let n = 0;
+  for (let i = 0; i < end; i++) {
+    if (/\d/.test(raw[i] ?? "")) n++;
+  }
+  return n;
+}
+
+/** `formatPriceInputDisplay` sonucunda ilk N rakamdan sonraki imleç sırası */
+export function caretIndexAfterPriceDigits(
+  display: string,
+  digitsBefore: number
+): number {
+  let pos = 0;
+  let d = 0;
+  while (pos < display.length && d < digitsBefore) {
+    if (/\d/.test(display[pos] ?? "")) d++;
+    pos++;
+  }
+  return pos;
+}
