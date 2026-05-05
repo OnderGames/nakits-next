@@ -151,15 +151,15 @@ export default function Header() {
           </Link>
 
           <div
-            className={`nav-mobile-bar${authMobileToolbar ? " nav-mobile-bar--auth" : ""}`}
+            className={`nav-mobile-bar${authMobileToolbar ? " nav-mobile-bar--auth" : ""}${guestMobileInline ? " nav-mobile-bar--guest" : ""}`}
           >
             {guestMobileInline ? (
               <>
                 <Link
-                  className="nav-pill nav-pill--login nav-mobile-bar__guest-pill"
-                  href="/login"
+                  className="nav-cta nav-cta--orange nav-cta--toolbar nav-mobile-bar__guest-cta"
+                  href="/add-listing"
                 >
-                  Giriş Yap
+                  İlan Ver
                 </Link>
                 <Link
                   className="nav-pill nav-pill--join nav-mobile-bar__guest-pill"
@@ -167,9 +167,15 @@ export default function Header() {
                 >
                   Üye Ol
                 </Link>
+                <Link
+                  className="nav-pill nav-pill--login nav-mobile-bar__guest-pill"
+                  href="/login"
+                >
+                  Giriş Yap
+                </Link>
               </>
             ) : null}
-            {showUserClusterToolbar && user ? (
+            {!guestMobileInline && showUserClusterToolbar && user ? (
               <>
                 <Link className="nav-cta nav-cta--orange nav-cta--toolbar" href="/add-listing">
                   İlan Ver
@@ -179,11 +185,11 @@ export default function Header() {
                   <HeaderAccountMenu user={user} />
                 </div>
               </>
-            ) : (
+            ) : !guestMobileInline ? (
               <Link className="nav-cta nav-cta--orange nav-cta--toolbar" href="/add-listing">
                 İlan Ver
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -208,14 +214,14 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link className="nav-pill nav-pill--login" href="/login">
-                Giriş Yap
+              <Link className="nav-cta nav-cta--orange" href="/add-listing">
+                İlan Ver
               </Link>
               <Link className="nav-pill nav-pill--join" href="/register">
                 Üye Ol
               </Link>
-              <Link className="nav-cta nav-cta--orange" href="/add-listing">
-                İlan Ver
+              <Link className="nav-pill nav-pill--login" href="/login">
+                Giriş Yap
               </Link>
             </>
           )}
