@@ -91,11 +91,7 @@ export default async function ListingDetailPage({ params }: Props) {
             </div>
           ) : null}
         </div>
-        <aside className="panel">
-          <h3>Satıcı ile iletişime geç</h3>
-          <p className="meta" style={{ marginBottom: 12 }}>
-            İletişim yalnızca mesaj ile; aşağıdan satıcıya yazabilirsin.
-          </p>
+        <aside className="panel listing-contact-aside">
           <ListingMessagePanel
             listingId={listing.id}
             sellerId={listing.sellerId}

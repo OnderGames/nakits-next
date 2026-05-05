@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import {
   getOrCreateConversation,
   notifyUnreadRefresh,
@@ -19,6 +20,52 @@ type Props = {
   sellerLabel: string;
 };
 
+function sellerInitial(label: string): string {
+  const t = label.trim();
+  if (!t) return "?";
+  return t[0].toLocaleUpperCase("tr-TR");
+}
+
+function MessagePanelIcon() {
+  return (
+    <span className="listing-contact-card__icon" aria-hidden>
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+      </svg>
+    </span>
+  );
+}
+
+function ContactCardShell({
+  lede,
+  children
+}: {
+  lede: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="listing-contact-card">
+      <div className="listing-contact-card__head">
+        <MessagePanelIcon />
+        <div className="listing-contact-card__head-text">
+          <h2 className="listing-contact-card__title">Satıcı ile iletişime geç</h2>
+          <p className="listing-contact-card__lede">{lede}</p>
+        </div>
+      </div>
+      <div className="listing-contact-card__body">{children}</div>
+    </div>
+  );
+}
+
 export default function ListingMessagePanel({
   listingId,
   sellerId,
@@ -32,6 +79,7 @@ export default function ListingMessagePanel({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [sendSuccess, setSendSuccess] = useState(false);
+  const textareaId = "listing-contact-message";
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -98,133 +146,153 @@ export default function ListingMessagePanel({
 
   if (!ready) {
     return (
-      <div>
-        <p className="meta">Yükleniyor…</p>
-      </div>
+      <ContactCardShell lede="Mesaj kutusu yükleniyor…">
+        <p className="listing-contact-card__skeleton meta">Bir saniye…</p>
+      </ContactCardShell>
     );
   }
 
   if (!hasSupabaseConfig) {
     return (
-      <p className="meta">
-        Mesajlaşma için Supabase yapılandırması gerekir.
-      </p>
+      <ContactCardShell lede="Canlı sitede güvenli mesajlaşma için yapılandırma gerekir.">
+        <p className="meta listing-contact-card__muted">
+          Mesajlaşma için Supabase yapılandırması gerekir.
+        </p>
+      </ContactCardShell>
     );
   }
 
   if (!sellerId) {
     return (
-      <p className="meta">
-        Bu örnek ilanda mesaj gönderilemez (canlı ilanlarda çalışır).
-      </p>
+      <ContactCardShell lede="Bu örnek ilanda mesaj gönderimi kapalıdır.">
+        <p className="meta listing-contact-card__muted">
+          Bu örnek ilanda mesaj gönderilemez (canlı ilanlarda çalışır).
+        </p>
+      </ContactCardShell>
     );
   }
 
   if (!userId) {
     return (
-      <div>
-        <p className="meta" style={{ marginBottom: 12 }}>
-          Satıcıya yazmak için giriş yapın.
-        </p>
-        <Link
-          className="btn btn-primary"
-          href={`/login?next=${encodeURIComponent(`/listings/${listingId}`)}`}
-        >
-          Giriş yap
-        </Link>
-      </div>
+      <ContactCardShell lede="Telefon numarası paylaşılmaz; yanıt satıcının gelen kutusuna düşer.">
+        <div className="listing-contact-cta">
+          <p className="listing-contact-cta__text">
+            Satıcıya ilk mesajını yazmak için giriş yap.
+          </p>
+          <Link
+            className="btn btn-primary listing-contact-cta__btn"
+            href={`/login?next=${encodeURIComponent(`/listings/${listingId}`)}`}
+          >
+            Giriş yap
+          </Link>
+        </div>
+      </ContactCardShell>
     );
   }
 
   if (userId === sellerId) {
     return (
-      <p className="meta">
-        Bu senin ilanın; alıcılar sana buradan mesaj gönderebilir.
-      </p>
+      <ContactCardShell lede="Alıcılar bu ilan sayfasından sana yazabilir; gelen kutusu Mesajlarım’da.">
+        <p className="meta listing-contact-card__muted listing-contact-card__muted--info">
+          Bu senin ilanın. Mesajları takip etmek için{" "}
+          <Link href="/mesajlar" className="listing-contact-inline-link">
+            Mesajlarım
+          </Link>{" "}
+          sayfasını kullan.
+        </p>
+      </ContactCardShell>
     );
   }
 
   const canSend = body.trim().length > 0;
 
   return (
-    <form
-      onSubmit={(e) => void handleSubmit(e)}
-      className="listing-message-form"
-      style={{ position: "relative", zIndex: 1 }}
-    >
-      <div className="messages-inbox-card__party messages-inbox-card__party--bare">
-        <span className="messages-inbox-card__party-label">Satıcı:</span>
-        {sellerPublicCode ? (
-          <Link
-            href={`/kullanici/${sellerPublicCode}`}
-            className="messages-inbox-card__party-link"
-          >
-            {sellerLabel}
-          </Link>
-        ) : (
-          <span className="messages-inbox-card__party-name-plain">
-            {sellerLabel}
-          </span>
-        )}
-      </div>
-      <textarea
-        rows={6}
-        placeholder="Mesajınızı yazın…"
-        value={body}
-        disabled={sending || sendSuccess}
-        onChange={(e) => setBody(e.target.value)}
-      />
-      {!canSend && !sending && !sendSuccess ? (
-        <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>
-          Önce mesajını yaz; ardından <strong>Mesaj gönder</strong> aktif olur.
-        </p>
-      ) : null}
-      <button
-        className="btn btn-primary"
-        style={{ marginTop: 10, width: "100%" }}
-        type="submit"
-        disabled={!canSend || sending || sendSuccess}
-        aria-busy={sending}
+    <ContactCardShell lede="Telefon numarası paylaşılmaz; mesajın doğrudan satıcıya iletilir.">
+      <form
+        onSubmit={(e) => void handleSubmit(e)}
+        className="listing-message-form"
       >
-        {sendSuccess
-          ? "Gönderildi"
-          : sending
-            ? "Gönderiliyor…"
-            : "Mesaj gönder"}
-      </button>
-      <p className="meta" style={{ marginTop: 12 }}>
-        <Link href="/mesajlar" style={{ fontWeight: 600 }}>
-          Mesajlarım — gelen kutusu
+        <div className="listing-contact-seller">
+          <span
+            className="listing-contact-seller__avatar"
+            aria-hidden
+          >
+            {sellerInitial(sellerLabel)}
+          </span>
+          <div className="listing-contact-seller__info">
+            <span className="listing-contact-seller__label">Mesaj alıcısı</span>
+            {sellerPublicCode ? (
+              <Link
+                href={`/kullanici/${sellerPublicCode}`}
+                className="listing-contact-seller__name"
+              >
+                {sellerLabel}
+              </Link>
+            ) : (
+              <span className="listing-contact-seller__name listing-contact-seller__name--plain">
+                {sellerLabel}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="listing-contact-field">
+          <label htmlFor={textareaId} className="listing-contact-field__label">
+            Mesajınız
+          </label>
+          <textarea
+            id={textareaId}
+            className="listing-contact-textarea"
+            rows={5}
+            placeholder="Merhaba, ilanınız hakkında…"
+            value={body}
+            disabled={sending || sendSuccess}
+            onChange={(e) => setBody(e.target.value)}
+            spellCheck
+          />
+          {!canSend && !sending && !sendSuccess ? (
+            <p className="listing-contact-field__hint meta">
+              Kısa bir soru veya teklif yazın; gönderince sohbet sayfasına
+              yönlendirilirsiniz.
+            </p>
+          ) : null}
+        </div>
+
+        <button
+          className="btn btn-primary listing-contact-submit"
+          type="submit"
+          disabled={!canSend || sending || sendSuccess}
+          aria-busy={sending}
+        >
+          {sendSuccess
+            ? "Gönderildi"
+            : sending
+              ? "Gönderiliyor…"
+              : "Mesaj gönder"}
+        </button>
+
+        <Link href="/mesajlar" className="listing-contact-inbox-link">
+          <span>Mesajlarım — gelen kutusu</span>
+          <span className="listing-contact-inbox-link__arrow" aria-hidden>
+            →
+          </span>
         </Link>
-      </p>
-      {sendSuccess && (
-        <p
-          className="notice"
-          role="status"
-          aria-live="polite"
-          style={{
-            marginTop: 12,
-            background: "#dcfce7",
-            borderColor: "#bbf7d0",
-            color: "#14532d"
-          }}
-        >
-          Mesajınız gönderildi. Sohbete yönlendiriliyorsunuz…
-        </p>
-      )}
-      {error && (
-        <p
-          className="notice"
-          style={{
-            marginTop: 12,
-            background: "#fee2e2",
-            borderColor: "#fecaca",
-            color: "#7f1d1d"
-          }}
-        >
-          {error}
-        </p>
-      )}
-    </form>
+
+        {sendSuccess && (
+          <p
+            className="notice listing-contact-notice listing-contact-notice--success"
+            role="status"
+            aria-live="polite"
+          >
+            Mesajınız iletildi. Sohbete yönlendiriliyorsunuz…
+          </p>
+        )}
+        {error && (
+          <p className="notice listing-contact-notice listing-contact-notice--error">
+            {error}
+          </p>
+        )}
+      </form>
+    </ContactCardShell>
   );
 }
