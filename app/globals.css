@@ -468,10 +468,59 @@ main.container {
   }
 
   .nav-user-cluster--toolbar-mobile {
-    flex: 1;
+    flex: 1 1 auto;
     justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
     min-width: 0;
-    margin-right: -2px;
+    max-width: 100%;
+  }
+
+  /* Girişli mobil üst satır — İlan Ver taşmasın */
+  .nav--auth-mobile-tray .nav__leading {
+    gap: 4px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .nav--auth-mobile-tray .brand-mark {
+    flex-shrink: 0;
+    padding: 6px 8px 6px 6px;
+    margin-left: -2px;
+  }
+
+  .nav--auth-mobile-tray .brand-mark__text {
+    font-size: 1.14rem;
+  }
+
+  .nav-mobile-bar--auth {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    align-content: center;
+  }
+
+  .nav-mobile-bar--auth > .nav-cta--toolbar {
+    flex-shrink: 0;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    min-height: 36px;
+    border-radius: 10px;
+  }
+
+  .nav-mobile-bar--auth .nav-notif__trigger {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .nav-mobile-bar--auth .nav-notif__trigger svg {
+    width: 18px;
+    height: 18px;
   }
 
   /* Üst çubukta masaüstü tarzı hesap düğmesi (mobil çekmece detayı yerine) */
@@ -492,9 +541,10 @@ main.container {
   .nav-user-cluster--toolbar-mobile .nav-account__desk-trigger {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    min-height: 44px;
-    padding: 5px 8px 5px 5px;
+    gap: 6px;
+    max-width: 100%;
+    min-height: 40px;
+    padding: 4px 6px 4px 4px;
     border-radius: 999px;
     border: 1.5px solid rgba(148, 163, 184, 0.6);
     background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
@@ -518,9 +568,10 @@ main.container {
   .nav-user-cluster--toolbar-mobile .nav-account__desk-label {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding-right: 4px;
-    max-width: min(104px, 28vw);
+    gap: 4px;
+    padding-right: 2px;
+    min-width: 0;
+    max-width: min(76px, 20vw);
   }
 
   .nav-user-cluster--toolbar-mobile .nav-account__name-short {
@@ -569,12 +620,33 @@ main.container {
 
   .nav-user-cluster--toolbar-mobile .nav-account__caret {
     flex-shrink: 0;
+    width: 12px;
+    height: 12px;
     color: #64748b;
     transition: transform 0.18s ease;
   }
 
   .nav-user-cluster--toolbar-mobile .nav-account__desk-trigger--open .nav-account__caret {
     transform: rotate(180deg);
+  }
+
+  .nav-user-cluster--toolbar-mobile .nav-account__avatar--desk {
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 380px) {
+  .nav-user-cluster--toolbar-mobile .nav-account__desk-label {
+    display: none;
+  }
+
+  .nav-user-cluster--toolbar-mobile .nav-account__desk-trigger {
+    gap: 0;
+    padding: 4px;
+    min-width: 40px;
+    justify-content: center;
   }
 }
 
