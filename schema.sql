@@ -98,6 +98,31 @@ create table if not exists favorites (
   primary key (profile_id, listing_id)
 );
 
+create table if not exists listing_reports (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references listings(id) on delete cascade,
+  reporter_id uuid not null references profiles(id) on delete cascade,
+  reason_key text not null
+    constraint listing_reports_reason_check check (
+      reason_key in ('spam', 'fraud', 'illegal', 'inappropriate', 'misleading', 'other')
+    ),
+  details text not null default '',
+  status text not null default 'open'
+    constraint listing_reports_status_check check (status in ('open', 'reviewed', 'dismissed')),
+  created_at timestamptz not null default now(),
+  reviewed_at timestamptz,
+  constraint listing_reports_details_len check (char_length(details) <= 2000)
+);
+
+create index if not exists idx_listing_reports_listing on listing_reports (listing_id);
+create index if not exists idx_listing_reports_status_created on listing_reports (status, created_at desc);
+
+create unique index if not exists listing_reports_one_open_per_user
+  on listing_reports (listing_id, reporter_id)
+  where (status = 'open');
+
+alter table listing_reports enable row level security;
+
 create table if not exists notifications (
   id uuid primary key default gen_random_uuid(),
   profile_id uuid not null references profiles(id) on delete cascade,

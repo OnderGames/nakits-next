@@ -5,6 +5,7 @@ alter table categories enable row level security;
 alter table listings enable row level security;
 alter table listing_images enable row level security;
 alter table favorites enable row level security;
+alter table listing_reports enable row level security;
 alter table notifications enable row level security;
 alter table conversations enable row level security;
 alter table conversation_reads enable row level security;
@@ -220,3 +221,14 @@ create policy "notifications update own"
 on notifications for update
 using (auth.uid() = profile_id)
 with check (auth.uid() = profile_id);
+
+-- İlan şikayetleri (ekleme kendi adına; okuma kendi şikayetleri)
+drop policy if exists "listing_reports insert own" on listing_reports;
+create policy "listing_reports insert own"
+on listing_reports for insert
+with check (auth.uid() = reporter_id);
+
+drop policy if exists "listing_reports select own" on listing_reports;
+create policy "listing_reports select own"
+on listing_reports for select
+using (auth.uid() = reporter_id);

@@ -13,6 +13,7 @@ import { listingDetailHref } from "@/lib/listing-code";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
+import AdminListingReportsSection from "./AdminListingReportsSection";
 import AdminUserManagementSection from "./AdminUserManagementSection";
 
 type ListingFilter = "all" | "pending" | "active" | "sold" | "rejected";
@@ -140,6 +141,8 @@ export default function AdminModerationPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortOption>("created_desc");
   const [searchQuery, setSearchQuery] = useState("");
+  const [modTab, setModTab] = useState<"listings" | "reports">("listings");
+  const [reportOpenCount, setReportOpenCount] = useState<number | null>(null);
 
   const authHeaders = useCallback(async () => {
     const sb = getSupabaseBrowser();
@@ -223,10 +226,31 @@ export default function AdminModerationPage() {
     });
   }, []);
 
+  const refreshReportOpenBadge = useCallback(async () => {
+    const h = await authHeaders();
+    if (!h) return;
+    const res = await fetch("/api/admin/listing-reports?status=open", {
+      headers: h
+    });
+    const j = (await res.json()) as { openCount?: number };
+    if (typeof j.openCount === "number") {
+      setReportOpenCount(j.openCount);
+    }
+  }, [authHeaders]);
+
+  const handleReportsUpdated = useCallback(() => {
+    void refreshReportOpenBadge();
+  }, [refreshReportOpenBadge]);
+
   useEffect(() => {
     if (!moderationStaff || !checkedStaff) return;
+    void refreshReportOpenBadge();
+  }, [moderationStaff, checkedStaff, refreshReportOpenBadge]);
+
+  useEffect(() => {
+    if (!moderationStaff || !checkedStaff || modTab !== "listings") return;
     void loadListings(filter);
-  }, [filter, moderationStaff, checkedStaff, loadListings]);
+  }, [filter, moderationStaff, checkedStaff, modTab, loadListings]);
 
   async function setStatus(id: string, status: "active" | "rejected") {
     setBusyId(id);
@@ -323,27 +347,59 @@ export default function AdminModerationPage() {
 
   return (
     <div className="account-page">
-      <h1 className="section-title">İlan moderasyonu</h1>
-      <p className="meta" style={{ marginBottom: 16 }}>
-        Durum filtresi ve sıralama ile listeyi daraltın; açıklama metinleri
-        burada gösterilmez (daha az yer kaplar).
-      </p>
+      <h1 className="section-title">Moderasyon</h1>
 
-      {loadError && (
-        <p
-          className="notice"
-          style={{
-            marginBottom: 14,
-            background: "#fee2e2",
-            borderColor: "#fecaca",
-            color: "#7f1d1d"
+      <div className="admin-mod-main-tabs" role="tablist" aria-label="Moderasyon bölümleri">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={modTab === "listings"}
+          className={modTab === "listings" ? "btn btn-primary" : "btn btn-outline"}
+          disabled={busyId !== null}
+          onClick={() => setModTab("listings")}
+        >
+          İlanlar
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={modTab === "reports"}
+          className={modTab === "reports" ? "btn btn-primary" : "btn btn-outline"}
+          disabled={busyId !== null}
+          onClick={() => {
+            setModTab("reports");
+            void refreshReportOpenBadge();
           }}
         >
-          {loadError}
-        </p>
-      )}
+          Şikayetler
+          {reportOpenCount !== null && reportOpenCount > 0 ? (
+            <span className="admin-mod-main-tabs__badge">{reportOpenCount}</span>
+          ) : null}
+        </button>
+      </div>
 
-      <section className="panel admin-moderation-list-panel">
+      {modTab === "listings" ? (
+        <>
+          <p className="meta" style={{ marginBottom: 16 }}>
+            Durum filtresi ve sıralama ile listeyi daraltın; açıklama metinleri burada
+            gösterilmez (daha az yer kaplar).
+          </p>
+
+          {loadError && (
+            <p
+              className="notice"
+              style={{
+                marginBottom: 14,
+                background: "#fee2e2",
+                borderColor: "#fecaca",
+                color: "#7f1d1d"
+              }}
+            >
+              {loadError}
+            </p>
+          )}
+
+          <section className="panel admin-moderation-list-panel">
         <div className="admin-moderation-toolbar">
           {(Object.keys(FILTER_LABEL) as ListingFilter[]).map((key) => (
             <button
@@ -516,7 +572,15 @@ export default function AdminModerationPage() {
             ))}
           </ul>
         )}
-      </section>
+          </section>
+        </>
+      ) : (
+        <AdminListingReportsSection
+          enabled={moderationStaff && checkedStaff}
+          getAuthHeaders={authHeaders}
+          onReportsUpdated={handleReportsUpdated}
+        />
+      )}
 
       <AdminUserManagementSection
         enabled={moderationStaff && checkedStaff}

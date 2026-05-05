@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ListingReportPanel from "@/components/ListingReportPanel";
 import ListingDetailFavoriteBar from "@/components/ListingDetailFavoriteBar";
 import ListingOwnerFavoriteStat from "@/components/ListingOwnerFavoriteStat";
 import ListingGalleryCarousel from "@/components/ListingGalleryCarousel";
@@ -84,6 +85,11 @@ export default async function ListingDetailPage({ params }: Props) {
           {listing.description && (
             <p style={{ marginTop: 12, lineHeight: 1.5 }}>{listing.description}</p>
           )}
+          {hasSupabaseConfig && listing.sellerId ? (
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+              <ListingReportPanel listingId={listing.id} sellerId={listing.sellerId} />
+            </div>
+          ) : null}
         </div>
         <aside className="panel">
           <h3>Satıcı ile iletişime geç</h3>
