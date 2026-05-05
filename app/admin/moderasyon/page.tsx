@@ -13,6 +13,8 @@ import { listingDetailHref } from "@/lib/listing-code";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
+import AdminUserManagementSection from "./AdminUserManagementSection";
+
 type ListingFilter = "all" | "pending" | "active" | "sold" | "rejected";
 
 const FILTER_LABEL: Record<ListingFilter, string> = {
@@ -127,8 +129,11 @@ function filterRows(list: AdminListingRow[], query: string): AdminListingRow[] {
 
 export default function AdminModerationPage() {
   const [ready, setReady] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [checkedAdmin, setCheckedAdmin] = useState(false);
+  /** Moderasyon paneli (ADMIN_EMAILS veya moderator/admin rolü) */
+  const [moderationStaff, setModerationStaff] = useState(false);
+  /** Tam yönetici: kullanıcı silme + rol yükseltme */
+  const [fullAdminPower, setFullAdminPower] = useState(false);
+  const [checkedStaff, setCheckedStaff] = useState(false);
   const [filter, setFilter] = useState<ListingFilter>("all");
   const [rows, setRows] = useState<AdminListingRow[]>([]);
   const [loadError, setLoadError] = useState("");
@@ -179,43 +184,49 @@ export default function AdminModerationPage() {
   useEffect(() => {
     if (!hasSupabaseConfig) {
       setReady(true);
-      setCheckedAdmin(true);
-      setIsAdmin(false);
+      setCheckedStaff(true);
+      setModerationStaff(false);
+      setFullAdminPower(false);
       return;
     }
     const sb = getSupabaseBrowser();
     if (!sb) {
       setReady(true);
-      setCheckedAdmin(true);
+      setCheckedStaff(true);
+      setModerationStaff(false);
+      setFullAdminPower(false);
       return;
     }
     void sb.auth.getSession().then(({ data }) => {
       setReady(true);
       const token = data.session?.access_token;
       if (!token) {
-        setCheckedAdmin(true);
-        setIsAdmin(false);
+        setCheckedStaff(true);
+        setModerationStaff(false);
+        setFullAdminPower(false);
         return;
       }
       void fetch("/api/admin/me", {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then((r) => r.json())
-        .then((j: { admin?: boolean }) => {
-          setIsAdmin(Boolean(j.admin));
-          setCheckedAdmin(true);
+        .then((j: { moderation?: boolean; admin?: boolean; power?: boolean }) => {
+          setModerationStaff(Boolean(j.moderation ?? j.admin));
+          setFullAdminPower(Boolean(j.power));
+          setCheckedStaff(true);
         })
         .catch(() => {
-          setIsAdmin(false);
-          setCheckedAdmin(true);
+          setModerationStaff(false);
+          setFullAdminPower(false);
+          setCheckedStaff(true);
         });
     });
   }, []);
 
   useEffect(() => {
-    if (!isAdmin || !checkedAdmin) return;
+    if (!moderationStaff || !checkedStaff) return;
     void loadListings(filter);
-  }, [filter, isAdmin, checkedAdmin, loadListings]);
+  }, [filter, moderationStaff, checkedStaff, loadListings]);
 
   async function setStatus(id: string, status: "active" | "rejected") {
     setBusyId(id);
@@ -267,7 +278,7 @@ export default function AdminModerationPage() {
     setRows((prev) => prev.filter((r) => r.id !== id));
   }
 
-  if (!ready || !checkedAdmin) {
+  if (!ready || !checkedStaff) {
     return (
       <div className="account-page">
         <p className="meta">Yükleniyor…</p>
@@ -284,16 +295,19 @@ export default function AdminModerationPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (!moderationStaff) {
     return (
       <div className="account-page">
         <h1 className="section-title">Moderasyon</h1>
         <section className="panel">
-          <p>Bu sayfaya yalnızca site yöneticileri erişebilir.</p>
+          <p>Bu sayfaya yalnızca moderasyon yetkisi olanlar erişebilir.</p>
           <p className="meta" style={{ marginTop: 10 }}>
-            Ortamda{" "}
-            <code style={{ fontSize: 13 }}>ADMIN_EMAILS</code> içinde e-posta
-            adresin tanımlı olmalı ve giriş yapmış olmalısın.
+            Giriş yapmış olmalı ve{" "}
+            <code style={{ fontSize: 13 }}>ADMIN_EMAILS</code> ile tanımlı olmalı{" "}
+            <strong>veya</strong> veritabanında{" "}
+            <code style={{ fontSize: 13 }}>profile_staff</code> içinde moderator / admin rolü tanımlı
+            olmalısınız (<code style={{ fontSize: 13 }}>sql/migration_profile_staff.sql</code> ilk
+            kurulum için).
           </p>
           <Link
             className="btn btn-primary"
@@ -503,6 +517,12 @@ export default function AdminModerationPage() {
           </ul>
         )}
       </section>
+
+      <AdminUserManagementSection
+        enabled={moderationStaff && checkedStaff}
+        adminPower={fullAdminPower}
+        getAuthHeaders={authHeaders}
+      />
 
       <p className="meta" style={{ marginTop: 20 }}>
         <Link href="/">Ana sayfa</Link>

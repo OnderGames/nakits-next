@@ -15,6 +15,22 @@ create table if not exists profiles (
   constraint profiles_public_code_digits check (public_code ~ '^[0-9]{6,9}$')
 );
 
+-- Moderasyon (RLS ile dış dünyadan okuma yok; yalnız service_role/API)
+create table if not exists profile_staff (
+  profile_id uuid primary key references profiles (id) on delete cascade,
+  app_role text not null default 'member'
+    constraint profile_staff_role_check check (app_role in ('member', 'moderator', 'admin')),
+  is_blocked boolean not null default false,
+  moderation_flagged boolean not null default false,
+  admin_verified_email boolean not null default false,
+  admin_verified_phone boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_profile_staff_app_role on profile_staff (app_role);
+
+alter table profile_staff enable row level security;
+
 create table if not exists categories (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
@@ -58,6 +74,12 @@ $$;
 drop trigger if exists trg_listings_updated_at on listings;
 create trigger trg_listings_updated_at
 before update on listings
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists trg_profile_staff_updated_at on profile_staff;
+create trigger trg_profile_staff_updated_at
+before update on profile_staff
 for each row
 execute function public.set_updated_at();
 
@@ -233,6 +255,11 @@ begin
     public.generate_profile_public_code()
   )
   on conflict (id) do nothing;
+
+  insert into public.profile_staff (profile_id)
+  values (new.id)
+  on conflict (profile_id) do nothing;
+
   return new;
 end;
 $$;

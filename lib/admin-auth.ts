@@ -47,6 +47,131 @@ export async function verifyAdminFromRequest(
   return { ok: true, userId: user.id, email };
 }
 
+/** Üye yüzünden profil (/profile_staff): moderasyon API + panel */
+export type AppRole = "member" | "moderator" | "admin";
+
+export type ModerationStaffResult =
+  | {
+      ok: true;
+      userId: string;
+      email: string;
+      envAdmin: boolean;
+      profileRole: AppRole;
+    }
+  | { ok: false; status: number; message: string };
+
+/**
+ * İlan moderasyonu ve kullanıcı yönetimi: ADMIN_EMAILS veya profilde moderator/admin.
+ * Engellenen üyeler erişemez.
+ */
+export async function verifyModerationStaff(
+  request: Request
+): Promise<ModerationStaffResult> {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return { ok: false, status: 401, message: "Oturum gerekli." };
+  }
+  const token = authHeader.slice(7).trim();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anon) {
+    return { ok: false, status: 500, message: "Sunucu yapılandırması eksik." };
+  }
+
+  const sb = createClient(url, anon, {
+    global: { headers: { Authorization: `Bearer ${token}` } }
+  });
+  const {
+    data: { user },
+    error
+  } = await sb.auth.getUser();
+  if (error || !user?.email) {
+    return { ok: false, status: 401, message: "Geçersiz oturum." };
+  }
+  const email = user.email.toLowerCase();
+
+  const admins = parseAdminEmails();
+  if (admins.has(email)) {
+    return {
+      ok: true,
+      userId: user.id,
+      email: user.email,
+      envAdmin: true,
+      profileRole: "admin"
+    };
+  }
+
+  const adminSb = getServiceRoleClient();
+  if (!adminSb) {
+    return { ok: false, status: 503, message: getServiceRoleMissingMessage() };
+  }
+
+  type StaffJoin = {
+    profile_staff: {
+      app_role: AppRole;
+      is_blocked: boolean;
+    } | null;
+  };
+  const { data: prow, error: pErr } = await adminSb
+    .from("profiles")
+    .select("profile_staff ( app_role, is_blocked )")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (pErr) {
+    return { ok: false, status: 500, message: pErr.message };
+  }
+  const staffRaw = prow as StaffJoin | null;
+  const st = staffRaw?.profile_staff;
+  const normalized =
+    Array.isArray(st) && st.length > 0
+      ? st[0]
+      : st && typeof st === "object" && "app_role" in st
+        ? st
+        : null;
+
+  if (!normalized) {
+    return {
+      ok: false,
+      status: 403,
+      message:
+        "Yetki kaydı eksik veya kullanıcı değilsiniz. Yöneticiden profile_staff oluşturulmasını isteyin."
+    };
+  }
+
+  if (normalized.is_blocked) {
+    return { ok: false, status: 403, message: "Bu hesap engellenmiş." };
+  }
+
+  const profileRole =
+    normalized.app_role === "moderator" || normalized.app_role === "admin"
+      ? normalized.app_role
+      : "member";
+
+  if (profileRole === "member") {
+    return { ok: false, status: 403, message: "Bu işlem için yetkiniz yok." };
+  }
+
+  return {
+    ok: true,
+    userId: user.id,
+    email: user.email,
+    envAdmin: false,
+    profileRole
+  };
+}
+
+/** Tam yönetici: ortam ADMIN_EMAIL veya DB admin rolü (üye silme, rol yükseltme). */
+export function hasAdminPower(m: ModerationStaffResult): boolean {
+  if (!m.ok) return false;
+  return m.envAdmin || m.profileRole === "admin";
+}
+
+export function isProtectedAdminEmail(targetEmail: string | null | undefined) {
+  if (!targetEmail?.trim()) return false;
+  return parseAdminEmails().has(targetEmail.trim().toLowerCase());
+}
+
 /**
  * Build zamanında `undefined` ile sabitlenmesin diye köşeli parantez + runtime okuma.
  * (Vercel'de service_role bazen dot-notasyonla görünmez kalabiliyor.)

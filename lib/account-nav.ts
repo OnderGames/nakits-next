@@ -24,9 +24,9 @@ export const MEMBER_ACCOUNT_NAV_ITEMS: AccountNavItemDef[] = [
 ];
 
 export function mergeAccountNavItems(
-  isAdmin: boolean
+  hasModerationAccess: boolean
 ): AccountNavItemDef[] {
-  return isAdmin
+  return hasModerationAccess
     ? [...ADMIN_ACCOUNT_NAV_ITEMS, ...MEMBER_ACCOUNT_NAV_ITEMS]
     : [...MEMBER_ACCOUNT_NAV_ITEMS];
 }

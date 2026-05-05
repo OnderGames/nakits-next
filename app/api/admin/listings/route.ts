@@ -1,7 +1,7 @@
 import {
   getServiceRoleClient,
   getServiceRoleMissingMessage,
-  verifyAdminFromRequest
+  verifyModerationStaff
 } from "@/lib/admin-auth";
 import { sqlCategorySlugToKey } from "@/lib/categories";
 
@@ -33,7 +33,7 @@ const select = `
 `;
 
 export async function GET(request: Request) {
-  const v = await verifyAdminFromRequest(request);
+  const v = await verifyModerationStaff(request);
   if (!v.ok) {
     return Response.json({ error: v.message }, { status: v.status });
   }

@@ -90,7 +90,8 @@ export default function HeaderAccountMenu({ user, onCloseDrawer }: Props) {
 
   const [displayName, setDisplayName] = useState("");
   const [metaReady, setMetaReady] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [moderationStaff, setModerationStaff] = useState(false);
+  const [staffRole, setStaffRole] = useState<string | null>(null);
 
   const email = user.email ?? null;
   const uid = user.id;
@@ -99,7 +100,8 @@ export default function HeaderAccountMenu({ user, onCloseDrawer }: Props) {
     if (!hasSupabaseConfig) {
       setDisplayName(email?.split("@")[0] ?? "Üye");
       setMetaReady(true);
-      setIsAdmin(false);
+      setModerationStaff(false);
+      setStaffRole(null);
       return;
     }
     const sb = getSupabaseBrowser();
@@ -113,19 +115,27 @@ export default function HeaderAccountMenu({ user, onCloseDrawer }: Props) {
     const token = session?.access_token;
     const em = session?.user?.email ?? email;
 
-    let admin = false;
+    let staff = false;
+    let role: string | null = null;
     if (token) {
       try {
         const r = await fetch("/api/admin/me", {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const j = (await r.json()) as { admin?: boolean };
-        admin = Boolean(j.admin);
+        const j = (await r.json()) as {
+          moderation?: boolean;
+          admin?: boolean;
+          role?: string | null;
+        };
+        staff = Boolean(j.moderation ?? j.admin);
+        role = j.role ?? null;
       } catch {
-        admin = false;
+        staff = false;
+        role = null;
       }
     }
-    setIsAdmin(admin);
+    setModerationStaff(staff);
+    setStaffRole(role);
 
     const meta = session?.user?.user_metadata as { full_name?: string } | undefined;
     const metaName = meta?.full_name?.trim() ?? "";
@@ -158,7 +168,17 @@ export default function HeaderAccountMenu({ user, onCloseDrawer }: Props) {
     };
   }, [desktopOpen]);
 
-  const navItems = useMemo(() => mergeAccountNavItems(isAdmin), [isAdmin]);
+  const navItems = useMemo(
+    () => mergeAccountNavItems(moderationStaff),
+    [moderationStaff]
+  );
+  const staffAccountLabel = moderationStaff
+    ? staffRole === "moderator"
+      ? "Moderatör hesabı"
+      : staffRole === "admin"
+        ? "Yönetici hesabı"
+        : "Moderasyon yetkisi"
+    : null;
   const greeting = displayName || email?.split("@")[0] || "Üye";
   const initials = userInitials(metaReady ? greeting : "", email);
 
@@ -262,7 +282,7 @@ export default function HeaderAccountMenu({ user, onCloseDrawer }: Props) {
             role="menu"
           >
             <p className="nav-account__dropdown-meta">
-              {isAdmin ? "Yönetici" : "Bireysel hesap"}
+              {staffAccountLabel ?? "Bireysel hesap"}
               {email ? (
                 <>
                   {" · "}

@@ -1,7 +1,7 @@
 import {
   getServiceRoleClient,
   getServiceRoleMissingMessage,
-  verifyAdminFromRequest
+  verifyModerationStaff
 } from "@/lib/admin-auth";
 import { listingExpiresAtIsoFromNow } from "@/lib/listing-policy";
 
@@ -16,7 +16,7 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const v = await verifyAdminFromRequest(request);
+  const v = await verifyModerationStaff(request);
   if (!v.ok) {
     return Response.json({ error: v.message }, { status: v.status });
   }
@@ -69,7 +69,7 @@ export async function DELETE(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const v = await verifyAdminFromRequest(request);
+  const v = await verifyModerationStaff(request);
   if (!v.ok) {
     return Response.json({ error: v.message }, { status: v.status });
   }
