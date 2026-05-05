@@ -6,12 +6,15 @@ import {
   GAYRIMENKUL_KONUT_INTERMEDIATE_KEY,
   KONUT_LISTING_KINDS,
   KONUT_PROPERTY_TYPES,
+  OTOMOBIL_MARKALARI,
+  TASITLAR_OTOMOBIL_INTERMEDIATE_KEY,
   compositeCategoryKey,
   konutLeafCategorySubSlug,
   labelGayrimenkulSatKirLeaf,
   labelKonutLeafCategory,
   tryParseGayrimenkulSatKirLeafSubSlug,
   tryParseKonutLeafSubSlug,
+  tryParseOtomobilMarkaLeafSubSlug,
   type CategoryGroupDef,
   type SubcategoryDef
 } from "@/lib/categories";
@@ -101,6 +104,12 @@ export default function CategoryMillerPicker({
       )
     : null;
 
+  const tasitlarOtomobilLeafParsed = detailCategoryKey.startsWith("tasitlar.")
+    ? tryParseOtomobilMarkaLeafSubSlug(
+        detailCategoryKey.slice("tasitlar.".length)
+      )
+    : null;
+
   const crumbText = useMemo(() => {
     if (!selectedGroup) return "Kategori seçin";
     const gmSlug = selectedGroup.slug;
@@ -138,6 +147,15 @@ export default function CategoryMillerPicker({
       return `${selectedGroup.name} › Konut`;
     }
 
+    if (gmSlug === "tasitlar") {
+      if (tasitlarOtomobilLeafParsed) {
+        return `${selectedGroup.name} › Otomobil › ${tasitlarOtomobilLeafParsed.brandName}`;
+      }
+      if (subPart === "otomobil") {
+        return `${selectedGroup.name} › Otomobil`;
+      }
+    }
+
     const legacySub = selectedGroup.subs.find((s) => s.slug === subPart);
     if (legacySub) return `${selectedGroup.name} › ${legacySub.name}`;
 
@@ -149,6 +167,7 @@ export default function CategoryMillerPicker({
     satKirFlowBase,
     satKirLeafParsed,
     selectedGroup,
+    tasitlarOtomobilLeafParsed,
     txnDraft
   ]);
 
@@ -206,6 +225,10 @@ export default function CategoryMillerPicker({
   const showKonutPropColumn =
     konutFlow && txnDraft !== "" && !konutLeafParsed;
 
+  const showOtomobilMarkaColumn =
+    groupSlug === "tasitlar" &&
+    detailCategoryKey === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY;
+
   return (
     <div className="category-miller">
       <div className="category-miller__head">
@@ -253,6 +276,8 @@ export default function CategoryMillerPicker({
           className={
             groupSlug &&
             ((!detailCategoryKey && groupSlug !== "gayrimenkul") ||
+              (groupSlug === "tasitlar" &&
+                Boolean(detailCategoryKey?.startsWith("tasitlar."))) ||
               (groupSlug === "gayrimenkul" &&
                 !satKirFlowBase &&
                 !konutFlow &&
@@ -265,6 +290,7 @@ export default function CategoryMillerPicker({
               ? "category-miller__col category-miller__col--active"
               : groupSlug &&
                   groupSlug !== "gayrimenkul" &&
+                  groupSlug !== "tasitlar" &&
                   !detailCategoryKey
                 ? "category-miller__col category-miller__col--active"
                 : "category-miller__col"
@@ -288,6 +314,12 @@ export default function CategoryMillerPicker({
                     !sub.drilldown
                 );
 
+                if (sub.drilldown === "otomobil-marka") {
+                  rowSel =
+                    detailCategoryKey === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY ||
+                    Boolean(tasitlarOtomobilLeafParsed);
+                }
+
                 if (sub.drilldown === "konut") {
                   rowSel =
                     konutFlow ||
@@ -309,6 +341,11 @@ export default function CategoryMillerPicker({
                   sub.drilldown === "emlak-listing-kind" &&
                   (satKirFlowBase === sub.slug || rowSel) &&
                   !satKirLeafParsed;
+
+                const showChevronOtomobil =
+                  sub.drilldown === "otomobil-marka" &&
+                  rowSel &&
+                  !tasitlarOtomobilLeafParsed;
 
                 return (
                   <li key={sub.slug} className="category-miller__item">
@@ -335,6 +372,11 @@ export default function CategoryMillerPicker({
                           ›
                         </span>
                       )}
+                      {showChevronOtomobil && (
+                        <span className="category-miller__chevron" aria-hidden>
+                          ›
+                        </span>
+                      )}
                       {konutLeafParsed && sub.drilldown === "konut" && (
                         <span className="category-miller__ok" aria-hidden>
                           ✓
@@ -343,6 +385,12 @@ export default function CategoryMillerPicker({
                       {satKirLeafParsed &&
                         sub.drilldown === "emlak-listing-kind" &&
                         satKirLeafParsed.baseSlug === sub.slug && (
+                          <span className="category-miller__ok" aria-hidden>
+                            ✓
+                          </span>
+                        )}
+                      {tasitlarOtomobilLeafParsed &&
+                        sub.drilldown === "otomobil-marka" && (
                           <span className="category-miller__ok" aria-hidden>
                             ✓
                           </span>
@@ -361,6 +409,47 @@ export default function CategoryMillerPicker({
             </ul>
           )}
         </div>
+
+        {showOtomobilMarkaColumn && (
+          <div className="category-miller__col category-miller__col--active">
+            <ul
+              className="category-miller__list"
+              role="listbox"
+              aria-label="Otomobil markası"
+            >
+              {OTOMOBIL_MARKALARI.map((m) => {
+                const leafKey = compositeCategoryKey(
+                  "tasitlar",
+                  `otomobil-${m.slug}`
+                );
+                const sel = detailCategoryKey === leafKey;
+                return (
+                  <li key={m.slug} className="category-miller__item">
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      role="option"
+                      aria-selected={sel}
+                      className={
+                        sel
+                          ? "category-miller__row category-miller__row--selected"
+                          : "category-miller__row"
+                      }
+                      onClick={() => onCategoryKeyChange(leafKey)}
+                    >
+                      <span className="category-miller__row-label">{m.name}</span>
+                      {sel && (
+                        <span className="category-miller__ok" aria-hidden>
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
 
         {showSatKirColumn && (
           <div

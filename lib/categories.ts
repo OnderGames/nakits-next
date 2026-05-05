@@ -1,9 +1,45 @@
 export type SubcategoryDef = {
   slug: string;
   name: string;
-  /** Konut: Satılık/Kiralık + yapı tipi; diğer emlak dalları: yalnız Satılık/Kiralık */
-  drilldown?: "konut" | "emlak-listing-kind";
+  /** Konut: Satılık/Kiralık + yapı tipi; diğer emlak dalları: yalnız Satılık/Kiralık; Otomobil: marka seçimi */
+  drilldown?: "konut" | "emlak-listing-kind" | "otomobil-marka";
 };
+
+/** Otomobil altı marka (slug URL/güvenli; name ekranda birebir) */
+export const OTOMOBIL_MARKALARI = [
+  { slug: "chery", name: "Chery" },
+  { slug: "citroen", name: "Citroën" },
+  { slug: "fiat", name: "Fiat" },
+  { slug: "ford", name: "Ford" },
+  { slug: "hyundai", name: "Hyundai" },
+  { slug: "opel", name: "Opel" },
+  { slug: "peugeot", name: "Peugeot" },
+  { slug: "renault", name: "Renault" },
+  { slug: "skoda", name: "Skoda" },
+  { slug: "togg", name: "TOGG" },
+  { slug: "toyota", name: "Toyota" },
+  { slug: "tofas", name: "Tofaş" },
+  { slug: "volkswagen", name: "Volkswagen" }
+] as const;
+
+/** İlan formu: marka seçilmeden `tasitlar.otomobil` ara anahtarı */
+export const TASITLAR_OTOMOBIL_INTERMEDIATE_KEY = "tasitlar.otomobil";
+
+export function tryParseOtomobilMarkaLeafSubSlug(subSlug: string): {
+  brandSlug: string;
+  brandName: string;
+} | null {
+  const prefix = "otomobil-";
+  if (!subSlug.startsWith(prefix)) return null;
+  const brandSlug = subSlug.slice(prefix.length);
+  const m = OTOMOBIL_MARKALARI.find((x) => x.slug === brandSlug);
+  if (!m) return null;
+  return { brandSlug: m.slug, brandName: m.name };
+}
+
+export function isIntermediateTasitlarOtomobilListingKey(key: string): boolean {
+  return key.trim() === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY;
+}
 
 export type CategoryGroupDef = {
   slug: string;
@@ -87,7 +123,7 @@ export const CATEGORY_GROUPS: CategoryGroupDef[] = [
     emoji: "🚗",
     name: "Vasıta",
     subs: [
-      { slug: "otomobil", name: "Otomobil" },
+      { slug: "otomobil", name: "Otomobil", drilldown: "otomobil-marka" },
       { slug: "motosiklet", name: "Motosiklet" },
       { slug: "ticari-araclar", name: "Ticari araç" },
       { slug: "bisiklet", name: "Bisiklet" },
@@ -278,6 +314,18 @@ export function leafRowsForCategoryGroup(group: CategoryGroupDef): ReadonlyArray
       }
       continue;
     }
+    if (sub.drilldown === "otomobil-marka") {
+      for (const m of OTOMOBIL_MARKALARI) {
+        const subSlug = `otomobil-${m.slug}`;
+        const compositeKey = compositeCategoryKey(group.slug, subSlug);
+        rows.push({
+          reactKey: compositeKey,
+          compositeKey,
+          label: `${sub.name} › ${m.name}`
+        });
+      }
+      continue;
+    }
     const compositeKey = compositeCategoryKey(group.slug, sub.slug);
     rows.push({
       reactKey: sub.slug,
@@ -297,6 +345,19 @@ export function parseCategoryKey(key: string): ParsedCategorySlug | null {
     const prefix = `${group.slug}.`;
     if (!key.startsWith(prefix)) continue;
     const subSlug = key.slice(prefix.length);
+
+    if (group.slug === "tasitlar") {
+      const om = tryParseOtomobilMarkaLeafSubSlug(subSlug);
+      if (om) {
+        return {
+          group,
+          sub: {
+            slug: subSlug,
+            name: `Otomobil › ${om.brandName}`
+          }
+        };
+      }
+    }
 
     if (group.slug === "gayrimenkul") {
       const konutLeaf = tryParseKonutLeafSubSlug(subSlug);
@@ -399,6 +460,12 @@ export function sqlCategorySlugToKey(sqlSlug: string): string | null {
     const prefix = `${group.slug}_`;
     if (!sqlSlug.startsWith(prefix)) continue;
     const subSlug = sqlSlug.slice(prefix.length);
+
+    if (group.slug === "tasitlar") {
+      if (tryParseOtomobilMarkaLeafSubSlug(subSlug)) {
+        return compositeCategoryKey(group.slug, subSlug);
+      }
+    }
 
     if (group.slug === "gayrimenkul") {
       if (tryParseKonutLeafSubSlug(subSlug)) {

@@ -12,6 +12,7 @@ import {
 import {
   formatPriceInputDisplay,
   isIntermediateGayrimenkulListingKey,
+  isIntermediateTasitlarOtomobilListingKey,
   parsePriceInput,
   sqlCategorySlugFromKey
 } from "@/lib/categories";
@@ -240,6 +241,10 @@ export default function AddListingPage() {
       setError(
         "Emlak kategorisinde Satılık veya Kiralık seçimini tamamlayın (Konut ise ayrıca konut tipi gerekir)."
       );
+      return;
+    }
+    if (isIntermediateTasitlarOtomobilListingKey(detailCategoryKey)) {
+      setError("Otomobil için listeden bir marka seçin.");
       return;
     }
 
