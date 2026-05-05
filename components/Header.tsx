@@ -170,14 +170,20 @@ export default function Header() {
               </>
             ) : null}
             {showUserClusterToolbar && user ? (
-              <div className="nav-user-cluster nav-user-cluster--toolbar-mobile">
-                <HeaderNotificationsBell userId={user.id} />
-                <HeaderAccountMenu user={user} />
-              </div>
-            ) : null}
-            <Link className="nav-cta nav-cta--orange nav-cta--toolbar" href="/add-listing">
-              İlan Ver
-            </Link>
+              <>
+                <Link className="nav-cta nav-cta--orange nav-cta--toolbar" href="/add-listing">
+                  İlan Ver
+                </Link>
+                <div className="nav-user-cluster nav-user-cluster--toolbar-mobile">
+                  <HeaderNotificationsBell userId={user.id} />
+                  <HeaderAccountMenu user={user} />
+                </div>
+              </>
+            ) : (
+              <Link className="nav-cta nav-cta--orange nav-cta--toolbar" href="/add-listing">
+                İlan Ver
+              </Link>
+            )}
           </div>
         </div>
 
@@ -190,15 +196,15 @@ export default function Header() {
             <span className="meta menu__loading">…</span>
           ) : loggedIn ? (
             <>
+              <Link className="nav-cta nav-cta--orange" href="/add-listing">
+                İlan Ver
+              </Link>
               {showUserClusterMenu && user ? (
                 <div className="nav-user-cluster nav-user-cluster--desktop-only">
                   <HeaderNotificationsBell userId={user.id} />
                   <HeaderAccountMenu user={user} />
                 </div>
               ) : null}
-              <Link className="nav-cta nav-cta--orange" href="/add-listing">
-                İlan Ver
-              </Link>
             </>
           ) : (
             <>
