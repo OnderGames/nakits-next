@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage() {
         </p>
 
         <section style={{ marginTop: 24 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>1. Amaç ve kapsam</h2>
+          <h2 style={{ fontSize: 18, marginBottom: 8 }}>1. Amaç ve Kapsam</h2>
           <p>
             Bu metin, 6698 sayılı Kişisel Verilerin Korunması Kanunu (“KVKK”)
             uyarınca, Nakits.com ilan platformu (“Platform”) kapsamında
@@ -40,7 +40,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section style={{ marginTop: 24 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>2. Veri sorumlusu</h2>
+          <h2 style={{ fontSize: 18, marginBottom: 8 }}>2. Veri Sorumlusu</h2>
           <p>
             KVKK kapsamında veri sorumlusu, Nakits.com hizmetini işleten
             tüzel/gerçek kişi unvanıdır. İlgili kişi taleplerinizi kimliğinizi
@@ -52,12 +52,8 @@ export default function PrivacyPolicyPage() {
 
         <section style={{ marginTop: 24 }}>
           <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-            3. İşlenen kişisel veri kategorileri
+            3. İşlenen Kişisel Veri Kategorileri
           </h2>
-          <p style={{ marginBottom: 12 }}>
-            Hizmetin niteliğine bağlı olarak aşağıdaki türde veriler
-            işlenebilir (tamamı her kullanıcı için söz konusu olmayabilir):
-          </p>
           <ul style={{ paddingLeft: 22, margin: 0 }}>
             <li style={{ marginBottom: 8 }}>
               <strong>Kimlik ve iletişim:</strong> ad-soyad veya mağaza
@@ -79,7 +75,7 @@ export default function PrivacyPolicyPage() {
 
         <section style={{ marginTop: 24 }}>
           <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-            4. Kişisel verilerin işlenme amaçları
+            4. Kişisel Verilerin İşlenme Amaçları
           </h2>
           <ul style={{ paddingLeft: 22, margin: 0 }}>
             <li style={{ marginBottom: 8 }}>
@@ -108,9 +104,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section style={{ marginTop: 24 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-            5. Hukuki sebepler
-          </h2>
+          <h2 style={{ fontSize: 18, marginBottom: 8 }}>5. Hukuki Sebepler</h2>
           <p>
             Verileriniz; KVKK’nın 5. ve 6. maddelerinde öngörülen; açık rıza,
             sözleşmenin kurulması veya ifası, veri sorumlusunun meşru menfaati,
@@ -121,10 +115,8 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section style={{ marginTop: 24 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-            6. Aktarım
-          </h2>
-          <p style={{ marginBottom: 12 }}>
+          <h2 style={{ fontSize: 18, marginBottom: 8 }}>6. Aktarım</h2>
+          <p>
             Platform’un barındırılması ve veri tabanı işlemleri için hizmet
             sağlayıcılar (örneğin bulut/hosting ve kimlik doğrulama sağlayıcısı)
             kullanılabilir. Bu çerçevede verileriniz, hizmetin gerektirdiği
@@ -135,21 +127,19 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section style={{ marginTop: 24 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-            7. Saklama süreleri
-          </h2>
+          <h2 style={{ fontSize: 18, marginBottom: 8 }}>7. Saklama Süreleri</h2>
           <p>
-            Kişisel veriler, işlendikleri amaçla bağlantılı olarak gerekli
-            süre boyunca saklanır. Hesap ve ilan verileriniz aktif kullanım
-            veya yasal zamanaşımı / denetim gereklilikleri sona erdiğinde
-            silinir, yok edilir veya anonim hale getirilir; süreler ilgili mevzuat ve
+            Kişisel veriler, işlendikleri amaçla bağlantılı olarak gerekli süre
+            boyunca saklanır. Hesap ve ilan verileriniz aktif kullanım veya
+            yasal zamanaşımı / denetim gereklilikleri sona erdiğinde silinir,
+            yok edilir veya anonim hale getirilir; süreler ilgili mevzuat ve
             operasyonel ihtiyaçlara göre belirlenir.
           </p>
         </section>
 
         <section style={{ marginTop: 24 }}>
           <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-            8. KVKK kapsamındaki haklarınız
+            8. KVKK Kapsamındaki Haklarınız
           </h2>
           <p style={{ marginBottom: 12 }}>
             İlgili kişi olarak KVKK’nın 11. maddesi uyarınca:
@@ -166,8 +156,7 @@ export default function PrivacyPolicyPage() {
               Aktarıldığı üçüncü kişileri bilme (varsa),
             </li>
             <li style={{ marginBottom: 8 }}>
-              Eksik veya yanlış işlenmiş olması halinde düzeltilmesini
-              isteme,
+              Eksik veya yanlış işlenmiş olması halinde düzeltilmesini isteme,
             </li>
             <li style={{ marginBottom: 8 }}>
               Kanunda öngörülen şartlar çerçevesinde silinmesini veya yok
@@ -183,14 +172,14 @@ export default function PrivacyPolicyPage() {
             </li>
             <li style={{ marginBottom: 8 }}>
               Kanuna aykırı işleme sebebiyle zarara uğramanız hâlinde zararın
-              giderilmesini talep etme haklarına sahipsiniz.
+              giderilmesini talep etme,
             </li>
           </ul>
-          <p style={{ marginTop: 12 }}>
-            taleplerinizi veri sorumlusuna iletebilirsiniz. Başvurunuza
-            kanuni süre içinde yanıt verilir. Sonuçtan memnun kalmamanız
-            hâlinde Kişisel Verileri Koruma Kurulu’na şikâyette
-            bulunabilirsiniz (
+          <p style={{ marginTop: 12, marginBottom: 0 }}>
+            haklarına sahipsiniz. Taleplerinizi veri sorumlusuna
+            iletebilirsiniz. Başvurunuza kanuni süre içinde yanıt verilir.
+            Sonuçtan memnun kalmamanız hâlinde Kişisel Verileri Koruma
+            Kurulu’na şikâyette bulunabilirsiniz (
             <a
               href="https://www.kvkk.gov.tr"
               target="_blank"
@@ -216,17 +205,15 @@ export default function PrivacyPolicyPage() {
         <section style={{ marginTop: 24 }}>
           <h2 style={{ fontSize: 18, marginBottom: 8 }}>10. Çerezler</h2>
           <p>
-            Oturumunuzun ve tercihlerinizin yönetilmesi için çerezler ve
-            yerel depolama kullanılabilir. Tarayıcı ayarlarınızdan çerezleri
-            kısıtlayabilirsiniz; bu durumda Platform’un bazı işlevleri
-            sınırlı çalışabilir.
+            Oturumunuzun ve tercihlerinizin yönetilmesi için çerezler ve yerel
+            depolama kullanılabilir. Tarayıcı ayarlarınızdan çerezleri
+            kısıtlayabilirsiniz; bu durumda Platform’un bazı işlevleri sınırlı
+            çalışabilir.
           </p>
         </section>
 
         <section style={{ marginTop: 24 }}>
-          <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-            11. Değişiklikler
-          </h2>
+          <h2 style={{ fontSize: 18, marginBottom: 8 }}>11. Değişiklikler</h2>
           <p>
             Bu politika güncellenebilir. Önemli değişiklikler mümkün olduğunca
             Platform üzerinden duyurulur; sayfadaki “son güncelleme” tarihini
@@ -238,7 +225,7 @@ export default function PrivacyPolicyPage() {
               href="/uyelik-sozlesmesi"
               style={{ color: "var(--primary)", textDecoration: "underline" }}
             >
-              Üyelik sözleşmesi
+              Üyelik Sözleşmesi ve Kullanım Şartları
             </Link>
           </p>
         </section>

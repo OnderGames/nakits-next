@@ -4896,10 +4896,18 @@ span.listing-seller__name--plain {
 
 .site-footer__inner {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.site-footer__top {
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px 20px;
+  width: 100%;
 }
 
 .site-footer__nav {
@@ -4935,8 +4943,52 @@ span.listing-seller__name--plain {
   color: var(--muted);
 }
 
+.site-footer__stores {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  width: 100%;
+}
+
+.site-footer__stores-label {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.site-footer__stores-links {
+  margin: 0 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.site-footer__stores-links a {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(148, 163, 184, 0.7);
+  text-underline-offset: 3px;
+}
+
+.site-footer__stores-links a:hover {
+  color: var(--primary);
+  text-decoration-color: rgba(59, 91, 255, 0.45);
+}
+
+.site-footer__stores-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 52ch;
+}
+
 @media (max-width: 520px) {
-  .site-footer__inner {
+  .site-footer__top {
     flex-direction: column;
     align-items: flex-start;
   }

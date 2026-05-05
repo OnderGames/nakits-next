@@ -47,7 +47,7 @@ export default function RegisterPage() {
     }
     if (!termsAccepted) {
       setError(
-        "Devam etmek için Üyelik Sözleşmesi ile Gizlilik / KVKK metnini okuyup kabul etmelisin."
+        "Devam etmek için Üyelik Sözleşmesi ve Kullanım Şartları ile Gizlilik / KVKK metnini okuyup kabul etmelisin."
       );
       return;
     }
@@ -175,7 +175,7 @@ export default function RegisterPage() {
               }}
             >
               <Link href="/uyelik-sozlesmesi" style={termsLinkStyle}>
-                Nakits.com Üyelik Sözleşmesi
+                Nakits.com Üyelik Sözleşmesi ve Kullanım Şartları
               </Link>
               ’ni ve{" "}
               <Link href="/gizlilik-politikasi" style={termsLinkStyle}>

@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Üyelik sözleşmesi ve kullanım şartları",
+  description:
+    "Nakits.com üyelik koşulları, kullanım kuralları, ücretlendirme ve uyuşmazlık çözümü."
+};
 
 export default function MembershipAgreementPage() {
   return (
@@ -16,8 +23,11 @@ export default function MembershipAgreementPage() {
         style={{ maxWidth: 720, lineHeight: 1.65 }}
       >
         <h1 className="section-title" style={{ marginTop: 0 }}>
-          Nakits.com Üyelik Sözleşmesi
+          Nakits.com Üyelik Sözleşmesi ve Kullanım Şartları
         </h1>
+        <p className="meta" style={{ marginTop: 8, marginBottom: 0 }}>
+          Son güncelleme: 6 Mayıs 2026
+        </p>
 
         <section style={{ marginTop: 24 }}>
           <h2 style={{ fontSize: 18, marginBottom: 8 }}>1. Taraflar</h2>
@@ -52,8 +62,8 @@ export default function MembershipAgreementPage() {
               18 yaşından küçük kişiler siteye üye olamaz.
             </li>
             <li style={{ marginBottom: 8 }}>
-              Nakits.com, üyelik başvurularını reddetme veya iptal etme
-              hakkına sahiptir.
+              Nakits.com, üyelik başvurularını reddetme veya iptal etme hakkına
+              sahiptir.
             </li>
           </ul>
         </section>
@@ -76,8 +86,11 @@ export default function MembershipAgreementPage() {
               kullanamaz.
             </li>
             <li style={{ marginBottom: 8 }}>
-              Yasaklı ürünlerin (örneğin sahte, kaçak, yasal olmayan ürünler)
-              ilanı kesinlikle yasaktır.
+              Yasaklı ürünlerin ilanı kesinlikle yasaktır. Yasaklı ürünler
+              arasında; sahte, kaçak, yasal olmayan ürünler; silah, mühimmat,
+              patlayıcı, uyuşturucu, tütün, alkol, kumar içerikleri,
+              pornografi, telif hakkı ihlali içeren ürünler ve mevzuata aykırı
+              diğer ürünler yer alır.
             </li>
           </ul>
         </section>
@@ -109,6 +122,11 @@ export default function MembershipAgreementPage() {
               Nakits.com, sistemin güvenliğini sağlamak için gerekli teknik
               önlemleri alır.
             </li>
+            <li style={{ marginBottom: 8 }}>
+              Nakits.com, yalnızca ilan yayınlama hizmeti sunar;
+              ürün/hizmetin doğruluğu, teslimi ve ödeme süreçlerinden satıcı
+              sorumludur. Nakits.com bu işlemlere taraf değildir.
+            </li>
           </ul>
         </section>
 
@@ -126,6 +144,11 @@ export default function MembershipAgreementPage() {
             </li>
             <li style={{ marginBottom: 8 }}>
               Üye, bu ücretlendirmeleri kabul ederek siteyi kullanır.
+            </li>
+            <li style={{ marginBottom: 8 }}>
+              Ödeme ve iade koşulları ayrıca duyurulacak olup, Nakits.com
+              yalnızca aracılık hizmeti sunduğundan ürün/hizmet bedellerinden
+              sorumlu değildir.
             </li>
           </ul>
         </section>
@@ -147,12 +170,20 @@ export default function MembershipAgreementPage() {
 
         <section style={{ marginTop: 24 }}>
           <h2 style={{ fontSize: 18, marginBottom: 8 }}>
-            8. Uygulanacak Hukuk ve Yetki
+            8. Uyuşmazlık Çözümü
           </h2>
-          <p>
-            Bu sözleşmeden doğacak uyuşmazlıklarda Türk Hukuku uygulanır ve Adana
-            Mahkemeleri ile İcra Daireleri yetkilidir.
-          </p>
+          <ul style={{ paddingLeft: 22, margin: 0 }}>
+            <li style={{ marginBottom: 8 }}>
+              Bu sözleşmeden doğacak uyuşmazlıklarda Türk Hukuku uygulanır.
+            </li>
+            <li style={{ marginBottom: 8 }}>
+              Adana Mahkemeleri ve İcra Daireleri yetkilidir.
+            </li>
+            <li style={{ marginBottom: 8 }}>
+              Taraflar, dava açmadan önce arabuluculuk yoluna başvurmayı kabul
+              eder.
+            </li>
+          </ul>
         </section>
       </article>
     </main>
