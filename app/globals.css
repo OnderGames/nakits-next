@@ -794,9 +794,25 @@ main.container {
     width: min(340px, calc(100vw - 32px));
   }
 
+  /*
+   * Girişli mobil üst sıra: zil, avatarın solunda. absolute + right:0 ile panel
+   * zilin sağına yapışınca tam genişlik sola taşar; fixed + yan inset ile sığdır.
+   */
   .nav-user-cluster--toolbar-mobile .nav-notif__panel {
-    right: 0;
-    left: auto;
+    position: fixed;
+    z-index: 100;
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    top: calc(env(safe-area-inset-top, 0px) + 72px);
+    width: auto;
+    max-width: none;
+    max-height: min(
+      420px,
+      calc(
+        100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) -
+          88px
+      )
+    );
   }
 }
 
@@ -891,6 +907,7 @@ main.container {
   font-size: 13px;
   line-height: 1.45;
   color: var(--text);
+  overflow-wrap: anywhere;
 }
 
 .nav-notif__item-body--unread {
