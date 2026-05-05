@@ -5,3 +5,8 @@ dist
 out
 .vercel
 *.tsbuildinfo
+
+# Geçici şema/script çıktıları
+scripts/_*.txt
+
+.vercel

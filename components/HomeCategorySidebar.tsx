@@ -161,7 +161,9 @@ export default function HomeCategorySidebar({
   const toprakRef = useRef<HTMLDetailsElement>(null);
   const depoRef = useRef<HTMLDetailsElement>(null);
   const otomobilTasitRef = useRef<HTMLDetailsElement>(null);
-  const cheryOtomobilRef = useRef<HTMLDetailsElement>(null);
+  const otomobilBrandDetailRefs = useRef<
+    Record<string, HTMLDetailsElement | null>
+  >({});
 
   useEffect(() => {
     const sub = gayrimenkulSubFromKey(selectedCategoryKey);
@@ -197,8 +199,13 @@ export default function HomeCategorySidebar({
       otomobilTasitRef.current.open =
         rest === "otomobil" || rest.startsWith("otomobil-");
     }
-    if (cheryOtomobilRef.current) {
-      cheryOtomobilRef.current.open = rest.startsWith("otomobil-chery");
+    for (const m of OTOMOBIL_MARKALARI) {
+      const models = getOtomobilModelsForBrand(m.slug);
+      if (!models?.length) continue;
+      const el = otomobilBrandDetailRefs.current[m.slug];
+      if (el) {
+        el.open = rest.startsWith(`otomobil-${m.slug}`);
+      }
     }
   }, [selectedCategoryKey]);
 
@@ -215,11 +222,9 @@ export default function HomeCategorySidebar({
         href={buildCategoryHref(compositeKey, preserveParams)}
         aria-current={active ? "page" : undefined}
       >
-        <span className="home-category-sidebar__sub-label">
-          <span className="home-category-sidebar__sub-name">{label}</span>{" "}
-          <span className="home-category-sidebar__count">
-            ({formatListingCountTr(n)})
-          </span>
+        <span className="home-category-sidebar__sub-name">{label}</span>
+        <span className="home-category-sidebar__count">
+          ({formatListingCountTr(n)})
         </span>
         <span className="home-category-sidebar__arrow" aria-hidden>
           ›
@@ -396,9 +401,9 @@ export default function HomeCategorySidebar({
                   return (
                     <li key={m.slug}>
                       <details
-                        ref={
-                          m.slug === "chery" ? cheryOtomobilRef : undefined
-                        }
+                        ref={(el) => {
+                          otomobilBrandDetailRefs.current[m.slug] = el;
+                        }}
                         className="home-category-sidebar__nest-details"
                       >
                         <summary className="home-category-sidebar__nest-summary">
@@ -497,13 +502,11 @@ export default function HomeCategorySidebar({
                           )}
                           aria-current={active ? "page" : undefined}
                         >
-                          <span className="home-category-sidebar__sub-label">
-                            <span className="home-category-sidebar__sub-name">
-                              {row.label}
-                            </span>{" "}
-                            <span className="home-category-sidebar__count">
-                              ({formatListingCountTr(n)})
-                            </span>
+                          <span className="home-category-sidebar__sub-name">
+                            {row.label}
+                          </span>
+                          <span className="home-category-sidebar__count">
+                            ({formatListingCountTr(n)})
                           </span>
                           <span
                             className="home-category-sidebar__arrow"

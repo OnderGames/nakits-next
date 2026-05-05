@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import Header from "@/components/Header";
 import MessagesPeekDock from "@/components/MessagesPeekDock";
+import SiteFooter from "@/components/SiteFooter";
 import "./globals.css";
 
 const fontSans = Inter({
@@ -27,8 +28,12 @@ const siteUrl =
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Nakits",
-  description: "Nakits — ilan platformu (MVP).",
+  title: {
+    default: "Nakits.com — ikinci el ve sıfır ilan vitrini",
+    template: "%s | Nakits.com"
+  },
+  description:
+    "Türkiye genelinde ikinci el ve sıfır ürün ilanları; vitrin ilanları, şehir ve ilçe filtreleri.",
   icons: {
     icon: [{ url: "/icon.png", type: "image/png" }],
     apple: [{ url: "/icon.png", type: "image/png" }]
@@ -46,6 +51,7 @@ export default function RootLayout({
         <FavoritesProvider>
           <Header />
           {children}
+          <SiteFooter />
           <MessagesPeekDock />
         </FavoritesProvider>
       </body>

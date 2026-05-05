@@ -1,4 +1,6 @@
 # Nakits: yerelde build alır, Git'e commit + push yapar (Vercel bağlıysa deploy tetiklenir).
+# Canli site www.nakits.com icin Vercel projesi: nakits-next-p8ha
+#   (yanlis proje: nakits-next sadece vercel.app URL'lerine gider; once: vercel link -p nakits-next-p8ha)
 # Kullanım (nakits-next klasöründen):
 #   .\scripts\deploy-push.ps1
 #   .\scripts\deploy-push.ps1 -Message "İlçe filtresi ve migration"

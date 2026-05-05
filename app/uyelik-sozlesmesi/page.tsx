@@ -96,7 +96,13 @@ export default function MembershipAgreementPage() {
               kaldırma hakkına sahiptir.
             </li>
             <li style={{ marginBottom: 8 }}>
-              Nakits.com, üyelerin kişisel verilerini Gizlilik Politikası ve KVKK
+              Nakits.com, üyelerin kişisel verilerini{" "}
+              <Link
+                href="/gizlilik-politikasi"
+                style={{ color: "var(--primary)", textDecoration: "underline" }}
+              >
+                Gizlilik Politikası ve KVKK bildirimi
+              </Link>{" "}
               çerçevesinde korur.
             </li>
             <li style={{ marginBottom: 8 }}>
