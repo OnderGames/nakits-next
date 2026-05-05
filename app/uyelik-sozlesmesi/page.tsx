@@ -185,6 +185,16 @@ export default function MembershipAgreementPage() {
             </li>
           </ul>
         </section>
+
+        <p style={{ marginTop: 24 }}>
+          İngilizce metin:{" "}
+          <Link
+            href="/terms-of-service"
+            style={{ color: "var(--primary)", textDecoration: "underline" }}
+          >
+            Terms of Service
+          </Link>
+        </p>
       </article>
     </main>
   );

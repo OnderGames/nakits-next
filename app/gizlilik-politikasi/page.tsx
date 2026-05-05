@@ -227,6 +227,13 @@ export default function PrivacyPolicyPage() {
             >
               Üyelik Sözleşmesi ve Kullanım Şartları
             </Link>
+            {" · "}
+            <Link
+              href="/privacy-policy"
+              style={{ color: "var(--primary)", textDecoration: "underline" }}
+            >
+              Privacy Policy (English)
+            </Link>
           </p>
         </section>
       </article>

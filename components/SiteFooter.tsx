@@ -26,11 +26,11 @@ export default function SiteFooter() {
           <span className="site-footer__sep" aria-hidden>
             ·
           </span>
-          <Link href="/gizlilik-politikasi">Privacy Policy</Link>
+          <Link href="/privacy-policy">Privacy Policy</Link>
           <span className="site-footer__sep" aria-hidden>
             ·
           </span>
-          <Link href="/uyelik-sozlesmesi">Terms of Service</Link>
+          <Link href="/terms-of-service">Terms of Service</Link>
         </nav>
         <p className="site-footer__copy">© {year} Nakits.com</p>
       </div>
