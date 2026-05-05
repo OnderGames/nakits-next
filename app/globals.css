@@ -512,11 +512,54 @@ main.container {
     max-width: 100%;
   }
 
-  /* Girişli mobil üst satır — İlan Ver taşmasın */
+  /* Girişli mobil üst satır — logo | ortada İlan Ver | sağda zil+hesap */
   .nav--auth-mobile-tray .nav__leading {
-    gap: 4px;
+    gap: 6px;
     align-items: center;
     min-width: 0;
+  }
+
+  .nav--auth-mobile-tray .nav__leading--auth-mobile-toolbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .nav-auth-mobile-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .nav-auth-mobile-cta {
+    flex-shrink: 0;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    min-height: 36px;
+    border-radius: 10px;
+  }
+
+  .nav__leading--auth-mobile-toolbar .nav-user-cluster--toolbar-mobile {
+    flex: none;
+    justify-content: flex-end;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .nav__leading--auth-mobile-toolbar .nav-notif__trigger {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .nav__leading--auth-mobile-toolbar .nav-notif__trigger svg {
+    width: 18px;
+    height: 18px;
   }
 
   .nav--auth-mobile-tray .brand-mark {
@@ -527,36 +570,6 @@ main.container {
 
   .nav--auth-mobile-tray .brand-mark__text {
     font-size: 1.14rem;
-  }
-
-  .nav-mobile-bar--auth {
-    flex: 1 1 auto;
-    min-width: 0;
-    gap: 4px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    align-items: center;
-    align-content: center;
-  }
-
-  .nav-mobile-bar--auth > .nav-cta--toolbar {
-    flex-shrink: 0;
-    padding: 6px 10px !important;
-    font-size: 12px !important;
-    min-height: 36px;
-    border-radius: 10px;
-  }
-
-  .nav-mobile-bar--auth .nav-notif__trigger {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    flex-shrink: 0;
-  }
-
-  .nav-mobile-bar--auth .nav-notif__trigger svg {
-    width: 18px;
-    height: 18px;
   }
 
   /* Üst çubukta masaüstü tarzı hesap düğmesi (mobil çekmece detayı yerine) */

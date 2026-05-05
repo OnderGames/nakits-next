@@ -142,7 +142,9 @@ export default function Header() {
       <div
         className={`container nav${authMobileToolbar ? " nav--auth-mobile-tray" : ""}${guestMobileInline ? " nav-mobile-inline-guest" : ""}`}
       >
-        <div className="nav__leading">
+        <div
+          className={`nav__leading${showUserClusterToolbar && user ? " nav__leading--auth-mobile-toolbar" : ""}`}
+        >
           <Link className="brand-mark" href="/" aria-label="Nakits.com — ana sayfa">
             <span className="brand-mark__text">
               <span className="brand-mark__nakits">Nakits</span>
@@ -150,47 +152,49 @@ export default function Header() {
             </span>
           </Link>
 
-          <div
-            className={`nav-mobile-bar${authMobileToolbar ? " nav-mobile-bar--auth" : ""}${guestMobileInline ? " nav-mobile-bar--guest" : ""}`}
-          >
-            {guestMobileInline ? (
-              <>
+          {guestMobileInline ? (
+            <div className="nav-mobile-bar nav-mobile-bar--guest">
+              <Link
+                className="nav-cta nav-cta--orange nav-cta--toolbar nav-mobile-bar__guest-cta"
+                href="/add-listing"
+              >
+                İlan Ver
+              </Link>
+              <Link
+                className="nav-pill nav-pill--join nav-mobile-bar__guest-pill"
+                href="/register"
+              >
+                Üye Ol
+              </Link>
+              <Link
+                className="nav-pill nav-pill--login nav-mobile-bar__guest-pill"
+                href="/login"
+              >
+                Giriş Yap
+              </Link>
+            </div>
+          ) : showUserClusterToolbar && user ? (
+            <>
+              <div className="nav-auth-mobile-center">
                 <Link
-                  className="nav-cta nav-cta--orange nav-cta--toolbar nav-mobile-bar__guest-cta"
+                  className="nav-cta nav-cta--orange nav-cta--toolbar nav-auth-mobile-cta"
                   href="/add-listing"
                 >
                   İlan Ver
                 </Link>
-                <Link
-                  className="nav-pill nav-pill--join nav-mobile-bar__guest-pill"
-                  href="/register"
-                >
-                  Üye Ol
-                </Link>
-                <Link
-                  className="nav-pill nav-pill--login nav-mobile-bar__guest-pill"
-                  href="/login"
-                >
-                  Giriş Yap
-                </Link>
-              </>
-            ) : null}
-            {!guestMobileInline && showUserClusterToolbar && user ? (
-              <>
-                <Link className="nav-cta nav-cta--orange nav-cta--toolbar" href="/add-listing">
-                  İlan Ver
-                </Link>
-                <div className="nav-user-cluster nav-user-cluster--toolbar-mobile">
-                  <HeaderNotificationsBell userId={user.id} />
-                  <HeaderAccountMenu user={user} />
-                </div>
-              </>
-            ) : !guestMobileInline ? (
+              </div>
+              <div className="nav-user-cluster nav-user-cluster--toolbar-mobile">
+                <HeaderNotificationsBell userId={user.id} />
+                <HeaderAccountMenu user={user} />
+              </div>
+            </>
+          ) : (
+            <div className="nav-mobile-bar">
               <Link className="nav-cta nav-cta--orange nav-cta--toolbar" href="/add-listing">
                 İlan Ver
               </Link>
-            ) : null}
-          </div>
+            </div>
+          )}
         </div>
 
         <Suspense fallback={<HeaderSearchFallback />}>
