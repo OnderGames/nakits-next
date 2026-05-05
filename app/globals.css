@@ -3601,10 +3601,42 @@ span.listing-seller__name--plain {
   font-weight: 700;
   line-height: 1.35;
   color: var(--text);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.admin-moderation-compact__title-text {
+  flex: 1 1 140px;
+  min-width: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.admin-moderation-compact__row--risky {
+  border-left: 3px solid #f59e0b;
+  padding-left: calc(14px - 3px);
+  background: linear-gradient(
+    90deg,
+    rgba(245, 158, 11, 0.08),
+    var(--card)
+  );
+}
+
+.admin-moderation-compact__risk-badge {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.45);
 }
 
 .admin-moderation-compact__meta {

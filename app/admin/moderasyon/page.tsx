@@ -9,6 +9,7 @@ import {
   useState
 } from "react";
 import { formatPrice } from "@/lib/categories";
+import { scanListingModerationRisk } from "@/lib/moderation-risk";
 import { listingDetailHref } from "@/lib/listing-code";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
@@ -17,6 +18,8 @@ import AdminListingReportsSection from "./AdminListingReportsSection";
 import AdminUserManagementSection from "./AdminUserManagementSection";
 
 type ListingFilter = "all" | "pending" | "active" | "sold" | "rejected";
+
+type RiskListingFilter = "all" | "risk";
 
 const FILTER_LABEL: Record<ListingFilter, string> = {
   all: "Tümü",
@@ -141,6 +144,7 @@ export default function AdminModerationPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortOption>("created_desc");
   const [searchQuery, setSearchQuery] = useState("");
+  const [riskFilter, setRiskFilter] = useState<RiskListingFilter>("all");
   const [modTab, setModTab] = useState<"listings" | "reports">("listings");
   const [reportOpenCount, setReportOpenCount] = useState<number | null>(null);
 
@@ -179,10 +183,52 @@ export default function AdminModerationPage() {
     [authHeaders]
   );
 
-  const displayRows = useMemo(
-    () => sortRows(filterRows(rows, searchQuery), sortKey),
-    [rows, searchQuery, sortKey]
-  );
+  const riskByRowId = useMemo(() => {
+    const m = new Map<
+      string,
+      ReturnType<typeof scanListingModerationRisk>
+    >();
+    for (const r of rows) {
+      m.set(
+        r.id,
+        scanListingModerationRisk({
+          title: r.title,
+          description: r.description,
+          categoryKey: r.categoryKey
+        })
+      );
+    }
+    return m;
+  }, [rows]);
+
+  const riskyRowCount = useMemo(() => {
+    let n = 0;
+    for (const r of rows) {
+      if (riskByRowId.get(r.id)?.risky) n += 1;
+    }
+    return n;
+  }, [rows, riskByRowId]);
+
+  const displayRows = useMemo(() => {
+    let list = filterRows(rows, searchQuery);
+    if (riskFilter === "risk") {
+      list = list.filter((r) => riskByRowId.get(r.id)?.risky);
+    }
+    return sortRows(list, sortKey);
+  }, [rows, searchQuery, sortKey, riskFilter, riskByRowId]);
+
+  const listingsEmptyMessage = useMemo(() => {
+    if (rows.length === 0 || displayRows.length > 0) return null;
+    const hasSearch = Boolean(searchQuery.trim());
+    if (riskFilter === "risk" && hasSearch) {
+      return "Arama ve yasaklı ürün uyarısı filtresiyle eşleşen kayıt yok.";
+    }
+    if (riskFilter === "risk") {
+      return "Bu yüklemede otomatik uyarı tetikleyen ilan yok.";
+    }
+    if (hasSearch) return "Arama ile eşleşen kayıt yok.";
+    return "Kayıt yok.";
+  }, [rows.length, displayRows.length, searchQuery, riskFilter]);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -381,8 +427,10 @@ export default function AdminModerationPage() {
       {modTab === "listings" ? (
         <>
           <p className="meta" style={{ marginBottom: 16 }}>
-            Durum filtresi ve sıralama ile listeyi daraltın; açıklama metinleri burada
-            gösterilmez (daha az yer kaplar).
+            Durum, sıralama ve arama ile daraltın. &quot;Yasaklı ürün uyarısı&quot; filtresi
+            başlık + açıklamada yasaklı ürün/hizmete işaret eden kalıpları otomatik arar
+            (hukuki karar değildir, önceliklendirme içindir). Açıklama metinleri satırda
+            gösterilmez.
           </p>
 
           {loadError && (
@@ -451,12 +499,32 @@ export default function AdminModerationPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          <div className="admin-moderation-toolbar__field">
+            <label htmlFor="admin-mod-risk">Otomatik uyarı</label>
+            <select
+              id="admin-mod-risk"
+              value={riskFilter}
+              disabled={busyId !== null}
+              onChange={(e) =>
+                setRiskFilter(e.target.value as RiskListingFilter)
+              }
+            >
+              <option value="all">Tüm ilanlar</option>
+              <option value="risk">
+                Yasaklı ürün uyarısı ({riskyRowCount} bu listede)
+              </option>
+            </select>
+          </div>
         </div>
 
         <p className="meta" style={{ margin: "10px 14px", fontSize: 13 }}>
           {displayRows.length} kayıt
           {filter !== "all" ? ` · ${FILTER_LABEL[filter]}` : ""}
+          {riskFilter === "risk" ? ` · yalnızca uyarı eşleşenler` : ""}
           {searchQuery.trim() ? ` · arama filtresi aktif` : ""}
+          {riskFilter === "all" && riskyRowCount > 0
+            ? ` · ${riskyRowCount} uyarı eşleşmesi`
+            : ""}
           {displayRows.length !== rows.length ? ` (${rows.length} yüklendi)` : ""}
         </p>
 
@@ -469,13 +537,22 @@ export default function AdminModerationPage() {
         ) : displayRows.length === 0 ? (
           <div className="account-empty-panel" style={{ padding: "0 14px 16px" }}>
             <p className="account-empty-panel__text" style={{ margin: 0 }}>
-              Arama ile eşleşen kayıt yok.
+              {listingsEmptyMessage ?? "Kayıt yok."}
             </p>
           </div>
         ) : (
           <ul className="admin-moderation-compact">
-            {displayRows.map((row) => (
-              <li key={row.id} className="admin-moderation-compact__row">
+            {displayRows.map((row) => {
+              const risk = riskByRowId.get(row.id);
+              return (
+              <li
+                key={row.id}
+                className={
+                  risk?.risky
+                    ? "admin-moderation-compact__row admin-moderation-compact__row--risky"
+                    : "admin-moderation-compact__row"
+                }
+              >
                 <div className="admin-moderation-compact__thumb">
                   <Image
                     src={rowThumb(row)}
@@ -487,7 +564,19 @@ export default function AdminModerationPage() {
                   />
                 </div>
                 <div className="admin-moderation-compact__body">
-                  <p className="admin-moderation-compact__title">{row.title}</p>
+                  <p className="admin-moderation-compact__title">
+                    <span className="admin-moderation-compact__title-text">
+                      {row.title}
+                    </span>
+                    {risk?.risky ? (
+                      <span
+                        className="admin-moderation-compact__risk-badge"
+                        title={risk.reasons.join(" · ")}
+                      >
+                        Uyarı
+                      </span>
+                    ) : null}
+                  </p>
                   <p className="admin-moderation-compact__meta">
                     <span
                       className="admin-moderation-compact__status"
@@ -569,7 +658,8 @@ export default function AdminModerationPage() {
                   </button>
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
           </section>
