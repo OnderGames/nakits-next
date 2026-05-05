@@ -12,14 +12,17 @@ import {
   useState
 } from "react";
 import {
+  formatCategoryDisplay,
   formatPriceInputDisplay,
   getTasitlarOtomobilBrandSlugAwaitingModel,
   isIntermediateGayrimenkulListingKey,
   isIntermediateTasitlarOtomobilListingKey,
+  isReadyListingCategoryKey,
   parseCategoryKey,
   parsePriceInput,
   sqlCategorySlugFromKey
 } from "@/lib/categories";
+import AddListingMainCategoryGrid from "@/components/AddListingMainCategoryGrid";
 import CategoryMillerPicker from "@/components/CategoryMillerPicker";
 import {
   fetchListingForEdit,
@@ -100,6 +103,8 @@ type EditSlide =
   | { kind: "existing"; rowId: string; url: string }
   | { kind: "new"; file: File; previewUrl: string };
 
+type EditListingPhase = "main" | "sub" | "details";
+
 export default function EditListingPage() {
   const router = useRouter();
   const params = useParams();
@@ -126,6 +131,27 @@ export default function EditListingPage() {
   const [editCity, setEditCity] = useState("");
   const [editDistrict, setEditDistrict] = useState("");
   const [editPriceText, setEditPriceText] = useState("");
+  const [phase, setPhase] = useState<EditListingPhase>("main");
+  const skipSubAutoAdvanceRef = useRef(false);
+  const prevCategoryReadyRef = useRef(false);
+
+  useEffect(() => {
+    if (phase !== "sub") {
+      prevCategoryReadyRef.current =
+        isReadyListingCategoryKey(detailCategoryKey);
+      return;
+    }
+    const ready = isReadyListingCategoryKey(detailCategoryKey);
+    if (skipSubAutoAdvanceRef.current) {
+      skipSubAutoAdvanceRef.current = false;
+      prevCategoryReadyRef.current = ready;
+      return;
+    }
+    if (ready && !prevCategoryReadyRef.current) {
+      setPhase("details");
+    }
+    prevCategoryReadyRef.current = ready;
+  }, [phase, detailCategoryKey]);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -207,6 +233,15 @@ export default function EditListingPage() {
       } else {
         setGroupSlug("");
         setDetailCategoryKey("");
+      }
+      const keyTrim = (row.categoryKey ?? "").trim();
+      if (!keyTrim || !parseCategoryKey(keyTrim)) {
+        setPhase("main");
+        prevCategoryReadyRef.current = false;
+      } else {
+        const leafOk = isReadyListingCategoryKey(keyTrim);
+        prevCategoryReadyRef.current = leafOk;
+        setPhase(leafOk ? "details" : "sub");
       }
       setCondition(row.condition);
       setEditCity(row.city);
@@ -506,8 +541,20 @@ export default function EditListingPage() {
       ? formatListingExpiryShort(listing.expiresAt)
       : null;
 
+  function goBackToMainCategory() {
+    setGroupSlug("");
+    setDetailCategoryKey("");
+    setPhase("main");
+    prevCategoryReadyRef.current = false;
+  }
+
+  function goEditCategoryFromDetails() {
+    skipSubAutoAdvanceRef.current = true;
+    setPhase("sub");
+  }
+
   return (
-    <div className="account-page">
+    <div className="account-page add-listing-flow">
       <h1 className="section-title">İlan düzenle</h1>
       {listing.listingCode && listing.listingCode !== "—" && (
         <p className="meta" style={{ marginBottom: 10 }}>
@@ -546,8 +593,94 @@ export default function EditListingPage() {
         )}
       </p>
 
+      <nav className="add-listing-steps" aria-label="İlan düzenleme adımları">
+        <span
+          className={
+            phase === "main"
+              ? "add-listing-steps__item add-listing-steps__item--active"
+              : "add-listing-steps__item add-listing-steps__item--done"
+          }
+        >
+          <span className="add-listing-steps__num">1</span>
+          Ana kategori
+        </span>
+        <span className="add-listing-steps__sep" aria-hidden>
+          →
+        </span>
+        <span
+          className={
+            phase === "sub"
+              ? "add-listing-steps__item add-listing-steps__item--active"
+              : phase === "details"
+                ? "add-listing-steps__item add-listing-steps__item--done"
+                : "add-listing-steps__item"
+          }
+        >
+          <span className="add-listing-steps__num">2</span>
+          Alt tür
+        </span>
+        <span className="add-listing-steps__sep" aria-hidden>
+          →
+        </span>
+        <span
+          className={
+            phase === "details"
+              ? "add-listing-steps__item add-listing-steps__item--active"
+              : "add-listing-steps__item"
+          }
+        >
+          <span className="add-listing-steps__num">3</span>
+          Bilgiler ve fotoğraf
+        </span>
+      </nav>
+
+      {phase === "main" && (
+        <section className="panel">
+          <AddListingMainCategoryGrid
+            disabled={submitting}
+            onSelectMain={(slug) => {
+              setGroupSlug(slug);
+              setDetailCategoryKey("");
+              setPhase("sub");
+              prevCategoryReadyRef.current = false;
+            }}
+          />
+        </section>
+      )}
+
+      {phase === "sub" && (
+        <section className="panel">
+          <CategoryMillerPicker
+            groupSlug={groupSlug}
+            detailCategoryKey={detailCategoryKey}
+            disabled={submitting}
+            hideMainGroupColumn
+            onRequestChangeMainCategory={goBackToMainCategory}
+            onGroupChange={setGroupSlug}
+            onCategoryKeyChange={setDetailCategoryKey}
+          />
+        </section>
+      )}
+
+      {phase === "details" && (
       <section className="panel">
         <form onSubmit={(e) => void handleSubmit(e)}>
+          <div className="add-listing-cat-chip" style={{ marginBottom: 14 }}>
+            <p className="add-listing-cat-chip__text">
+              {detailCategoryKey
+                ? formatCategoryDisplay(detailCategoryKey)
+                : "Kategori seçilmedi"}
+            </p>
+            <button
+              type="button"
+              className="add-listing-cat-chip__btn"
+              disabled={submitting}
+              onClick={goEditCategoryFromDetails}
+            >
+              Kategoriyi düzenle
+            </button>
+          </div>
+
           <div className="row">
             <div>
               <label htmlFor="edit-title">Başlık</label>
@@ -587,16 +720,6 @@ export default function EditListingPage() {
                 listesindeki «Fiyatı kaydet» ile de güncelleyebilirsiniz.
               </p>
             </div>
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            <CategoryMillerPicker
-              groupSlug={groupSlug}
-              detailCategoryKey={detailCategoryKey}
-              disabled={submitting}
-              onGroupChange={setGroupSlug}
-              onCategoryKeyChange={setDetailCategoryKey}
-            />
           </div>
 
           <div className="row" style={{ marginTop: 10 }}>
@@ -891,6 +1014,7 @@ export default function EditListingPage() {
           )}
         </form>
       </section>
+      )}
     </div>
   );
 }

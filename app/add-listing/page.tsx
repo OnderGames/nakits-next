@@ -10,13 +10,16 @@ import {
   useState
 } from "react";
 import {
+  formatCategoryDisplay,
   formatPriceInputDisplay,
   isIntermediateGayrimenkulListingKey,
   getTasitlarOtomobilBrandSlugAwaitingModel,
   isIntermediateTasitlarOtomobilListingKey,
+  isReadyListingCategoryKey,
   parsePriceInput,
   sqlCategorySlugFromKey
 } from "@/lib/categories";
+import AddListingMainCategoryGrid from "@/components/AddListingMainCategoryGrid";
 import CategoryMillerPicker from "@/components/CategoryMillerPicker";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
@@ -107,6 +110,8 @@ function uploadContentType(file: File): string {
 
 type PhotoPick = { file: File; url: string };
 
+type AddListingPhase = "main" | "sub" | "details";
+
 export default function AddListingPage() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -123,6 +128,26 @@ export default function AddListingPage() {
   const [listingDistrict, setListingDistrict] = useState("");
   const [priceText, setPriceText] = useState("");
   const [photosNormalizing, setPhotosNormalizing] = useState(false);
+  const [phase, setPhase] = useState<AddListingPhase>("main");
+  const skipSubAutoAdvanceRef = useRef(false);
+  const prevCategoryReadyRef = useRef(false);
+
+  useEffect(() => {
+    if (phase !== "sub") {
+      prevCategoryReadyRef.current = isReadyListingCategoryKey(detailCategoryKey);
+      return;
+    }
+    const ready = isReadyListingCategoryKey(detailCategoryKey);
+    if (skipSubAutoAdvanceRef.current) {
+      skipSubAutoAdvanceRef.current = false;
+      prevCategoryReadyRef.current = ready;
+      return;
+    }
+    if (ready && !prevCategoryReadyRef.current) {
+      setPhase("details");
+    }
+    prevCategoryReadyRef.current = ready;
+  }, [phase, detailCategoryKey]);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -418,6 +443,8 @@ export default function AddListingPage() {
     });
     setGroupSlug("");
     setDetailCategoryKey("");
+    setPhase("main");
+    prevCategoryReadyRef.current = false;
     setListingCity("");
     setListingDistrict("");
     setPriceText("");
@@ -454,11 +481,23 @@ export default function AddListingPage() {
     );
   }
 
+  function goBackToMainCategory() {
+    setGroupSlug("");
+    setDetailCategoryKey("");
+    setPhase("main");
+    prevCategoryReadyRef.current = false;
+  }
+
+  function goEditCategoryFromDetails() {
+    skipSubAutoAdvanceRef.current = true;
+    setPhase("sub");
+  }
+
   return (
-    <main className="container">
+    <main className="container add-listing-flow">
       <h1 className="section-title">İlan ver</h1>
       {hasSupabaseConfig && (
-        <p className="meta" style={{ marginBottom: 14, maxWidth: 640 }}>
+        <p className="meta" style={{ marginBottom: 0, maxWidth: 640 }}>
           Aynı anda en fazla <strong>{MAX_LISTINGS_PER_USER}</strong> onay
           bekleyen veya yayındaki ilan verebilirsiniz. Yayındaki her ilan en
           çok <strong>30 gün</strong> listelenir; süre sonunda ilan
@@ -468,7 +507,7 @@ export default function AddListingPage() {
         </p>
       )}
       {hasSupabaseConfig && categoryRowCount === 0 && (
-        <p className="notice" style={{ marginBottom: 14 }}>
+        <p className="notice" style={{ marginBottom: 0 }}>
           Veritabanında kategori kaydı yok. Supabase → SQL Editor&apos;da
           depodaki{" "}
           <code style={{ fontSize: 13 }}>sql/seed_categories.sql</code> içeriğini
@@ -478,8 +517,93 @@ export default function AddListingPage() {
           bloğu). Sonra bu sayfayı yenileyin.
         </p>
       )}
+
+      <nav className="add-listing-steps" aria-label="İlan verme adımları">
+        <span
+          className={
+            phase === "main"
+              ? "add-listing-steps__item add-listing-steps__item--active"
+              : "add-listing-steps__item add-listing-steps__item--done"
+          }
+        >
+          <span className="add-listing-steps__num">1</span>
+          Ana kategori
+        </span>
+        <span className="add-listing-steps__sep" aria-hidden>
+          →
+        </span>
+        <span
+          className={
+            phase === "sub"
+              ? "add-listing-steps__item add-listing-steps__item--active"
+              : phase === "details"
+                ? "add-listing-steps__item add-listing-steps__item--done"
+                : "add-listing-steps__item"
+          }
+        >
+          <span className="add-listing-steps__num">2</span>
+          Alt tür
+        </span>
+        <span className="add-listing-steps__sep" aria-hidden>
+          →
+        </span>
+        <span
+          className={
+            phase === "details"
+              ? "add-listing-steps__item add-listing-steps__item--active"
+              : "add-listing-steps__item"
+          }
+        >
+          <span className="add-listing-steps__num">3</span>
+          Bilgiler ve fotoğraf
+        </span>
+      </nav>
+
+      {phase === "main" && (
+        <section className="panel">
+          <AddListingMainCategoryGrid
+            disabled={submitting}
+            onSelectMain={(slug) => {
+              setGroupSlug(slug);
+              setDetailCategoryKey("");
+              setPhase("sub");
+              prevCategoryReadyRef.current = false;
+            }}
+          />
+        </section>
+      )}
+
+      {phase === "sub" && (
+        <section className="panel">
+          <CategoryMillerPicker
+            groupSlug={groupSlug}
+            detailCategoryKey={detailCategoryKey}
+            disabled={submitting}
+            hideMainGroupColumn
+            onRequestChangeMainCategory={goBackToMainCategory}
+            onGroupChange={setGroupSlug}
+            onCategoryKeyChange={setDetailCategoryKey}
+          />
+        </section>
+      )}
+
+      {phase === "details" && (
       <section className="panel">
         <form onSubmit={handleSubmit}>
+          <div className="add-listing-cat-chip" style={{ marginBottom: 14 }}>
+            <p className="add-listing-cat-chip__text">
+              {formatCategoryDisplay(detailCategoryKey)}
+            </p>
+            <button
+              type="button"
+              className="add-listing-cat-chip__btn"
+              disabled={submitting}
+              onClick={goEditCategoryFromDetails}
+            >
+              Kategoriyi düzenle
+            </button>
+          </div>
+
           <div className="row">
             <div>
               <label htmlFor="listing-title">Başlık</label>
@@ -512,16 +636,6 @@ export default function AddListingPage() {
                 disabled={submitting}
               />
             </div>
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            <CategoryMillerPicker
-              groupSlug={groupSlug}
-              detailCategoryKey={detailCategoryKey}
-              disabled={submitting}
-              onGroupChange={setGroupSlug}
-              onCategoryKeyChange={setDetailCategoryKey}
-            />
           </div>
 
           <div className="row" style={{ marginTop: 10 }}>
@@ -784,6 +898,7 @@ export default function AddListingPage() {
           )}
         </form>
       </section>
+      )}
     </main>
   );
 }

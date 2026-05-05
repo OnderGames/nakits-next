@@ -395,6 +395,14 @@ export function isIntermediateTasitlarOtomobilListingKey(key: string): boolean {
   return tryParseOtomobilBrandIntermediateSubSlug(rest) != null;
 }
 
+/** Yeni ilan: kategori seçimi eksiksiz yaprak mı (ara adım yok)? */
+export function isReadyListingCategoryKey(key: string): boolean {
+  if (!key.trim()) return false;
+  if (isIntermediateGayrimenkulListingKey(key)) return false;
+  if (isIntermediateTasitlarOtomobilListingKey(key)) return false;
+  return true;
+}
+
 export type CategoryGroupDef = {
   slug: string;
   emoji: string;

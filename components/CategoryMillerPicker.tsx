@@ -30,6 +30,10 @@ export type CategoryMillerPickerProps = {
   onGroupChange: (slug: string) => void;
   onCategoryKeyChange: (key: string) => void;
   disabled?: boolean;
+  /** Ana kategori üst bileşende seçildiyse sol sütun gizlenir */
+  hideMainGroupColumn?: boolean;
+  /** Sol üst: ana kategori seçimine dön */
+  onRequestChangeMainCategory?: () => void;
 };
 
 /** @deprecated isim uyumu için — `isIntermediateGayrimenkulListingKey` kullanın */
@@ -40,7 +44,9 @@ export default function CategoryMillerPicker({
   detailCategoryKey,
   onGroupChange,
   onCategoryKeyChange,
-  disabled = false
+  disabled = false,
+  hideMainGroupColumn = false,
+  onRequestChangeMainCategory
 }: CategoryMillerPickerProps) {
   const selectedGroup = CATEGORY_GROUPS.find((g) => g.slug === groupSlug);
 
@@ -345,48 +351,75 @@ export default function CategoryMillerPicker({
     );
   }
 
+  const rootClass =
+    "category-miller" +
+    (hideMainGroupColumn ? " category-miller--no-main" : "");
+
   return (
-    <div className="category-miller">
+    <div className={rootClass}>
       <div className="category-miller__head">
-        <h2 className="category-miller__title">Adım adım kategori seç</h2>
+        {hideMainGroupColumn && onRequestChangeMainCategory ? (
+          <button
+            type="button"
+            className="category-miller__back-main"
+            disabled={disabled}
+            onClick={() => onRequestChangeMainCategory()}
+          >
+            ← Ana kategori
+          </button>
+        ) : null}
+        <h2 className="category-miller__title">
+          {hideMainGroupColumn ? "Alt türü seç" : "Adım adım kategori seç"}
+        </h2>
         <p className="category-miller__crumb" aria-live="polite">
+          {hideMainGroupColumn && selectedGroup ? (
+            <>
+              <span aria-hidden>{selectedGroup.emoji}</span>{" "}
+            </>
+          ) : null}
           {crumbText}
         </p>
       </div>
       <div className="category-miller__columns" role="group" aria-label="Kategori sütunları">
-        <div className="category-miller__col">
-          <ul className="category-miller__list" role="listbox" aria-label="Ana kategoriler">
-            {CATEGORY_GROUPS.map((group) => {
-              const sel = groupSlug === group.slug;
-              return (
-                <li key={group.slug} className="category-miller__item">
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    role="option"
-                    aria-selected={sel}
-                    className={
-                      sel
-                        ? "category-miller__row category-miller__row--selected"
-                        : "category-miller__row"
-                    }
-                    onClick={() => onPickGroup(group.slug)}
-                  >
-                    <span className="category-miller__row-label">
-                      <span aria-hidden>{group.emoji}</span>{" "}
-                      <span>{group.name}</span>
-                    </span>
-                    {sel && (
-                      <span className="category-miller__chevron" aria-hidden>
-                        ›
+        {!hideMainGroupColumn ? (
+          <div className="category-miller__col">
+            <ul
+              className="category-miller__list"
+              role="listbox"
+              aria-label="Ana kategoriler"
+            >
+              {CATEGORY_GROUPS.map((group) => {
+                const sel = groupSlug === group.slug;
+                return (
+                  <li key={group.slug} className="category-miller__item">
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      role="option"
+                      aria-selected={sel}
+                      className={
+                        sel
+                          ? "category-miller__row category-miller__row--selected"
+                          : "category-miller__row"
+                      }
+                      onClick={() => onPickGroup(group.slug)}
+                    >
+                      <span className="category-miller__row-label">
+                        <span aria-hidden>{group.emoji}</span>{" "}
+                        <span>{group.name}</span>
                       </span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                      {sel && (
+                        <span className="category-miller__chevron" aria-hidden>
+                          ›
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
 
         <div
           className={
@@ -661,10 +694,22 @@ export default function CategoryMillerPicker({
           </div>
         )}
       </div>
-      <p className="category-miller__hint meta">
-        Emlak ilanlarında önce alan türünü (Konut, İş yeri, Arsa…), ardından Satılık veya
-        Kiralık seçin; Konut’ta bir de konut tipi (Daire, Villa…) gelir.
-      </p>
+      {groupSlug === "gayrimenkul" ? (
+        <p className="category-miller__hint meta">
+          Önce ilan konusu alanı (Konut, İş yeri, Arsa…), ardından satılık / kiralık;
+          konutta son adımda yapı tipi seçilir.
+        </p>
+      ) : groupSlug === "tasitlar" ? (
+        <p className="category-miller__hint meta">
+          Otomobilde sırayla alt tür, marka ve model; bisiklet, motosiklet vb.
+          tek seçimde biter.
+        </p>
+      ) : hideMainGroupColumn ? (
+        <p className="category-miller__hint meta">
+          Soldan sağa ilerleyin; tamamlanan satırda ✓ işareti çıkar — seçiminiz
+          bittiğinde sonraki adıma otomatik geçilir.
+        </p>
+      ) : null}
     </div>
   );
 }
