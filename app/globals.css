@@ -4246,6 +4246,79 @@ span.listing-seller__name--plain {
   color: var(--primary);
 }
 
+/* İlan gönderildi — tam ekran onay */
+.add-listing-sent {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.add-listing-sent__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.add-listing-sent__card {
+  position: relative;
+  z-index: 1;
+  width: min(400px, 100%);
+  padding: 28px 24px 24px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.06),
+    0 24px 48px rgba(15, 23, 42, 0.16);
+  text-align: center;
+}
+
+.add-listing-sent__tick {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  background: var(--success);
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+
+.add-listing-sent__title {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.add-listing-sent__desc {
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.add-listing-sent__hint {
+  margin: 0 0 20px;
+  font-size: 13px;
+}
+
+.add-listing-sent__cta {
+  width: 100%;
+  justify-content: center;
+}
+
 /* ——— Girişli kullanıcı: yüzen mesaj önizlemesi ——— */
 
 .msg-peek {

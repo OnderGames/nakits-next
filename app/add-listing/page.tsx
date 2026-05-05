@@ -2,6 +2,7 @@
 
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ChangeEvent,
   FormEvent,
@@ -113,7 +114,10 @@ type PhotoPick = { file: File; url: string };
 type AddListingPhase = "main" | "sub" | "details";
 
 export default function AddListingPage() {
-  const [notice, setNotice] = useState("");
+  const router = useRouter();
+  const [submissionSuccess, setSubmissionSuccess] = useState<{
+    photoCount: number;
+  } | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [photos, setPhotos] = useState<PhotoPick[]>([]);
@@ -149,6 +153,22 @@ export default function AddListingPage() {
     }
     prevCategoryReadyRef.current = ready;
   }, [phase, detailCategoryKey]);
+
+  useEffect(() => {
+    if (!submissionSuccess) {
+      return undefined;
+    }
+    document.body.style.overflow = "hidden";
+    const timer = window.setTimeout(() => {
+      setSubmissionSuccess(null);
+      router.push("/");
+      router.refresh();
+    }, 2800);
+    return () => {
+      window.clearTimeout(timer);
+      document.body.style.overflow = "";
+    };
+  }, [submissionSuccess, router]);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -253,7 +273,6 @@ export default function AddListingPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setNotice("");
     setError("");
     const sb = getSupabaseBrowser();
     if (!sb || !user) {
@@ -435,9 +454,7 @@ export default function AddListingPage() {
     }
 
     setSubmitting(false);
-    setNotice(
-      `İlanınız alındı (${photos.length} fotoğraf). Moderasyon sonrası yayınlanacak; onaylanınca herkes görebilir.`
-    );
+    setSubmissionSuccess({ photoCount: photos.length });
     setPhotos((prev) => {
       prev.forEach((p) => URL.revokeObjectURL(p.url));
       return [];
@@ -888,14 +905,47 @@ export default function AddListingPage() {
               {error}
             </p>
           )}
-          {notice && (
-            <p className="notice" style={{ marginTop: 10 }}>
-              {notice}
-            </p>
-          )}
         </form>
       </section>
       )}
+
+      {submissionSuccess ? (
+        <div
+          className="add-listing-sent"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="add-listing-sent-title"
+          aria-describedby="add-listing-sent-desc"
+        >
+          <div className="add-listing-sent__backdrop" aria-hidden />
+          <div className="add-listing-sent__card">
+            <div className="add-listing-sent__tick" aria-hidden>
+              ✓
+            </div>
+            <h2 id="add-listing-sent-title" className="add-listing-sent__title">
+              İlan gönderildi
+            </h2>
+            <p id="add-listing-sent-desc" className="add-listing-sent__desc">
+              {submissionSuccess.photoCount} fotoğraflı ilanın alındı. Moderasyon
+              sonrası yayınlanacak; onaylanınca herkes görebilir.
+            </p>
+            <p className="add-listing-sent__hint meta">
+              Birkaç saniye içinde ana sayfaya yönlendirileceksin.
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary add-listing-sent__cta"
+              onClick={() => {
+                setSubmissionSuccess(null);
+                router.push("/");
+                router.refresh();
+              }}
+            >
+              Ana sayfaya git
+            </button>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
