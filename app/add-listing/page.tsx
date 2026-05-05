@@ -31,9 +31,13 @@ import {
 } from "@/lib/turkish-provinces";
 import { isUniqueViolation, randomListingCode } from "@/lib/listing-code";
 import {
-  listingExpiresAtIsoFromNow,
+  listingExpiresAtIsoFromDays,
   MAX_LISTINGS_PER_USER
 } from "@/lib/listing-policy";
+import {
+  fetchListingDurationDaysPublic,
+  LISTING_DURATION_DEFAULT_DAYS
+} from "@/lib/site-settings";
 import { MAX_LISTING_PHOTOS } from "@/lib/listing-photos";
 import { countSellerOpenListings } from "@/lib/listings-data";
 import {
@@ -131,6 +135,9 @@ export default function AddListingPage() {
   const [listingCity, setListingCity] = useState("");
   const [listingDistrict, setListingDistrict] = useState("");
   const [priceText, setPriceText] = useState("");
+  const [listingDurationDays, setListingDurationDays] = useState(
+    LISTING_DURATION_DEFAULT_DAYS
+  );
   const livePriceInput = useLiveTrPriceInput(priceText, setPriceText);
   const [photosNormalizing, setPhotosNormalizing] = useState(false);
   const [phase, setPhase] = useState<AddListingPhase>("main");
@@ -190,6 +197,13 @@ export default function AddListingPage() {
       setUser(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!hasSupabaseConfig) return;
+    const sb = getSupabaseBrowser();
+    if (!sb) return;
+    void fetchListingDurationDaysPublic(sb).then(setListingDurationDays);
   }, []);
 
   useEffect(() => {
@@ -367,7 +381,7 @@ export default function AddListingPage() {
           district: districtTrim || null,
           condition: "used",
           show_phone_on_listing: false,
-          expires_at: listingExpiresAtIsoFromNow(),
+          expires_at: listingExpiresAtIsoFromDays(listingDurationDays),
           listing_code
         })
         .select("id")

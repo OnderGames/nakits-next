@@ -15,6 +15,7 @@ import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
 import AdminListingReportsSection from "./AdminListingReportsSection";
+import AdminSiteListingDurationSection from "./AdminSiteListingDurationSection";
 import AdminUserManagementSection from "./AdminUserManagementSection";
 
 type ListingFilter = "all" | "pending" | "active" | "sold" | "rejected";
@@ -394,6 +395,11 @@ export default function AdminModerationPage() {
   return (
     <div className="account-page">
       <h1 className="section-title">Moderasyon</h1>
+
+      <AdminSiteListingDurationSection
+        enabled={moderationStaff && checkedStaff}
+        getAuthHeaders={authHeaders}
+      />
 
       <div className="admin-mod-main-tabs" role="tablist" aria-label="Moderasyon bölümleri">
         <button

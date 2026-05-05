@@ -25,10 +25,51 @@ export const HOMEPAGE_THEME_DEFAULT: HomepageTheme = "v2";
 
 const DEFAULT_THEME = HOMEPAGE_THEME_DEFAULT;
 
+/** Yeni ilan / onay sonrası bitiş: site_settings (7–365 gün) */
+export const LISTING_DURATION_MIN_DAYS = 7;
+export const LISTING_DURATION_MAX_DAYS = 365;
+export const LISTING_DURATION_DEFAULT_DAYS = 30;
+
 const THEME_SET = new Set<string>(HOMEPAGE_THEMES);
 
 export function isHomepageTheme(value: unknown): value is HomepageTheme {
   return typeof value === "string" && THEME_SET.has(value);
+}
+
+export function normalizeListingDurationDays(raw: unknown): number {
+  const n =
+    typeof raw === "number"
+      ? raw
+      : typeof raw === "string"
+        ? Number(raw)
+        : Number.NaN;
+  if (!Number.isFinite(n)) return LISTING_DURATION_DEFAULT_DAYS;
+  return Math.min(
+    LISTING_DURATION_MAX_DAYS,
+    Math.max(LISTING_DURATION_MIN_DAYS, Math.round(n))
+  );
+}
+
+type SiteSettingsDurationRow = {
+  listing_duration_days?: number | null;
+};
+
+/** Anon oturum / vitrin: ilan süresi metni ve expires_at hesabı */
+export async function fetchListingDurationDaysPublic(
+  sb: SupabaseClient
+): Promise<number> {
+  const { data, error } = await sb
+    .from("site_settings")
+    .select("listing_duration_days")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (error || !data) {
+    return LISTING_DURATION_DEFAULT_DAYS;
+  }
+  return normalizeListingDurationDays(
+    (data as SiteSettingsDurationRow).listing_duration_days
+  );
 }
 
 export async function getHomepageTheme(

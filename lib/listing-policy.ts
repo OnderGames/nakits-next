@@ -1,14 +1,20 @@
+import {
+  LISTING_DURATION_DEFAULT_DAYS,
+  normalizeListingDurationDays
+} from "@/lib/site-settings";
+
 /** Eşzamanlı olarak «onay bekliyor» veya «yayında» olabilen ilan sayısı üst sınırı */
 export const MAX_LISTINGS_PER_USER = 3;
 
-/** Yayındaki / bekleyen ilanların ömrü (gün); süre dolunca cron ile silinir */
-export const LISTING_DURATION_DAYS = 30;
+/** Yeni ilan veya onay sonrası bitiş zamanı (ISO, UTC); gün sayısı site ayarından gelir */
+export function listingExpiresAtIsoFromDays(days: number): string {
+  const d = normalizeListingDurationDays(days);
+  return new Date(Date.now() + d * 24 * 60 * 60 * 1000).toISOString();
+}
 
-/** Yeni ilan veya onay sonrası bitiş zamanı (ISO, UTC) */
-export function listingExpiresAtIsoFromNow(): string {
-  return new Date(
-    Date.now() + LISTING_DURATION_DAYS * 24 * 60 * 60 * 1000
-  ).toISOString();
+/** Yedek: ayar okunamazsa sabit varsayılan gün */
+export function listingExpiresAtIsoFromDefaultDays(): string {
+  return listingExpiresAtIsoFromDays(LISTING_DURATION_DEFAULT_DAYS);
 }
 
 /** Satıldı ilanı süresi dolmadıysa tekrar yayına alınabilir */

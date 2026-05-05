@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import ListingCard from "@/components/ListingCard";
-import { LISTING_DURATION_DAYS } from "@/lib/listing-policy";
+import {
+  fetchListingDurationDaysPublic,
+  LISTING_DURATION_DEFAULT_DAYS
+} from "@/lib/site-settings";
 import {
   fetchSellerActiveListings,
   removeListingImagesFolderFromStorage
@@ -35,6 +38,16 @@ export default function ProfilePage() {
   const [markingSoldId, setMarkingSoldId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [listingActionError, setListingActionError] = useState("");
+  const [listingDurationDays, setListingDurationDays] = useState(
+    LISTING_DURATION_DEFAULT_DAYS
+  );
+
+  useEffect(() => {
+    if (!hasSupabaseConfig) return;
+    const sb = getSupabaseBrowser();
+    if (!sb) return;
+    void fetchListingDurationDaysPublic(sb).then(setListingDurationDays);
+  }, []);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -352,7 +365,7 @@ export default function ProfilePage() {
 
       <h2 className="section-title">Yayındaki ilanlarım</h2>
       <p className="meta" style={{ marginBottom: 12 }}>
-        Yayındaki her ilan <strong>{LISTING_DURATION_DAYS} gün</strong> süreyle
+        Yayındaki her ilan <strong>{listingDurationDays} gün</strong> süreyle
         listelenir; aşağıdaki
         kartlarda <strong>yayından kalkma tarihi</strong> ve kalan gün
         bilgisini görebilirsiniz. Süre dolunca ilan otomatik silinir. En fazla 3

@@ -3,7 +3,8 @@ import {
   getServiceRoleMissingMessage,
   verifyModerationStaff
 } from "@/lib/admin-auth";
-import { listingExpiresAtIsoFromNow } from "@/lib/listing-policy";
+import { listingExpiresAtIsoFromDays } from "@/lib/listing-policy";
+import { fetchListingDurationDaysForService } from "@/lib/site-settings-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,7 +45,8 @@ export async function PATCH(
 
   const patch: Record<string, unknown> = { status };
   if (status === "active") {
-    patch.expires_at = listingExpiresAtIsoFromNow();
+    const days = await fetchListingDurationDaysForService(adminSb);
+    patch.expires_at = listingExpiresAtIsoFromDays(days);
   }
 
   const { data, error } = await adminSb

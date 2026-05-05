@@ -680,8 +680,12 @@ create table if not exists site_settings (
         'slate'
       )
     ),
+  listing_duration_days smallint not null default 30
+    check (listing_duration_days >= 7 and listing_duration_days <= 365),
   updated_at timestamptz not null default now()
 );
-insert into site_settings (id, homepage_theme) values (1, 'v2') on conflict (id) do nothing;
+insert into site_settings (id, homepage_theme, listing_duration_days)
+values (1, 'v2', 30)
+on conflict (id) do nothing;
 alter table site_settings enable row level security;
 create policy "site_settings read all" on site_settings for select using (true);
