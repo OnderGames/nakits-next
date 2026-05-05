@@ -248,6 +248,10 @@ insert into categories (slug, name)
 values
   ('tasitlar_otomobil', 'Otomobil'),
   ('tasitlar_otomobil-chery', 'Otomobil › Chery'),
+  ('tasitlar_otomobil-chery-alia', 'Otomobil › Chery › Alia'),
+  ('tasitlar_otomobil-chery-chance', 'Otomobil › Chery › Chance'),
+  ('tasitlar_otomobil-chery-kimo', 'Otomobil › Chery › Kimo'),
+  ('tasitlar_otomobil-chery-niche', 'Otomobil › Chery › Niche'),
   ('tasitlar_otomobil-citroen', 'Otomobil › Citroën'),
   ('tasitlar_otomobil-fiat', 'Otomobil › Fiat'),
   ('tasitlar_otomobil-ford', 'Otomobil › Ford'),

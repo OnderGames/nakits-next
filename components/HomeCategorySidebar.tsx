@@ -8,6 +8,7 @@ import {
   KONUT_PROPERTY_TYPES,
   konutLeafCategorySubSlug,
   leafRowsForCategoryGroup,
+  getOtomobilModelsForBrand,
   OTOMOBIL_MARKALARI,
   parseCategoryKey
 } from "@/lib/categories";
@@ -160,6 +161,7 @@ export default function HomeCategorySidebar({
   const toprakRef = useRef<HTMLDetailsElement>(null);
   const depoRef = useRef<HTMLDetailsElement>(null);
   const otomobilTasitRef = useRef<HTMLDetailsElement>(null);
+  const cheryOtomobilRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
     const sub = gayrimenkulSubFromKey(selectedCategoryKey);
@@ -194,6 +196,9 @@ export default function HomeCategorySidebar({
     if (otomobilTasitRef.current) {
       otomobilTasitRef.current.open =
         rest === "otomobil" || rest.startsWith("otomobil-");
+    }
+    if (cheryOtomobilRef.current) {
+      cheryOtomobilRef.current.open = rest.startsWith("otomobil-chery");
     }
   }, [selectedCategoryKey]);
 
@@ -378,8 +383,47 @@ export default function HomeCategorySidebar({
               </span>
               <SummaryCount n={tasitlarTotals.otomobil} />
             </summary>
-            <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
+            <ul className="home-category-sidebar__nest-list">
               {OTOMOBIL_MARKALARI.map((m) => {
+                const models = getOtomobilModelsForBrand(m.slug);
+                if (models?.length) {
+                  const brandTotal = sumListingCountsWhere(
+                    counts,
+                    (k) =>
+                      k === `tasitlar.otomobil-${m.slug}` ||
+                      k.startsWith(`tasitlar.otomobil-${m.slug}-`)
+                  );
+                  return (
+                    <li key={m.slug}>
+                      <details
+                        ref={
+                          m.slug === "chery" ? cheryOtomobilRef : undefined
+                        }
+                        className="home-category-sidebar__nest-details"
+                      >
+                        <summary className="home-category-sidebar__nest-summary">
+                          <span className="home-category-sidebar__nest-summary-label">
+                            {m.name}
+                          </span>
+                          <SummaryCount n={brandTotal} />
+                        </summary>
+                        <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
+                          {models.map((mod) => {
+                            const compositeKey = compositeCategoryKey(
+                              "tasitlar",
+                              `otomobil-${m.slug}-${mod.slug}`
+                            );
+                            return (
+                              <li key={mod.slug}>
+                                {renderSubLink(compositeKey, mod.name)}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </details>
+                    </li>
+                  );
+                }
                 const compositeKey = compositeCategoryKey(
                   "tasitlar",
                   `otomobil-${m.slug}`

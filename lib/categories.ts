@@ -22,23 +22,133 @@ export const OTOMOBIL_MARKALARI = [
   { slug: "volkswagen", name: "Volkswagen" }
 ] as const;
 
+export type OtomobilMarkaModelDef = { slug: string; name: string };
+
+/** Marka → modeller (yaprak: tasitlar.otomobil-{marka}-{model}) */
+export const OTOMOBIL_MARKA_MODELS: Partial<
+  Record<(typeof OTOMOBIL_MARKALARI)[number]["slug"], readonly OtomobilMarkaModelDef[]>
+> = {
+  chery: [
+    { slug: "alia", name: "Alia" },
+    { slug: "chance", name: "Chance" },
+    { slug: "kimo", name: "Kimo" },
+    { slug: "niche", name: "Niche" }
+  ]
+};
+
+export function getOtomobilModelsForBrand(
+  brandSlug: string
+): readonly OtomobilMarkaModelDef[] | undefined {
+  return OTOMOBIL_MARKA_MODELS[brandSlug as keyof typeof OTOMOBIL_MARKA_MODELS];
+}
+
 /** İlan formu: marka seçilmeden `tasitlar.otomobil` ara anahtarı */
 export const TASITLAR_OTOMOBIL_INTERMEDIATE_KEY = "tasitlar.otomobil";
 
-export function tryParseOtomobilMarkaLeafSubSlug(subSlug: string): {
+/** Yaprak: `otomobil-{marka}-{model}` */
+export function tryParseOtomobilModelLeafSubSlug(subSlug: string): {
+  brandSlug: string;
+  brandName: string;
+  modelSlug: string;
+  modelName: string;
+} | null {
+  const prefix = "otomobil-";
+  if (!subSlug.startsWith(prefix)) return null;
+  const rest = subSlug.slice(prefix.length);
+  const brands = [...OTOMOBIL_MARKALARI].sort(
+    (a, b) => b.slug.length - a.slug.length
+  );
+  for (const b of brands) {
+    const models = OTOMOBIL_MARKA_MODELS[b.slug];
+    if (!models?.length) continue;
+    const p = `${b.slug}-`;
+    if (!rest.startsWith(p)) continue;
+    const modelSlug = rest.slice(p.length);
+    const model = models.find((m) => m.slug === modelSlug);
+    if (model) {
+      return {
+        brandSlug: b.slug,
+        brandName: b.name,
+        modelSlug: model.slug,
+        modelName: model.name
+      };
+    }
+  }
+  return null;
+}
+
+/** Modelli olmayan marka yaprağı: `otomobil-ford` */
+export function tryParseOtomobilBrandOnlyLeafSubSlug(subSlug: string): {
   brandSlug: string;
   brandName: string;
 } | null {
   const prefix = "otomobil-";
   if (!subSlug.startsWith(prefix)) return null;
-  const brandSlug = subSlug.slice(prefix.length);
-  const m = OTOMOBIL_MARKALARI.find((x) => x.slug === brandSlug);
+  const rest = subSlug.slice(prefix.length);
+  if (rest.includes("-")) return null;
+  const m = OTOMOBIL_MARKALARI.find((x) => x.slug === rest);
   if (!m) return null;
+  if (OTOMOBIL_MARKA_MODELS[m.slug]?.length) return null;
   return { brandSlug: m.slug, brandName: m.name };
 }
 
+/** Model seçilmeden marka adımı: `otomobil-chery` (modelli markalar) */
+export function tryParseOtomobilBrandIntermediateSubSlug(subSlug: string): {
+  brandSlug: string;
+  brandName: string;
+} | null {
+  const prefix = "otomobil-";
+  if (!subSlug.startsWith(prefix)) return null;
+  const rest = subSlug.slice(prefix.length);
+  if (rest.includes("-")) return null;
+  const m = OTOMOBIL_MARKALARI.find((x) => x.slug === rest);
+  if (!m) return null;
+  if (!OTOMOBIL_MARKA_MODELS[m.slug]?.length) return null;
+  return { brandSlug: m.slug, brandName: m.name };
+}
+
+/**
+ * Model + modelsiz marka yaprakları (ilan kaydı için yeterli); ara anahtarlar değil.
+ */
+export function isTasitlarOtomobilFinalListingKey(key: string): boolean {
+  const t = key.trim();
+  if (!t.startsWith("tasitlar.")) return false;
+  const rest = t.slice("tasitlar.".length);
+  return (
+    tryParseOtomobilModelLeafSubSlug(rest) != null ||
+    tryParseOtomobilBrandOnlyLeafSubSlug(rest) != null
+  );
+}
+
+/** Model sütunu: hangi marka için seçim bekleniyor */
+export function getTasitlarOtomobilBrandSlugAwaitingModel(key: string): string | null {
+  const t = key.trim();
+  if (!t.startsWith("tasitlar.")) return null;
+  const rest = t.slice("tasitlar.".length);
+  const inter = tryParseOtomobilBrandIntermediateSubSlug(rest);
+  return inter ? inter.brandSlug : null;
+}
+
+/** Geriye uyumluluk: marka/model/ara adım tanı */
+export function tryParseOtomobilMarkaLeafSubSlug(subSlug: string): {
+  brandSlug: string;
+  brandName: string;
+} | null {
+  const model = tryParseOtomobilModelLeafSubSlug(subSlug);
+  if (model) return { brandSlug: model.brandSlug, brandName: model.brandName };
+  const brandOnly = tryParseOtomobilBrandOnlyLeafSubSlug(subSlug);
+  if (brandOnly) return brandOnly;
+  const inter = tryParseOtomobilBrandIntermediateSubSlug(subSlug);
+  if (inter) return inter;
+  return null;
+}
+
 export function isIntermediateTasitlarOtomobilListingKey(key: string): boolean {
-  return key.trim() === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY;
+  const t = key.trim();
+  if (t === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY) return true;
+  if (!t.startsWith("tasitlar.")) return false;
+  const rest = t.slice("tasitlar.".length);
+  return tryParseOtomobilBrandIntermediateSubSlug(rest) != null;
 }
 
 export type CategoryGroupDef = {
@@ -316,13 +426,26 @@ export function leafRowsForCategoryGroup(group: CategoryGroupDef): ReadonlyArray
     }
     if (sub.drilldown === "otomobil-marka") {
       for (const m of OTOMOBIL_MARKALARI) {
-        const subSlug = `otomobil-${m.slug}`;
-        const compositeKey = compositeCategoryKey(group.slug, subSlug);
-        rows.push({
-          reactKey: compositeKey,
-          compositeKey,
-          label: `${sub.name} › ${m.name}`
-        });
+        const models = getOtomobilModelsForBrand(m.slug);
+        if (models?.length) {
+          for (const mod of models) {
+            const subSlug = `otomobil-${m.slug}-${mod.slug}`;
+            const compositeKey = compositeCategoryKey(group.slug, subSlug);
+            rows.push({
+              reactKey: compositeKey,
+              compositeKey,
+              label: `${sub.name} › ${m.name} › ${mod.name}`
+            });
+          }
+        } else {
+          const subSlug = `otomobil-${m.slug}`;
+          const compositeKey = compositeCategoryKey(group.slug, subSlug);
+          rows.push({
+            reactKey: compositeKey,
+            compositeKey,
+            label: `${sub.name} › ${m.name}`
+          });
+        }
       }
       continue;
     }
@@ -347,12 +470,24 @@ export function tasitlarFilterOptgroups(): {
   const otomobil: Array<{ reactKey: string; compositeKey: string; label: string }> =
     [];
   for (const m of OTOMOBIL_MARKALARI) {
-    const subSlug = `otomobil-${m.slug}`;
-    otomobil.push({
-      reactKey: subSlug,
-      compositeKey: compositeCategoryKey("tasitlar", subSlug),
-      label: `${otomobilName} › ${m.name}`
-    });
+    const models = getOtomobilModelsForBrand(m.slug);
+    if (models?.length) {
+      for (const mod of models) {
+        const subSlug = `otomobil-${m.slug}-${mod.slug}`;
+        otomobil.push({
+          reactKey: subSlug,
+          compositeKey: compositeCategoryKey("tasitlar", subSlug),
+          label: `${otomobilName} › ${m.name} › ${mod.name}`
+        });
+      }
+    } else {
+      const subSlug = `otomobil-${m.slug}`;
+      otomobil.push({
+        reactKey: subSlug,
+        compositeKey: compositeCategoryKey("tasitlar", subSlug),
+        label: `${otomobilName} › ${m.name}`
+      });
+    }
   }
   const diger = group.subs
     .filter((s) => s.slug !== "otomobil")
@@ -375,13 +510,33 @@ export function parseCategoryKey(key: string): ParsedCategorySlug | null {
     const subSlug = key.slice(prefix.length);
 
     if (group.slug === "tasitlar") {
-      const om = tryParseOtomobilMarkaLeafSubSlug(subSlug);
-      if (om) {
+      const modelLeaf = tryParseOtomobilModelLeafSubSlug(subSlug);
+      if (modelLeaf) {
         return {
           group,
           sub: {
             slug: subSlug,
-            name: `Otomobil › ${om.brandName}`
+            name: `Otomobil › ${modelLeaf.brandName} › ${modelLeaf.modelName}`
+          }
+        };
+      }
+      const brandOnly = tryParseOtomobilBrandOnlyLeafSubSlug(subSlug);
+      if (brandOnly) {
+        return {
+          group,
+          sub: {
+            slug: subSlug,
+            name: `Otomobil › ${brandOnly.brandName}`
+          }
+        };
+      }
+      const brandMid = tryParseOtomobilBrandIntermediateSubSlug(subSlug);
+      if (brandMid) {
+        return {
+          group,
+          sub: {
+            slug: subSlug,
+            name: `Otomobil › ${brandMid.brandName}`
           }
         };
       }
@@ -490,7 +645,11 @@ export function sqlCategorySlugToKey(sqlSlug: string): string | null {
     const subSlug = sqlSlug.slice(prefix.length);
 
     if (group.slug === "tasitlar") {
-      if (tryParseOtomobilMarkaLeafSubSlug(subSlug)) {
+      if (
+        tryParseOtomobilModelLeafSubSlug(subSlug) ||
+        tryParseOtomobilBrandOnlyLeafSubSlug(subSlug) ||
+        tryParseOtomobilBrandIntermediateSubSlug(subSlug)
+      ) {
         return compositeCategoryKey(group.slug, subSlug);
       }
     }

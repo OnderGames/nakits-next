@@ -13,6 +13,9 @@ import {
 } from "react";
 import {
   formatPriceInputDisplay,
+  getTasitlarOtomobilBrandSlugAwaitingModel,
+  isIntermediateGayrimenkulListingKey,
+  isIntermediateTasitlarOtomobilListingKey,
   parseCategoryKey,
   parsePriceInput,
   sqlCategorySlugFromKey
@@ -284,6 +287,20 @@ export default function EditListingPage() {
     }
     if (!detailCategoryKey) {
       setError("Ana ve alt kategori seçin.");
+      return;
+    }
+    if (isIntermediateGayrimenkulListingKey(detailCategoryKey)) {
+      setError(
+        "Emlak kategorisinde Satılık veya Kiralık seçimini tamamlayın (Konut ise ayrıca konut tipi gerekir)."
+      );
+      return;
+    }
+    if (isIntermediateTasitlarOtomobilListingKey(detailCategoryKey)) {
+      setError(
+        getTasitlarOtomobilBrandSlugAwaitingModel(detailCategoryKey)
+          ? "Otomobil için listeden bir model seçin."
+          : "Otomobil için listeden bir marka seçin."
+      );
       return;
     }
 

@@ -12,6 +12,7 @@ import {
 import {
   formatPriceInputDisplay,
   isIntermediateGayrimenkulListingKey,
+  getTasitlarOtomobilBrandSlugAwaitingModel,
   isIntermediateTasitlarOtomobilListingKey,
   parsePriceInput,
   sqlCategorySlugFromKey
@@ -244,7 +245,11 @@ export default function AddListingPage() {
       return;
     }
     if (isIntermediateTasitlarOtomobilListingKey(detailCategoryKey)) {
-      setError("Otomobil için listeden bir marka seçin.");
+      setError(
+        getTasitlarOtomobilBrandSlugAwaitingModel(detailCategoryKey)
+          ? "Otomobil için listeden bir model seçin."
+          : "Otomobil için listeden bir marka seçin."
+      );
       return;
     }
 

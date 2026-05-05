@@ -9,12 +9,17 @@ import {
   OTOMOBIL_MARKALARI,
   TASITLAR_OTOMOBIL_INTERMEDIATE_KEY,
   compositeCategoryKey,
+  getOtomobilModelsForBrand,
+  getTasitlarOtomobilBrandSlugAwaitingModel,
+  isTasitlarOtomobilFinalListingKey,
+  tryParseOtomobilBrandIntermediateSubSlug,
+  tryParseOtomobilBrandOnlyLeafSubSlug,
   konutLeafCategorySubSlug,
   labelGayrimenkulSatKirLeaf,
   labelKonutLeafCategory,
   tryParseGayrimenkulSatKirLeafSubSlug,
   tryParseKonutLeafSubSlug,
-  tryParseOtomobilMarkaLeafSubSlug,
+  tryParseOtomobilModelLeafSubSlug,
   type CategoryGroupDef,
   type SubcategoryDef
 } from "@/lib/categories";
@@ -104,12 +109,6 @@ export default function CategoryMillerPicker({
       )
     : null;
 
-  const tasitlarOtomobilLeafParsed = detailCategoryKey.startsWith("tasitlar.")
-    ? tryParseOtomobilMarkaLeafSubSlug(
-        detailCategoryKey.slice("tasitlar.".length)
-      )
-    : null;
-
   const crumbText = useMemo(() => {
     if (!selectedGroup) return "Kategori seçin";
     const gmSlug = selectedGroup.slug;
@@ -148,8 +147,17 @@ export default function CategoryMillerPicker({
     }
 
     if (gmSlug === "tasitlar") {
-      if (tasitlarOtomobilLeafParsed) {
-        return `${selectedGroup.name} › Otomobil › ${tasitlarOtomobilLeafParsed.brandName}`;
+      const model = tryParseOtomobilModelLeafSubSlug(subPart);
+      if (model) {
+        return `${selectedGroup.name} › Otomobil › ${model.brandName} › ${model.modelName}`;
+      }
+      const brandOnly = tryParseOtomobilBrandOnlyLeafSubSlug(subPart);
+      if (brandOnly) {
+        return `${selectedGroup.name} › Otomobil › ${brandOnly.brandName}`;
+      }
+      const brandMid = tryParseOtomobilBrandIntermediateSubSlug(subPart);
+      if (brandMid) {
+        return `${selectedGroup.name} › Otomobil › ${brandMid.brandName}`;
       }
       if (subPart === "otomobil") {
         return `${selectedGroup.name} › Otomobil`;
@@ -167,7 +175,6 @@ export default function CategoryMillerPicker({
     satKirFlowBase,
     satKirLeafParsed,
     selectedGroup,
-    tasitlarOtomobilLeafParsed,
     txnDraft
   ]);
 
@@ -227,7 +234,15 @@ export default function CategoryMillerPicker({
 
   const showOtomobilMarkaColumn =
     groupSlug === "tasitlar" &&
-    detailCategoryKey === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY;
+    (detailCategoryKey === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY ||
+      detailCategoryKey.startsWith("tasitlar.otomobil-"));
+
+  const brandSlugAwaitingModel =
+    groupSlug === "tasitlar"
+      ? getTasitlarOtomobilBrandSlugAwaitingModel(detailCategoryKey)
+      : null;
+
+  const showOtomobilModelColumn = Boolean(brandSlugAwaitingModel);
 
   function renderSecondColumnSubRow(sub: SubcategoryDef) {
     if (!selectedGroup) return null;
@@ -239,7 +254,8 @@ export default function CategoryMillerPicker({
     if (sub.drilldown === "otomobil-marka") {
       rowSel =
         detailCategoryKey === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY ||
-        Boolean(tasitlarOtomobilLeafParsed);
+        (detailCategoryKey.startsWith("tasitlar.otomobil-") &&
+          detailCategoryKey !== "tasitlar.otomobil");
     }
 
     if (sub.drilldown === "konut") {
@@ -267,7 +283,7 @@ export default function CategoryMillerPicker({
     const showChevronOtomobil =
       sub.drilldown === "otomobil-marka" &&
       rowSel &&
-      !tasitlarOtomobilLeafParsed;
+      !isTasitlarOtomobilFinalListingKey(detailCategoryKey);
 
     return (
       <li key={sub.slug} className="category-miller__item">
@@ -311,11 +327,12 @@ export default function CategoryMillerPicker({
                 ✓
               </span>
             )}
-          {tasitlarOtomobilLeafParsed && sub.drilldown === "otomobil-marka" && (
-            <span className="category-miller__ok" aria-hidden>
-              ✓
-            </span>
-          )}
+          {isTasitlarOtomobilFinalListingKey(detailCategoryKey) &&
+            sub.drilldown === "otomobil-marka" && (
+              <span className="category-miller__ok" aria-hidden>
+                ✓
+              </span>
+            )}
           {!sub.drilldown &&
             detailCategoryKey === keyLeaf &&
             keyLeaf !== "" && (
@@ -439,11 +456,27 @@ export default function CategoryMillerPicker({
               aria-label="Otomobil markası"
             >
               {OTOMOBIL_MARKALARI.map((m) => {
-                const leafKey = compositeCategoryKey(
+                const intermediateKey = compositeCategoryKey(
                   "tasitlar",
                   `otomobil-${m.slug}`
                 );
-                const sel = detailCategoryKey === leafKey;
+                const models = getOtomobilModelsForBrand(m.slug);
+                const rest = detailCategoryKey.startsWith("tasitlar.")
+                  ? detailCategoryKey.slice("tasitlar.".length)
+                  : "";
+                const modelLeaf = rest
+                  ? tryParseOtomobilModelLeafSubSlug(rest)
+                  : null;
+                const modelPickedHere =
+                  modelLeaf?.brandSlug === m.slug;
+                const sel = models?.length
+                  ? detailCategoryKey === intermediateKey || modelPickedHere
+                  : detailCategoryKey === intermediateKey;
+                const showChevronBrand =
+                  Boolean(models?.length) && sel && !modelPickedHere;
+                const showOkBrand =
+                  (models?.length && modelPickedHere) ||
+                  (!models?.length && detailCategoryKey === intermediateKey);
                 return (
                   <li key={m.slug} className="category-miller__item">
                     <button
@@ -456,10 +489,15 @@ export default function CategoryMillerPicker({
                           ? "category-miller__row category-miller__row--selected"
                           : "category-miller__row"
                       }
-                      onClick={() => onCategoryKeyChange(leafKey)}
+                      onClick={() => onCategoryKeyChange(intermediateKey)}
                     >
                       <span className="category-miller__row-label">{m.name}</span>
-                      {sel && (
+                      {showChevronBrand && (
+                        <span className="category-miller__chevron" aria-hidden>
+                          ›
+                        </span>
+                      )}
+                      {showOkBrand && (
                         <span className="category-miller__ok" aria-hidden>
                           ✓
                         </span>
@@ -471,6 +509,51 @@ export default function CategoryMillerPicker({
             </ul>
           </div>
         )}
+
+        {showOtomobilModelColumn && brandSlugAwaitingModel ? (
+          <div className="category-miller__col category-miller__col--active">
+            <ul
+              className="category-miller__list"
+              role="listbox"
+              aria-label="Otomobil modeli"
+            >
+              {(getOtomobilModelsForBrand(brandSlugAwaitingModel) ?? []).map(
+                (mod) => {
+                  const leafKey = compositeCategoryKey(
+                    "tasitlar",
+                    `otomobil-${brandSlugAwaitingModel}-${mod.slug}`
+                  );
+                  const sel = detailCategoryKey === leafKey;
+                  return (
+                    <li key={mod.slug} className="category-miller__item">
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        role="option"
+                        aria-selected={sel}
+                        className={
+                          sel
+                            ? "category-miller__row category-miller__row--selected"
+                            : "category-miller__row"
+                        }
+                        onClick={() => onCategoryKeyChange(leafKey)}
+                      >
+                        <span className="category-miller__row-label">
+                          {mod.name}
+                        </span>
+                        {sel && (
+                          <span className="category-miller__ok" aria-hidden>
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                }
+              )}
+            </ul>
+          </div>
+        ) : null}
 
         {showSatKirColumn && (
           <div
