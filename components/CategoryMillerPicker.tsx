@@ -229,6 +229,105 @@ export default function CategoryMillerPicker({
     groupSlug === "tasitlar" &&
     detailCategoryKey === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY;
 
+  function renderSecondColumnSubRow(sub: SubcategoryDef) {
+    if (!selectedGroup) return null;
+    const keyLeaf = compositeCategoryKey(selectedGroup.slug, sub.slug);
+    let rowSel = Boolean(
+      detailCategoryKey && detailCategoryKey === keyLeaf && !sub.drilldown
+    );
+
+    if (sub.drilldown === "otomobil-marka") {
+      rowSel =
+        detailCategoryKey === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY ||
+        Boolean(tasitlarOtomobilLeafParsed);
+    }
+
+    if (sub.drilldown === "konut") {
+      rowSel =
+        konutFlow ||
+        Boolean(konutLeafParsed) ||
+        detailCategoryKey === GAYRIMENKUL_KONUT_INTERMEDIATE_KEY;
+    } else if (sub.drilldown === "emlak-listing-kind") {
+      rowSel =
+        Boolean(satKirFlowBase === sub.slug) ||
+        Boolean(
+          detailCategoryKey.startsWith(`${selectedGroup.slug}.${sub.slug}-`)
+        );
+    }
+
+    const showChevronKonut =
+      sub.drilldown === "konut" &&
+      (konutFlow || konutLeafParsed) &&
+      !konutLeafParsed;
+    const showChevronSatKir =
+      sub.drilldown === "emlak-listing-kind" &&
+      (satKirFlowBase === sub.slug || rowSel) &&
+      !satKirLeafParsed;
+
+    const showChevronOtomobil =
+      sub.drilldown === "otomobil-marka" &&
+      rowSel &&
+      !tasitlarOtomobilLeafParsed;
+
+    return (
+      <li key={sub.slug} className="category-miller__item">
+        <button
+          type="button"
+          disabled={disabled}
+          role="option"
+          aria-selected={rowSel}
+          className={
+            rowSel
+              ? "category-miller__row category-miller__row--selected"
+              : "category-miller__row"
+          }
+          onClick={() => onPickLeafSub(selectedGroup, sub)}
+        >
+          <span className="category-miller__row-label">{sub.name}</span>
+          {showChevronKonut && (
+            <span className="category-miller__chevron" aria-hidden>
+              ›
+            </span>
+          )}
+          {showChevronSatKir && !satKirLeafParsed && (
+            <span className="category-miller__chevron" aria-hidden>
+              ›
+            </span>
+          )}
+          {showChevronOtomobil && (
+            <span className="category-miller__chevron" aria-hidden>
+              ›
+            </span>
+          )}
+          {konutLeafParsed && sub.drilldown === "konut" && (
+            <span className="category-miller__ok" aria-hidden>
+              ✓
+            </span>
+          )}
+          {satKirLeafParsed &&
+            sub.drilldown === "emlak-listing-kind" &&
+            satKirLeafParsed.baseSlug === sub.slug && (
+              <span className="category-miller__ok" aria-hidden>
+                ✓
+              </span>
+            )}
+          {tasitlarOtomobilLeafParsed && sub.drilldown === "otomobil-marka" && (
+            <span className="category-miller__ok" aria-hidden>
+              ✓
+            </span>
+          )}
+          {!sub.drilldown &&
+            detailCategoryKey === keyLeaf &&
+            keyLeaf !== "" && (
+              <span className="category-miller__ok" aria-hidden>
+                ✓
+              </span>
+            )}
+        </button>
+      </li>
+    );
+  }
+
   return (
     <div className="category-miller">
       <div className="category-miller__head">
@@ -306,106 +405,28 @@ export default function CategoryMillerPicker({
               role="listbox"
               aria-label={`${selectedGroup?.name ?? ""} alt kategorileri`}
             >
-              {(selectedGroup?.subs ?? []).map((sub) => {
-                const keyLeaf = compositeCategoryKey(selectedGroup!.slug, sub.slug);
-                let rowSel = Boolean(
-                  detailCategoryKey &&
-                    detailCategoryKey === keyLeaf &&
-                    !sub.drilldown
-                );
-
-                if (sub.drilldown === "otomobil-marka") {
-                  rowSel =
-                    detailCategoryKey === TASITLAR_OTOMOBIL_INTERMEDIATE_KEY ||
-                    Boolean(tasitlarOtomobilLeafParsed);
-                }
-
-                if (sub.drilldown === "konut") {
-                  rowSel =
-                    konutFlow ||
-                    Boolean(konutLeafParsed) ||
-                    detailCategoryKey === GAYRIMENKUL_KONUT_INTERMEDIATE_KEY;
-                } else if (sub.drilldown === "emlak-listing-kind") {
-                  rowSel =
-                    Boolean(satKirFlowBase === sub.slug) ||
-                    Boolean(
-                      detailCategoryKey.startsWith(`${selectedGroup!.slug}.${sub.slug}-`)
-                    );
-                }
-
-                const showChevronKonut =
-                  sub.drilldown === "konut" &&
-                  (konutFlow || konutLeafParsed) &&
-                  !konutLeafParsed;
-                const showChevronSatKir =
-                  sub.drilldown === "emlak-listing-kind" &&
-                  (satKirFlowBase === sub.slug || rowSel) &&
-                  !satKirLeafParsed;
-
-                const showChevronOtomobil =
-                  sub.drilldown === "otomobil-marka" &&
-                  rowSel &&
-                  !tasitlarOtomobilLeafParsed;
-
-                return (
-                  <li key={sub.slug} className="category-miller__item">
-                    <button
-                      type="button"
-                      disabled={disabled}
-                      role="option"
-                      aria-selected={rowSel}
-                      className={
-                        rowSel
-                          ? "category-miller__row category-miller__row--selected"
-                          : "category-miller__row"
-                      }
-                      onClick={() => onPickLeafSub(selectedGroup!, sub)}
-                    >
-                      <span className="category-miller__row-label">{sub.name}</span>
-                      {showChevronKonut && (
-                        <span className="category-miller__chevron" aria-hidden>
-                          ›
-                        </span>
-                      )}
-                      {showChevronSatKir && !satKirLeafParsed && (
-                        <span className="category-miller__chevron" aria-hidden>
-                          ›
-                        </span>
-                      )}
-                      {showChevronOtomobil && (
-                        <span className="category-miller__chevron" aria-hidden>
-                          ›
-                        </span>
-                      )}
-                      {konutLeafParsed && sub.drilldown === "konut" && (
-                        <span className="category-miller__ok" aria-hidden>
-                          ✓
-                        </span>
-                      )}
-                      {satKirLeafParsed &&
-                        sub.drilldown === "emlak-listing-kind" &&
-                        satKirLeafParsed.baseSlug === sub.slug && (
-                          <span className="category-miller__ok" aria-hidden>
-                            ✓
-                          </span>
-                        )}
-                      {tasitlarOtomobilLeafParsed &&
-                        sub.drilldown === "otomobil-marka" && (
-                          <span className="category-miller__ok" aria-hidden>
-                            ✓
-                          </span>
-                        )}
-                      {!sub.drilldown &&
-                        detailCategoryKey === keyLeaf &&
-                        keyLeaf !== "" && (
-                          <span className="category-miller__ok" aria-hidden>
-                            ✓
-                          </span>
-                        )}
-                    </button>
+              {groupSlug === "tasitlar" && selectedGroup ? (
+                <>
+                  {selectedGroup.subs
+                    .filter((s) => s.slug === "otomobil")
+                    .map((sub) => renderSecondColumnSubRow(sub))}
+                  <li
+                    className="category-miller__section-label"
+                    role="presentation"
+                  >
+                    <span className="category-miller__section-label-text">
+                      Diğer vasıta türleri
+                    </span>
                   </li>
-                );
-              })}
+                  {selectedGroup.subs
+                    .filter((s) => s.slug !== "otomobil")
+                    .map((sub) => renderSecondColumnSubRow(sub))}
+                </>
+              ) : (
+                (selectedGroup?.subs ?? []).map((sub) =>
+                  renderSecondColumnSubRow(sub)
+                )
+              )}
             </ul>
           )}
         </div>

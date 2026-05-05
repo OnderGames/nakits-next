@@ -3910,6 +3910,21 @@ span.listing-seller__name--plain {
   border-bottom: none;
 }
 
+.category-miller__section-label {
+  list-style: none;
+  padding: 0.5rem 0.75rem 0.25rem;
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted, #5c5c5c);
+  text-transform: uppercase;
+}
+
+.category-miller__section-label-text {
+  display: block;
+}
+
 .category-miller__row {
   width: 100%;
   display: flex;

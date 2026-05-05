@@ -336,6 +336,34 @@ export function leafRowsForCategoryGroup(group: CategoryGroupDef): ReadonlyArray
   return rows;
 }
 
+/** İlanlar filtresi select: Vasıta › önce Otomobil markaları, sonra diğer alt türler */
+export function tasitlarFilterOptgroups(): {
+  otomobil: ReadonlyArray<{ reactKey: string; compositeKey: string; label: string }>;
+  diger: ReadonlyArray<{ reactKey: string; compositeKey: string; label: string }>;
+} {
+  const group = CATEGORY_GROUPS.find((g) => g.slug === "tasitlar")!;
+  const otomobilSub = group.subs.find((s) => s.slug === "otomobil");
+  const otomobilName = otomobilSub?.name ?? "Otomobil";
+  const otomobil: Array<{ reactKey: string; compositeKey: string; label: string }> =
+    [];
+  for (const m of OTOMOBIL_MARKALARI) {
+    const subSlug = `otomobil-${m.slug}`;
+    otomobil.push({
+      reactKey: subSlug,
+      compositeKey: compositeCategoryKey("tasitlar", subSlug),
+      label: `${otomobilName} › ${m.name}`
+    });
+  }
+  const diger = group.subs
+    .filter((s) => s.slug !== "otomobil")
+    .map((sub) => ({
+      reactKey: sub.slug,
+      compositeKey: compositeCategoryKey("tasitlar", sub.slug),
+      label: sub.name
+    }));
+  return { otomobil, diger };
+}
+
 /** Grup slug'ında tire olabilir; ayırıcı olarak grup.slug + "." ile en uzun eşleşmeyi kullan. */
 export function parseCategoryKey(key: string): ParsedCategorySlug | null {
   const ordered = [...CATEGORY_GROUPS].sort(

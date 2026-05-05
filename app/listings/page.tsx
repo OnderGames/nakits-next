@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   Suspense,
   useCallback,
   useEffect,
@@ -16,7 +17,8 @@ import { buildListingCountsByCategoryKey } from "@/lib/category-counts";
 import {
   CATEGORY_GROUPS,
   categoryKeyMatchesListingSearch,
-  leafRowsForCategoryGroup
+  leafRowsForCategoryGroup,
+  tasitlarFilterOptgroups
 } from "@/lib/categories";
 import { listingPlaceMatchesFreeTextQuery } from "@/lib/listing-place-search";
 import { isListingCodeQuery } from "@/lib/listing-code";
@@ -286,15 +288,45 @@ function ListingsPageInner() {
               }}
             >
               <option value="">Tüm kategoriler</option>
-              {CATEGORY_GROUPS.map((group) => (
-                <optgroup key={group.slug} label={`${group.emoji} ${group.name}`}>
-                  {leafRowsForCategoryGroup(group).map((row) => (
-                    <option key={row.reactKey} value={row.compositeKey}>
-                      {row.label}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
+              {CATEGORY_GROUPS.map((group) =>
+                group.slug === "tasitlar" ? (
+                  <Fragment key={group.slug}>
+                    {(() => {
+                      const { otomobil, diger } = tasitlarFilterOptgroups();
+                      return (
+                        <>
+                          <optgroup
+                            label={`${group.emoji} ${group.name} · Otomobil`}
+                          >
+                            {otomobil.map((row) => (
+                              <option key={row.reactKey} value={row.compositeKey}>
+                                {row.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup
+                            label={`${group.emoji} ${group.name} · Diğer`}
+                          >
+                            {diger.map((row) => (
+                              <option key={row.reactKey} value={row.compositeKey}>
+                                {row.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        </>
+                      );
+                    })()}
+                  </Fragment>
+                ) : (
+                  <optgroup key={group.slug} label={`${group.emoji} ${group.name}`}>
+                    {leafRowsForCategoryGroup(group).map((row) => (
+                      <option key={row.reactKey} value={row.compositeKey}>
+                        {row.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                )
+              )}
             </select>
           </div>
           <div className="filter-field filter-field--action">
