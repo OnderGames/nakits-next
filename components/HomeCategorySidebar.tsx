@@ -60,13 +60,24 @@ function displayOtomobilModelLabel(name: string): string {
 
 type OtomobilSeriesGroup = {
   seriesLabel: string;
-  seriesSlug: string | null;
   models: Array<{ slug: string; label: string }>;
 };
 
 function groupOtomobilModelsBySeries(
   models: readonly { slug: string; name: string }[]
 ): OtomobilSeriesGroup[] {
+  const hasSeriesHierarchy = models.some((m) => m.name.includes("›"));
+  if (!hasSeriesHierarchy) {
+    return [
+      {
+        seriesLabel: "",
+        models: models.map((m) => ({
+          slug: m.slug,
+          label: displayOtomobilModelLabel(m.name)
+        }))
+      }
+    ];
+  }
   const groups = new Map<string, OtomobilSeriesGroup>();
   for (const mod of models) {
     const parts = mod.name.split("›").map((x) => x.trim()).filter(Boolean);
@@ -79,19 +90,13 @@ function groupOtomobilModelsBySeries(
       } else {
         groups.set(seriesLabel, {
           seriesLabel,
-          seriesSlug: null,
           models: [{ slug: mod.slug, label: modelLabel }]
         });
       }
       continue;
     }
     const seriesLabel = displayOtomobilModelLabel(mod.name);
-    const current = groups.get(seriesLabel);
-    if (current) {
-      current.seriesSlug = mod.slug;
-    } else {
-      groups.set(seriesLabel, { seriesLabel, seriesSlug: mod.slug, models: [] });
-    }
+    if (!groups.has(seriesLabel)) groups.set(seriesLabel, { seriesLabel, models: [] });
   }
   return [...groups.values()];
 }
@@ -457,33 +462,29 @@ export default function HomeCategorySidebar({
                         </summary>
                         <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
                           {groupOtomobilModelsBySeries(models).map((series) => {
-                            const seriesCompositeKey = series.seriesSlug
-                              ? compositeCategoryKey(
-                                  "tasitlar",
-                                  `otomobil-${m.slug}-${series.seriesSlug}`
-                                )
-                              : null;
                             const seriesCount = sumListingCountsWhere(
                               counts,
-                              (k) => {
-                                if (seriesCompositeKey && k === seriesCompositeKey) return true;
-                                if (!series.seriesSlug) return false;
-                                return k.startsWith(
-                                  `tasitlar.otomobil-${m.slug}-${series.seriesSlug}-`
-                                );
-                              }
+                              (k) =>
+                                series.models.some(
+                                  (mod) =>
+                                    k ===
+                                    compositeCategoryKey(
+                                      "tasitlar",
+                                      `otomobil-${m.slug}-${mod.slug}`
+                                    )
+                                )
                             );
                             return (
                               <li key={series.seriesLabel}>
                                 <details className="home-category-sidebar__nest-details">
                                   <summary className="home-category-sidebar__nest-summary">
-                                    {seriesCompositeKey ? (
+                                    {series.seriesLabel ? (
                                       <span className="home-category-sidebar__nest-summary-label">
                                         {series.seriesLabel}
                                       </span>
                                     ) : (
                                       <span className="home-category-sidebar__nest-summary-label">
-                                        {series.seriesLabel}
+                                        Modeller
                                       </span>
                                     )}
                                     <SummaryCount n={seriesCount} />

@@ -52,6 +52,18 @@ type OtomobilSeriesGroup = {
 function groupOtomobilModelsBySeries(
   models: readonly { slug: string; name: string }[]
 ): OtomobilSeriesGroup[] {
+  const hasSeriesHierarchy = models.some((m) => m.name.includes("›"));
+  if (!hasSeriesHierarchy) {
+    return [
+      {
+        seriesLabel: "",
+        models: models.map((m) => ({
+          slug: m.slug,
+          label: displayOtomobilModelLabel(m.name)
+        }))
+      }
+    ];
+  }
   const groups = new Map<string, OtomobilSeriesGroup>();
   for (const mod of models) {
     const parts = mod.name.split("›").map((x) => x.trim()).filter(Boolean);
@@ -633,16 +645,20 @@ export default function CategoryMillerPicker({
                 getOtomobilModelsForBrand(brandSlugAwaitingModel) ?? []
               ).flatMap((series) => {
                 const items: React.ReactNode[] = [
-                  <li
-                    key={`series-${series.seriesLabel}`}
-                    className="category-miller__item category-miller__item--section"
-                  >
-                    <div className="category-miller__section-label">
-                      <span className="category-miller__section-label-text">
-                        {series.seriesLabel}
-                      </span>
-                    </div>
-                  </li>
+                  ...(series.seriesLabel
+                    ? [
+                        <li
+                          key={`series-${series.seriesLabel}`}
+                          className="category-miller__item category-miller__item--section"
+                        >
+                          <div className="category-miller__section-label">
+                            <span className="category-miller__section-label-text">
+                              {series.seriesLabel}
+                            </span>
+                          </div>
+                        </li>
+                      ]
+                    : [])
                 ];
                 for (const mod of series.models) {
                   const leafKey = compositeCategoryKey(
