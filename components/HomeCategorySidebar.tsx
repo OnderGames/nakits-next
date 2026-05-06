@@ -33,6 +33,11 @@ type Props = {
   preserveParams?: Partial<
     Record<"q" | "city" | "district", string>
   > | null;
+  /**
+   * Mobilde ana sayfa çekmecesi: üstte zaten başlık var — tekrar etme,
+   * erişilebilirlik için `aria-label` kullan.
+   */
+  embedded?: boolean;
 };
 
 function buildCategoryHref(
@@ -112,7 +117,8 @@ function gayrimenkulSubFromKey(key: string | null | undefined): string | null {
 export default function HomeCategorySidebar({
   counts,
   selectedCategoryKey = null,
-  preserveParams = null
+  preserveParams = null,
+  embedded = false
 }: Props) {
   const groupSlugFromSelection = useMemo(() => {
     if (!selectedCategoryKey?.trim()) return null;
@@ -537,11 +543,15 @@ export default function HomeCategorySidebar({
   return (
     <aside
       className="home-category-sidebar"
-      aria-labelledby="home-cat-sidebar-title"
+      {...(embedded
+        ? { "aria-label": "Kategori ağacı" }
+        : { "aria-labelledby": "home-cat-sidebar-title" })}
     >
-      <h2 id="home-cat-sidebar-title" className="home-category-sidebar__title">
-        Kategoriler
-      </h2>
+      {!embedded ? (
+        <h2 id="home-cat-sidebar-title" className="home-category-sidebar__title">
+          Kategoriler
+        </h2>
+      ) : null}
       <ul className="home-category-sidebar__list">
         {CATEGORY_GROUPS.map((group) => (
           <li key={group.slug}>

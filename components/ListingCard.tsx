@@ -113,8 +113,9 @@ export default function ListingCard({
               <Image
                 src={listing.image}
                 alt=""
-                width={280}
-                height={280}
+                fill
+                sizes="(max-width: 639px) 100vw, (max-width: 899px) 45vw, 220px"
+                className="card--vitrin__media-img"
                 aria-hidden
               />
               {(listing.imageUrls?.length ?? 0) > 1 && (

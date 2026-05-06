@@ -17,6 +17,7 @@ import {
 } from "react";
 import HeaderAccountMenu from "@/components/HeaderAccountMenu";
 import HeaderNotificationsBell from "@/components/HeaderNotificationsBell";
+import { openHomeCategoryDrawer } from "@/lib/open-home-category-drawer";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 function HeaderSearchBar() {
@@ -91,7 +92,37 @@ function HeaderSearchFallback() {
   );
 }
 
+function NavHomeCategoryButton() {
+  return (
+    <button
+      type="button"
+      className="nav-home-category-trigger"
+      onClick={() => openHomeCategoryDrawer()}
+      aria-haspopup="dialog"
+      aria-label="Kategorilere göz at"
+    >
+      <svg
+        className="nav-home-category-trigger__icon"
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden
+      >
+        <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+        <path
+          d="M16 16l5 5"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+    </button>
+  );
+}
+
 export default function Header() {
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   /** null: henüz ölçülmedi (SSR / ilk boyama ile uyum için menüde küme) */
@@ -138,6 +169,9 @@ export default function Header() {
   /** Mobil: giriş yokken çekmece yerine üst bardaki Giriş / Üye Ol */
   const guestMobileInline = ready && !user;
 
+  const homeMobileBrowse =
+    pathname === "/" && isMobileNav === true;
+
   return (
     <header className="topbar">
       <div
@@ -156,6 +190,8 @@ export default function Header() {
               priority
             />
           </Link>
+
+          {homeMobileBrowse ? <NavHomeCategoryButton /> : null}
 
           {guestMobileInline ? (
             <div className="nav-mobile-bar nav-mobile-bar--guest">
@@ -202,9 +238,11 @@ export default function Header() {
           )}
         </div>
 
-        <Suspense fallback={<HeaderSearchFallback />}>
-          <HeaderSearchBar />
-        </Suspense>
+        {!homeMobileBrowse ? (
+          <Suspense fallback={<HeaderSearchFallback />}>
+            <HeaderSearchBar />
+          </Suspense>
+        ) : null}
 
         <nav id="site-menu" className="menu" aria-label="Site menüsü">
           {!ready ? (
