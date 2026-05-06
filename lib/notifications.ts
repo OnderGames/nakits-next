@@ -83,3 +83,18 @@ export async function markAllMyNotificationsRead(
   if (error) return { error: error.message };
   return {};
 }
+
+export async function deleteMyNotification(
+  sb: SupabaseClient,
+  profileId: string,
+  notificationId: string
+): Promise<{ error?: string }> {
+  const { error } = await sb
+    .from("notifications")
+    .delete()
+    .eq("id", notificationId)
+    .eq("profile_id", profileId);
+
+  if (error) return { error: error.message };
+  return {};
+}

@@ -38,6 +38,18 @@ export async function PATCH(
     return Response.json({ error: "Geçersiz istek gövdesi." }, { status: 400 });
   }
 
+  const { data: currentListing, error: currentErr } = await adminSb
+    .from("listings")
+    .select("id, seller_id, status, title, listing_code")
+    .eq("id", id)
+    .maybeSingle();
+  if (currentErr) {
+    return Response.json({ error: currentErr.message }, { status: 500 });
+  }
+  if (!currentListing) {
+    return Response.json({ error: "İlan bulunamadı." }, { status: 404 });
+  }
+
   const patch: Record<string, unknown> = {};
 
   if (body.promo_premium !== undefined) {
@@ -84,6 +96,31 @@ export async function PATCH(
   }
   if (!data) {
     return Response.json({ error: "İlan bulunamadı." }, { status: 404 });
+  }
+
+  const nextStatus = typeof patch.status === "string" ? patch.status : null;
+  const shouldNotifyPublished =
+    nextStatus === "active" && currentListing.status !== "active";
+
+  if (shouldNotifyPublished) {
+    const title = String(currentListing.title ?? "").trim();
+    const listingCode = String(currentListing.listing_code ?? "").trim();
+    const label =
+      title.length > 0 && listingCode.length > 0
+        ? `${title} No: ${listingCode}`
+        : title.length > 0
+          ? title
+          : listingCode.length > 0
+            ? `No: ${listingCode}`
+            : "İlanınız";
+    const notificationBody = `${label}: İlanınız yayınlandı`;
+    await adminSb.from("notifications").insert({
+      profile_id: currentListing.seller_id,
+      type: "listing_published",
+      listing_id: currentListing.id,
+      actor_profile_id: v.userId,
+      body: notificationBody
+    });
   }
 
   return Response.json({ ok: true, id: data.id });

@@ -19,6 +19,7 @@ import {
 import { formatRelativeTimeTr } from "@/lib/listings-data";
 import {
   countMyUnreadNotifications,
+  deleteMyNotification,
   fetchMyNotifications,
   markAllMyNotificationsRead,
   markNotificationRead,
@@ -44,6 +45,7 @@ export default function HeaderNotificationsBell({
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [markAllBusy, setMarkAllBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!hasSupabaseConfig || !userId) return;
@@ -214,6 +216,37 @@ export default function HeaderNotificationsBell({
     }
   }
 
+  async function handleDeleteItem(
+    e: React.MouseEvent<HTMLButtonElement>,
+    n: AppNotificationRow
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (deletingId) return;
+
+    if (isSyntheticBroadcastNotificationId(n.id)) {
+      const ts = parseBroadcastNotificationTimestamp(n.id);
+      if (ts) {
+        setBroadcastNotificationSeenAt(ts);
+        notifyNotificationsRefresh();
+        await load();
+      }
+      return;
+    }
+
+    if (!hasSupabaseConfig) return;
+    const sb = getSupabaseBrowser();
+    if (!sb) return;
+    setDeletingId(n.id);
+    try {
+      await deleteMyNotification(sb, userId, n.id);
+      notifyNotificationsRefresh();
+      await load();
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   if (!hasSupabaseConfig) return null;
 
   return (
@@ -302,6 +335,16 @@ export default function HeaderNotificationsBell({
                       <span className="nav-notif__item-time">
                         {formatRelativeTimeTr(n.createdAt)}
                       </span>
+                      <button
+                        type="button"
+                        className="nav-notif__item-close"
+                        aria-label="Bildirimi sil"
+                        title="Sil"
+                        disabled={deletingId === n.id}
+                        onClick={(e) => void handleDeleteItem(e, n)}
+                      >
+                        ×
+                      </button>
                     </>
                   );
 
