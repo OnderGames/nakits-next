@@ -148,7 +148,7 @@ export default function Header() {
         >
           <Link className="brand-mark" href="/" aria-label="Nakits.com — ana sayfa">
             <Image
-              src="/site-logo.svg"
+              src="/site-logo.png"
               alt="Nakits.com"
               width={220}
               height={88}
