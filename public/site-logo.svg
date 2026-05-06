@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" role="img" aria-label="Nakits.com">
+  <defs>
+    <linearGradient id="nakitsOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFB300" />
+      <stop offset="100%" stop-color="#FF5A00" />
+    </linearGradient>
+    <linearGradient id="nakitsNavy" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#173C73" />
+      <stop offset="100%" stop-color="#0B1F4A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Mark -->
+  <g transform="translate(20,20)">
+    <rect x="0" y="0" width="110" height="180" rx="26" fill="url(#nakitsOrange)" />
+    <rect x="150" y="0" width="110" height="180" rx="26" fill="url(#nakitsNavy)" />
+    <polygon points="72,55 102,30 188,126 158,151" fill="#FFFFFF" />
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(320,38)">
+    <text
+      x="0"
+      y="112"
+      font-family="Inter, Segoe UI, Arial, sans-serif"
+      font-size="108"
+      font-weight="800"
+      fill="#FF5A00"
+      letter-spacing="-2"
+    >
+      Nakits
+    </text>
+    <text
+      x="380"
+      y="112"
+      font-family="Inter, Segoe UI, Arial, sans-serif"
+      font-size="92"
+      font-weight="700"
+      fill="#0B1F4A"
+      letter-spacing="-1"
+    >
+      .com
+    </text>
+  </g>
+</svg>
