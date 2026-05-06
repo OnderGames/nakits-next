@@ -17,6 +17,7 @@ import {
   listingCanRepublishFromSold
 } from "@/lib/listing-policy";
 import { formatSellerNameForDisplay } from "@/lib/seller-display";
+import ListingPromoBadges from "@/components/ListingPromoBadges";
 import type { Listing } from "@/lib/types";
 
 const STATUS_LABEL: Record<NonNullable<Listing["status"]>, string> = {
@@ -108,6 +109,7 @@ export default function ListingCard({
         <div className="card--vitrin__shell">
           <div className="card--vitrin__surface">
             <div className="card--vitrin__media">
+              <ListingPromoBadges listing={listing} variant="vitrin" />
               <Image
                 src={listing.image}
                 alt=""
@@ -190,6 +192,7 @@ export default function ListingCard({
           )}
         </div>
         <div className="card-body">
+          <ListingPromoBadges listing={listing} variant="browse" />
           <h3>{listing.title}</h3>
           <p className="price">{formatPrice(listing.price)}</p>
           <p className="meta">

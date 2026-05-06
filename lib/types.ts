@@ -31,4 +31,10 @@ export type Listing = {
   modelYear?: number;
   /** Vasıta ilanı: kilometre (DB `vehicle_km`) */
   vehicleKm?: number;
+  /** Yönetim paneli: Premium rozeti ve sıralama önceliği */
+  promoPremium?: boolean;
+  /** Ana vitrin / liste önceliği */
+  promoShowcase?: boolean;
+  /** Öne çıkarma rozeti */
+  promoHighlight?: boolean;
 };

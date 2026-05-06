@@ -42,6 +42,9 @@ type ListingRow = {
   favorite_count?: number | string | null;
   model_year?: number | string | null;
   vehicle_km?: number | string | null;
+  promo_premium?: boolean;
+  promo_showcase?: boolean;
+  promo_highlight?: boolean;
   categories: CategoryEmbed;
   profiles: ProfileEmbed;
   listing_images: ImageRow[] | null;
@@ -91,10 +94,30 @@ function normalizeListingRow(raw: unknown): ListingRow {
         : undefined,
     model_year: r.model_year as number | string | null | undefined,
     vehicle_km: r.vehicle_km as number | string | null | undefined,
+    promo_premium: r.promo_premium === true,
+    promo_showcase: r.promo_showcase === true,
+    promo_highlight: r.promo_highlight === true,
     categories,
     profiles,
     listing_images
   };
+}
+
+/** Vitrin > Premium > Öne çıkarma; eşitlikte yeniden önce */
+function sortRowsByPromoThenDate(rows: unknown[]): unknown[] {
+  return [...rows].sort((a, b) => {
+    const ra = a as Record<string, unknown>;
+    const rb = b as Record<string, unknown>;
+    const score = (x: Record<string, unknown>) =>
+      (x.promo_showcase === true ? 100 : 0) +
+      (x.promo_premium === true ? 10 : 0) +
+      (x.promo_highlight === true ? 1 : 0);
+    const diff = score(rb) - score(ra);
+    if (diff !== 0) return diff;
+    const ta = new Date(String(ra.created_at)).getTime();
+    const tb = new Date(String(rb.created_at)).getTime();
+    return tb - ta;
+  });
 }
 
 function optionalYearKmInt(v: unknown): number | undefined {
@@ -144,7 +167,10 @@ function mapRowToListing(row: ListingRow): Listing {
     expiresAt: row.expires_at ?? undefined,
     favoriteCount,
     modelYear: optionalYearKmInt(row.model_year),
-    vehicleKm: optionalYearKmInt(row.vehicle_km)
+    vehicleKm: optionalYearKmInt(row.vehicle_km),
+    promoPremium: row.promo_premium === true,
+    promoShowcase: row.promo_showcase === true,
+    promoHighlight: row.promo_highlight === true
   };
 }
 
@@ -162,6 +188,9 @@ const listSelectNoDistrictNoFav = `
   description,
   model_year,
   vehicle_km,
+  promo_premium,
+  promo_showcase,
+  promo_highlight,
   categories ( slug ),
   profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
@@ -181,6 +210,9 @@ const listSelectNoFavCount = `
   description,
   model_year,
   vehicle_km,
+  promo_premium,
+  promo_showcase,
+  promo_highlight,
   categories ( slug ),
   profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
@@ -200,6 +232,9 @@ const listSelectNoDistrict = `
   favorite_count,
   model_year,
   vehicle_km,
+  promo_premium,
+  promo_showcase,
+  promo_highlight,
   categories ( slug ),
   profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
@@ -220,6 +255,9 @@ const listSelect = `
   favorite_count,
   model_year,
   vehicle_km,
+  promo_premium,
+  promo_showcase,
+  promo_highlight,
   categories ( slug ),
   profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
@@ -318,7 +356,8 @@ export async function fetchPublicListings(
   );
 
   if (error || !data) return [];
-  return data.map((raw) => {
+  const sorted = sortRowsByPromoThenDate(data);
+  return sorted.map((raw) => {
     const item = mapRowToListing(normalizeListingRow(raw));
     const { status, ...rest } = item;
     void status;
@@ -454,7 +493,8 @@ export async function fetchPublicActiveListingsForSeller(
   );
 
   if (error || !data) return [];
-  return data.map((raw) => {
+  const sorted = sortRowsByPromoThenDate(data);
+  return sorted.map((raw) => {
     const item = mapRowToListing(normalizeListingRow(raw));
     const { status, ...rest } = item;
     void status;

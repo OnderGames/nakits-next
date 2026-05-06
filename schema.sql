@@ -68,6 +68,9 @@ create table if not exists listings (
   constraint listings_vehicle_km_check check (
     vehicle_km is null or (vehicle_km >= 0 and vehicle_km <= 9999999)
   ),
+  promo_premium boolean not null default false,
+  promo_showcase boolean not null default false,
+  promo_highlight boolean not null default false,
   unique (listing_code)
 );
 

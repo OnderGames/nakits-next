@@ -27,6 +27,9 @@ const select = `
   created_at,
   expires_at,
   status,
+  promo_premium,
+  promo_showcase,
+  promo_highlight,
   categories ( slug ),
   profiles!seller_id ( full_name, email ),
   listing_images ( image_url, sort_order )
@@ -100,7 +103,10 @@ export async function GET(request: Request) {
       imageUrl: imageUrls[0] ?? null,
       imageUrls,
       sellerName: profiles?.full_name?.trim() || "Satıcı",
-      sellerEmail: profiles?.email ?? ""
+      sellerEmail: profiles?.email ?? "",
+      promoPremium: row.promo_premium === true,
+      promoShowcase: row.promo_showcase === true,
+      promoHighlight: row.promo_highlight === true
     };
   });
 

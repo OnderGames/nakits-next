@@ -46,6 +46,22 @@ function formatWhen(iso: string): string {
   });
 }
 
+function userInitials(fullName: string, email: string): string {
+  const t = fullName.trim();
+  if (t) {
+    const parts = t.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      const a = parts[0]?.[0];
+      const b = parts[1]?.[0];
+      if (a && b) return `${a}${b}`.toUpperCase();
+    }
+    return t.slice(0, 2).toUpperCase() || "?";
+  }
+  const em = email.trim();
+  if (em.length >= 2) return em.slice(0, 2).toUpperCase();
+  return "?";
+}
+
 function rowToDraft(r: ModerationUserRow): UserDraftFields {
   return {
     app_role: r.app_role,
@@ -225,74 +241,118 @@ export default function AdminUserManagementSection({
         </p>
       ) : null}
 
-      <div className="admin-users-scroll">
-        <table className="admin-users-table">
-          <thead>
-            <tr>
-              <th>Üye</th>
-              <th>Rol</th>
-              <th>Durum</th>
-              <th>Auth doğrula</th>
-              <th>Yönetici doğrula</th>
-              <th>İşlem</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayRows.length === 0 ? (
-              <tr>
-                <td colSpan={6} style={{ padding: 20 }}>
-                  <span className="meta">
-                    Kayıt yok veya arama eşleşmedi (en fazla 500 üye yüklendi). İlk kurulumda
-                    veritabanında sql/migration_profile_staff.sql çalışmış olmalı.
-                  </span>
-                </td>
-              </tr>
-            ) : (
-              displayRows.map((r) => {
-                const d = drafts[r.id];
-                if (!d) return null;
-                const dirty =
-                  d.app_role !== r.app_role ||
-                  d.is_blocked !== r.is_blocked ||
-                  d.moderation_flagged !== r.moderation_flagged ||
-                  d.admin_verified_email !== r.admin_verified_email ||
-                  d.admin_verified_phone !== r.admin_verified_phone;
-                return (
-                  <tr key={r.id}>
-                    <td data-label="Üye">
-                      <div className="admin-users-who">
-                        <strong>{r.full_name || "(İsimsiz)"}</strong>
-                        <span className="meta">{r.email}</span>
-                        <span className="meta">{r.phone ? `📱 ${r.phone}` : "— tel —"}</span>
-                        <span className="meta">
-                          Üye no:{" "}
-                          <Link href={`/kullanici/${r.public_code}`}>{r.public_code}</Link>
-                        </span>
-                        <span className="meta">{formatWhen(r.created_at)}</span>
-                      </div>
-                    </td>
-                    <td data-label="Rol">
-                      <select
-                        className="admin-users-role-select"
-                        value={d.app_role}
-                        disabled={!adminPower || busyId !== null}
-                        onChange={(e) =>
-                          setDraftField(r.id, {
-                            app_role: e.target.value as ModerationUserRow["app_role"]
-                          })
-                        }
+      {displayRows.length === 0 ? (
+        <div className="admin-users-empty">
+          <p className="meta" style={{ margin: 0 }}>
+            Kayıt yok veya arama eşleşmedi (en fazla 500 üye yüklendi). İlk kurulumda
+            veritabanında <code className="admin-users-empty__code">sql/migration_profile_staff.sql</code>{" "}
+            çalışmış olmalı.
+          </p>
+        </div>
+      ) : (
+        <ul className="admin-users-cards" aria-label="Üye listesi">
+          {displayRows.map((r) => {
+            const d = drafts[r.id];
+            if (!d) return null;
+            const dirty =
+              d.app_role !== r.app_role ||
+              d.is_blocked !== r.is_blocked ||
+              d.moderation_flagged !== r.moderation_flagged ||
+              d.admin_verified_email !== r.admin_verified_email ||
+              d.admin_verified_phone !== r.admin_verified_phone;
+            return (
+              <li key={r.id} className="admin-users-card">
+                <div className="admin-users-card__top">
+                  <div className="admin-users-card__identity">
+                    <span className="admin-users-card__avatar" aria-hidden>
+                      {userInitials(r.full_name, r.email)}
+                    </span>
+                    <div className="admin-users-card__titles">
+                      <strong className="admin-users-card__name">
+                        {r.full_name || "(İsimsiz)"}
+                      </strong>
+                      <span className="admin-users-card__email">{r.email}</span>
+                    </div>
+                  </div>
+                  <div className="admin-users-card__top-actions">
+                    <select
+                      className="admin-users-role-select"
+                      value={d.app_role}
+                      disabled={!adminPower || busyId !== null}
+                      aria-label={`Rol — ${r.email}`}
+                      onChange={(e) =>
+                        setDraftField(r.id, {
+                          app_role: e.target.value as ModerationUserRow["app_role"]
+                        })
+                      }
+                    >
+                      {(Object.keys(ROLE_LABEL) as ModerationUserRow["app_role"][]).map(
+                        (role) => (
+                          <option key={role} value={role}>
+                            {ROLE_LABEL[role]}
+                          </option>
+                        )
+                      )}
+                    </select>
+                    <div className="admin-users-card__save-del">
+                      <button
+                        type="button"
+                        className="btn btn-primary admin-users-card__save"
+                        disabled={!dirty || busyId !== null}
+                        onClick={() => void patchUser(r.id, d)}
                       >
-                        {(Object.keys(ROLE_LABEL) as ModerationUserRow["app_role"][]).map(
-                          (role) => (
-                            <option key={role} value={role}>
-                              {ROLE_LABEL[role]}
-                            </option>
-                          )
-                        )}
-                      </select>
-                    </td>
-                    <td data-label="Durum">
-                      <label className="admin-users-check">
+                        {busyId === r.id ? "…" : "Kaydet"}
+                      </button>
+                      {adminPower ? (
+                        <button
+                          type="button"
+                          className="btn btn-outline admin-users-card__delete"
+                          disabled={busyId !== null || r.app_role !== "member"}
+                          title={
+                            r.app_role !== "member"
+                              ? "Önce rolü üyeye düşürün."
+                              : "Üyeliği tamamen sil"
+                          }
+                          onClick={() => void deleteUser(r)}
+                        >
+                          Sil
+                        </button>
+                      ) : (
+                        <span className="meta admin-users-card__del-hint">Sil: tam admin</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="admin-users-card__chips" aria-label="İletişim ve kayıt">
+                  <span className="admin-users-chip">
+                    {r.phone ? (
+                      <>
+                        <span className="admin-users-chip__k">Tel</span>
+                        {r.phone}
+                      </>
+                    ) : (
+                      <>
+                        <span className="admin-users-chip__k">Tel</span>
+                        —
+                      </>
+                    )}
+                  </span>
+                  <span className="admin-users-chip">
+                    <span className="admin-users-chip__k">Üye no</span>
+                    <Link href={`/kullanici/${r.public_code}`}>{r.public_code}</Link>
+                  </span>
+                  <span className="admin-users-chip">
+                    <span className="admin-users-chip__k">Kayıt</span>
+                    {formatWhen(r.created_at)}
+                  </span>
+                </div>
+
+                <div className="admin-users-card__panels">
+                  <div className="admin-users-card__panel">
+                    <span className="admin-users-card__panel-title">Durum</span>
+                    <div className="admin-users-card__toggles">
+                      <label className="admin-users-toggle">
                         <input
                           type="checkbox"
                           checked={d.is_blocked}
@@ -303,7 +363,7 @@ export default function AdminUserManagementSection({
                         />
                         Engelli
                       </label>
-                      <label className="admin-users-check">
+                      <label className="admin-users-toggle">
                         <input
                           type="checkbox"
                           checked={d.moderation_flagged}
@@ -316,17 +376,37 @@ export default function AdminUserManagementSection({
                         />
                         Şüpheli
                       </label>
-                    </td>
-                    <td data-label="Auth doğrula">
-                      <span className="admin-users-verify-pill admin-users-verify-pill--muted">
-                        {r.auth_email_verified ? "E-posta ✓" : "E-posta —"}
+                    </div>
+                  </div>
+                  <div className="admin-users-card__panel">
+                    <span className="admin-users-card__panel-title">Auth (salt okunur)</span>
+                    <div className="admin-users-card__pills">
+                      <span
+                        className={
+                          r.auth_email_verified
+                            ? "admin-users-pill admin-users-pill--ok"
+                            : "admin-users-pill admin-users-pill--off"
+                        }
+                      >
+                        E‑posta {r.auth_email_verified ? "✓" : "—"}
                       </span>
-                      <span className="admin-users-verify-pill admin-users-verify-pill--muted">
-                        {r.auth_phone_verified ? "SMS ✓" : "SMS —"}
+                      <span
+                        className={
+                          r.auth_phone_verified
+                            ? "admin-users-pill admin-users-pill--ok"
+                            : "admin-users-pill admin-users-pill--off"
+                        }
+                      >
+                        SMS {r.auth_phone_verified ? "✓" : "—"}
                       </span>
-                    </td>
-                    <td data-label="Yönetici doğrula">
-                      <label className="admin-users-check">
+                    </div>
+                  </div>
+                  <div className="admin-users-card__panel">
+                    <span className="admin-users-card__panel-title">
+                      Yönetici doğrulaması
+                    </span>
+                    <div className="admin-users-card__admin-verify">
+                      <label className="admin-users-toggle">
                         <input
                           type="checkbox"
                           checked={d.admin_verified_email}
@@ -337,9 +417,9 @@ export default function AdminUserManagementSection({
                             })
                           }
                         />
-                        E‑posta doğrula
+                        E‑posta
                       </label>
-                      <label className="admin-users-check">
+                      <label className="admin-users-toggle">
                         <input
                           type="checkbox"
                           checked={d.admin_verified_phone}
@@ -350,46 +430,16 @@ export default function AdminUserManagementSection({
                             })
                           }
                         />
-                        Telefon doğrula
+                        Telefon
                       </label>
-                    </td>
-                    <td data-label="İşlem">
-                      <div className="admin-users-actions">
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          disabled={!dirty || busyId !== null}
-                          onClick={() => void patchUser(r.id, d)}
-                        >
-                          {busyId === r.id ? "…" : "Kaydet"}
-                        </button>
-                        {adminPower ? (
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            style={{ borderColor: "#991b1b", color: "#991b1b" }}
-                            disabled={busyId !== null || r.app_role !== "member"}
-                            title={
-                              r.app_role !== "member"
-                                ? "Önce rolü üyeye düşürün."
-                                : "Üyeliği tamamen sil"
-                            }
-                            onClick={() => void deleteUser(r)}
-                          >
-                            Sil
-                          </button>
-                        ) : (
-                          <span className="meta">Sil: tam admin</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </section>
   );
 }

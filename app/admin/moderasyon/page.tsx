@@ -69,6 +69,9 @@ type AdminListingRow = {
   imageUrls?: string[];
   sellerName: string;
   sellerEmail: string;
+  promoPremium?: boolean;
+  promoShowcase?: boolean;
+  promoHighlight?: boolean;
 };
 
 const LISTING_IMAGE_FALLBACK =
@@ -355,6 +358,52 @@ export default function AdminModerationPage() {
     setRows((prev) => prev.filter((r) => r.id !== id));
   }
 
+  async function patchListingPromo(
+    id: string,
+    patch: {
+      promo_premium?: boolean;
+      promo_showcase?: boolean;
+      promo_highlight?: boolean;
+    }
+  ) {
+    setBusyId(id);
+    setLoadError("");
+    const h = await authHeaders();
+    if (!h) {
+      setBusyId(null);
+      return;
+    }
+    const res = await fetch(`/api/admin/listings/${id}`, {
+      method: "PATCH",
+      headers: { ...h, "Content-Type": "application/json" },
+      body: JSON.stringify(patch)
+    });
+    const json = (await res.json()) as { error?: string };
+    setBusyId(null);
+    if (!res.ok) {
+      setLoadError(json.error ?? "Güncellenemedi.");
+      void loadListings(filter);
+      return;
+    }
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== id) return r;
+        return {
+          ...r,
+          ...(patch.promo_premium !== undefined && {
+            promoPremium: patch.promo_premium
+          }),
+          ...(patch.promo_showcase !== undefined && {
+            promoShowcase: patch.promo_showcase
+          }),
+          ...(patch.promo_highlight !== undefined && {
+            promoHighlight: patch.promo_highlight
+          })
+        };
+      })
+    );
+  }
+
   if (!ready || !checkedStaff) {
     return (
       <div className="account-page">
@@ -499,10 +548,13 @@ export default function AdminModerationPage() {
           {panelSection === "listings" ? (
         <>
           <p className="meta" style={{ marginBottom: 16 }}>
-            Durum, sıralama ve arama ile daraltın. &quot;Yasaklı ürün uyarısı&quot; filtresi
-            başlık + açıklamada yasaklı ürün/hizmete işaret eden kalıpları otomatik arar
-            (hukuki karar değildir, önceliklendirme içindir). Açıklama metinleri satırda
-            gösterilmez.
+            Durum, sıralama ve arama ile daraltın. Her ilanda{" "}
+            <strong>Vitrin</strong>, <strong>Premium</strong> ve <strong>Öne çıkan</strong>{" "}
+            kutuları ana sayfa / ilan listesi önceliği ve sitede rozet için kullanılır
+            (öncelik: vitrin &gt; premium &gt; öne çıkan, sonra yeniden önce). &quot;Yasaklı
+            ürün uyarısı&quot; filtresi başlık + açıklamada yasaklı ürün/hizmete işaret eden
+            kalıpları otomatik arar (hukuki karar değildir, önceliklendirme içindir). Açıklama
+            metinleri satırda gösterilmez.
           </p>
 
           {loadError && (
@@ -679,6 +731,50 @@ export default function AdminModerationPage() {
                       <span>{row.sellerName}</span>
                     )}
                   </p>
+                  <div
+                    className="admin-mod-promo-row"
+                    aria-label="Promosyon — vitrin, premium, öne çıkarma"
+                  >
+                    <label className="admin-mod-promo-row__item">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(row.promoShowcase)}
+                        disabled={busyId !== null}
+                        onChange={(e) =>
+                          void patchListingPromo(row.id, {
+                            promo_showcase: e.target.checked
+                          })
+                        }
+                      />
+                      Vitrin
+                    </label>
+                    <label className="admin-mod-promo-row__item">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(row.promoPremium)}
+                        disabled={busyId !== null}
+                        onChange={(e) =>
+                          void patchListingPromo(row.id, {
+                            promo_premium: e.target.checked
+                          })
+                        }
+                      />
+                      Premium
+                    </label>
+                    <label className="admin-mod-promo-row__item">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(row.promoHighlight)}
+                        disabled={busyId !== null}
+                        onChange={(e) =>
+                          void patchListingPromo(row.id, {
+                            promo_highlight: e.target.checked
+                          })
+                        }
+                      />
+                      Öne çıkan
+                    </label>
+                  </div>
                 </div>
                 <div className="admin-moderation-compact__actions">
                   {row.status === "active" && (

@@ -5,6 +5,7 @@ import ListingDetailFavoriteBar from "@/components/ListingDetailFavoriteBar";
 import ListingOwnerFavoriteStat from "@/components/ListingOwnerFavoriteStat";
 import ListingDetailSpecTable from "@/components/ListingDetailSpecTable";
 import ListingGalleryCarousel from "@/components/ListingGalleryCarousel";
+import ListingPromoBadges from "@/components/ListingPromoBadges";
 import ListingMessagePanel from "@/components/ListingMessagePanel";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
 import { formatSellerNameForDisplay } from "@/lib/seller-display";
@@ -44,6 +45,7 @@ export default async function ListingDetailPage({ params }: Props) {
       <section className="grid-2">
         <div className="panel">
           <ListingGalleryCarousel images={gallery} title={listing.title} />
+          <ListingPromoBadges listing={listing} variant="browse" />
           <div className="listing-detail-title-row">
             <h2>{listing.title}</h2>
             <ListingDetailFavoriteBar

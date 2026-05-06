@@ -11,6 +11,9 @@ export const dynamic = "force-dynamic";
 
 type Body = {
   status?: string;
+  promo_premium?: boolean;
+  promo_showcase?: boolean;
+  promo_highlight?: boolean;
 };
 
 export async function PATCH(
@@ -35,18 +38,38 @@ export async function PATCH(
     return Response.json({ error: "Geçersiz istek gövdesi." }, { status: 400 });
   }
 
-  const status = body.status;
-  if (status !== "active" && status !== "rejected") {
-    return Response.json(
-      { error: "status yalnızca active veya rejected olabilir." },
-      { status: 400 }
-    );
+  const patch: Record<string, unknown> = {};
+
+  if (body.promo_premium !== undefined) {
+    patch.promo_premium = Boolean(body.promo_premium);
+  }
+  if (body.promo_showcase !== undefined) {
+    patch.promo_showcase = Boolean(body.promo_showcase);
+  }
+  if (body.promo_highlight !== undefined) {
+    patch.promo_highlight = Boolean(body.promo_highlight);
   }
 
-  const patch: Record<string, unknown> = { status };
-  if (status === "active") {
-    const days = await fetchListingDurationDaysForService(adminSb);
-    patch.expires_at = listingExpiresAtIsoFromDays(days);
+  if (body.status !== undefined) {
+    const status = body.status;
+    if (status !== "active" && status !== "rejected") {
+      return Response.json(
+        { error: "status yalnızca active veya rejected olabilir." },
+        { status: 400 }
+      );
+    }
+    patch.status = status;
+    if (status === "active") {
+      const days = await fetchListingDurationDaysForService(adminSb);
+      patch.expires_at = listingExpiresAtIsoFromDays(days);
+    }
+  }
+
+  if (Object.keys(patch).length === 0) {
+    return Response.json(
+      { error: "Güncellenecek alan yok (status veya promosyon bayrakları)." },
+      { status: 400 }
+    );
   }
 
   const { data, error } = await adminSb
