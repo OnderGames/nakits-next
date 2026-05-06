@@ -222,6 +222,11 @@ on notifications for update
 using (auth.uid() = profile_id)
 with check (auth.uid() = profile_id);
 
+drop policy if exists "notifications delete own" on notifications;
+create policy "notifications delete own"
+on notifications for delete
+using (auth.uid() = profile_id);
+
 -- İlan şikayetleri (ekleme kendi adına; okuma kendi şikayetleri)
 drop policy if exists "listing_reports insert own" on listing_reports;
 create policy "listing_reports insert own"

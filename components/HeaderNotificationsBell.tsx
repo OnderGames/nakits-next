@@ -11,8 +11,10 @@ import {
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import {
   BROADCAST_NOTIFICATION_ID_PREFIX,
+  isBroadcastNotificationDismissed,
   isSyntheticBroadcastNotificationId,
   parseBroadcastNotificationTimestamp,
+  setBroadcastNotificationDismissedAt,
   setBroadcastNotificationSeenAt,
   isBroadcastNotificationUnread
 } from "@/lib/broadcast-notification";
@@ -63,7 +65,7 @@ export default function HeaderNotificationsBell({
       let merged = rows;
       let totalUnread = unread;
 
-      if (bTrim && bc.updatedAt) {
+      if (bTrim && bc.updatedAt && !isBroadcastNotificationDismissed(bc.updatedAt)) {
         const unreadBc = isBroadcastNotificationUnread(bc.body, bc.updatedAt);
         if (unreadBc) totalUnread += 1;
         merged = [
@@ -227,6 +229,7 @@ export default function HeaderNotificationsBell({
     if (isSyntheticBroadcastNotificationId(n.id)) {
       const ts = parseBroadcastNotificationTimestamp(n.id);
       if (ts) {
+        setBroadcastNotificationDismissedAt(ts);
         setBroadcastNotificationSeenAt(ts);
         notifyNotificationsRefresh();
         await load();
