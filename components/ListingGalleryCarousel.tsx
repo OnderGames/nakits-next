@@ -18,7 +18,10 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
   const stripRef = useRef<HTMLDivElement>(null);
   const galleryRootRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef(0);
+  const lightboxIndexRef = useRef(0);
   const [active, setActive] = useState(0);
+  /** Lightbox tek başına: carousel kaydı / scroll ile çakışmasın diye ayrı indeks */
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [galleryHover, setGalleryHover] = useState(false);
   const [portalReady, setPortalReady] = useState(false);
@@ -26,6 +29,10 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
+
+  useEffect(() => {
+    lightboxIndexRef.current = lightboxIndex;
+  }, [lightboxIndex]);
 
   useEffect(() => {
     setPortalReady(true);
@@ -76,11 +83,26 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
     const handleKey = (e: KeyboardEvent) => {
       if (lightboxOpen && e.key === "Escape") {
         e.preventDefault();
+        const idx = lightboxIndexRef.current;
         setLightboxOpen(false);
+        requestAnimationFrame(() => scrollToIndex(idx));
         return;
       }
 
       if (images.length <= 1) return;
+
+      if (lightboxOpen) {
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          setLightboxIndex((i) => Math.max(0, i - 1));
+          return;
+        }
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          setLightboxIndex((i) => Math.min(images.length - 1, i + 1));
+          return;
+        }
+      }
 
       const root = galleryRootRef.current;
       const ae = document.activeElement;
@@ -88,7 +110,7 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
         Boolean(root) &&
         (root === ae || Boolean(root && ae && root.contains(ae)));
 
-      if (!lightboxOpen && !galleryHover && !focusedInside) return;
+      if (!galleryHover && !focusedInside) return;
 
       if (e.key === "ArrowLeft") {
         e.preventDefault();
@@ -124,34 +146,42 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
           type="button"
           className="listing-gallery-lightbox__backdrop"
           aria-label="Kapat"
-          onClick={() => setLightboxOpen(false)}
+          onClick={() => {
+            const idx = lightboxIndexRef.current;
+            setLightboxOpen(false);
+            requestAnimationFrame(() => scrollToIndex(idx));
+          }}
         />
         <div className="listing-gallery-lightbox__inner">
           <div className="listing-gallery-lightbox__top">
             <span className="listing-gallery-lightbox__counter">
-              {active + 1} / {images.length}
+              {lightboxIndex + 1} / {images.length}
             </span>
             <button
               type="button"
               className="btn btn-outline listing-gallery-lightbox__close"
-              onClick={() => setLightboxOpen(false)}
+              onClick={() => {
+                const idx = lightboxIndexRef.current;
+                setLightboxOpen(false);
+                requestAnimationFrame(() => scrollToIndex(idx));
+              }}
             >
               Kapat
             </button>
           </div>
           <div className="listing-gallery-lightbox__stage">
-            <Image
-              key={`lb-${active}-${images[active]}`}
-              src={images[active]}
+            {/* Native img: Next/Image remount + optimizer gecikmesi titremeye yol açıyordu */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={images[lightboxIndex]}
               alt={
                 images.length > 1
-                  ? `${title} — fotoğraf ${active + 1} / ${images.length}`
+                  ? `${title} — fotoğraf ${lightboxIndex + 1} / ${images.length}`
                   : title
               }
-              fill
-              sizes="100vw"
               className="listing-gallery-lightbox__img"
-              priority
+              decoding="async"
+              fetchPriority="high"
             />
           </div>
           {images.length > 1 ? (
@@ -159,8 +189,10 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
               <button
                 type="button"
                 className="btn btn-outline"
-                disabled={active <= 0}
-                onClick={() => scrollToIndex(active - 1)}
+                disabled={lightboxIndex <= 0}
+                onClick={() =>
+                  setLightboxIndex((i) => Math.max(0, i - 1))
+                }
                 aria-label="Önceki fotoğraf"
               >
                 ‹ Önceki
@@ -168,8 +200,12 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
               <button
                 type="button"
                 className="btn btn-outline"
-                disabled={active >= images.length - 1}
-                onClick={() => scrollToIndex(active + 1)}
+                disabled={lightboxIndex >= images.length - 1}
+                onClick={() =>
+                  setLightboxIndex((i) =>
+                    Math.min(images.length - 1, i + 1)
+                  )
+                }
                 aria-label="Sonraki fotoğraf"
               >
                 Sonraki ›
@@ -211,7 +247,11 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
           <button
             type="button"
             className="btn btn-outline listing-gallery-toolbar__enlarge"
-            onClick={() => setLightboxOpen(true)}
+            onClick={() => {
+              setLightboxIndex(active);
+              lightboxIndexRef.current = active;
+              setLightboxOpen(true);
+            }}
           >
             Büyük görüntüle
           </button>

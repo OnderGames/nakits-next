@@ -4376,7 +4376,14 @@ span.listing-seller__name--plain {
 }
 
 .listing-gallery-lightbox__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+  display: block;
+  margin: 0;
+  padding: 0;
 }
 
 .listing-gallery-lightbox__nav {
