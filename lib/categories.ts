@@ -944,11 +944,33 @@ export function isIntermediateTasitlarOtomobilListingKey(key: string): boolean {
   return tryParseOtomobilBrandIntermediateSubSlug(rest) != null;
 }
 
+/**
+ * Hiyerarşik otomobil katalogu (ör. BMW): yalnızca seri yaprağı seçilmiş,
+ * altta gövde varyantı varken ilan henüz tamamlanmış sayılmaz (örn. 1 Serisi → 116d).
+ */
+export function isOtomobilSeriesLeafAwaitingBodyVariant(key: string): boolean {
+  const t = key.trim();
+  if (!t.startsWith("tasitlar.")) return false;
+  const rest = t.slice("tasitlar.".length);
+  const leaf = tryParseOtomobilModelLeafSubSlug(rest);
+  if (!leaf) return false;
+  const models = getOtomobilModelsForBrand(leaf.brandSlug);
+  if (!models?.some((m) => m.name.includes("›"))) return false;
+  const entry = models.find((m) => m.slug === leaf.modelSlug);
+  if (!entry || entry.name.includes("›")) return false;
+  return models.some(
+    (m) =>
+      m.slug.startsWith(`${entry.slug}-`) &&
+      m.slug.length > entry.slug.length
+  );
+}
+
 /** Yeni ilan: kategori seçimi eksiksiz yaprak mı (ara adım yok)? */
 export function isReadyListingCategoryKey(key: string): boolean {
   if (!key.trim()) return false;
   if (isIntermediateGayrimenkulListingKey(key)) return false;
   if (isIntermediateTasitlarOtomobilListingKey(key)) return false;
+  if (isOtomobilSeriesLeafAwaitingBodyVariant(key)) return false;
   return true;
 }
 
@@ -1329,11 +1351,17 @@ export function parseCategoryKey(key: string): ParsedCategorySlug | null {
     if (group.slug === "tasitlar") {
       const modelLeaf = tryParseOtomobilModelLeafSubSlug(subSlug);
       if (modelLeaf) {
+        const modelSegments = modelLeaf.modelName
+          .split("›")
+          .map((x) => x.trim())
+          .filter(Boolean);
         return {
           group,
           sub: {
             slug: subSlug,
-            name: `Otomobil › ${modelLeaf.brandName} › ${modelLeaf.modelName}`
+            name: ["Otomobil", modelLeaf.brandName, ...modelSegments].join(
+              " › "
+            )
           }
         };
       }

@@ -17,6 +17,7 @@ import {
   getTasitlarOtomobilBrandSlugAwaitingModel,
   isIntermediateGayrimenkulListingKey,
   isIntermediateTasitlarOtomobilListingKey,
+  isOtomobilSeriesLeafAwaitingBodyVariant,
   isReadyListingCategoryKey,
   parseCategoryKey,
   parsePriceInput,
@@ -351,10 +352,20 @@ export default function EditListingPage() {
       return;
     }
     if (isIntermediateTasitlarOtomobilListingKey(detailCategoryKey)) {
+      const awaiting =
+        getTasitlarOtomobilBrandSlugAwaitingModel(detailCategoryKey);
       setError(
-        getTasitlarOtomobilBrandSlugAwaitingModel(detailCategoryKey)
-          ? "Otomobil için listeden bir model seçin."
-          : "Otomobil için listeden bir marka seçin."
+        awaiting === "bmw"
+          ? "BMW için sırayla seri ve gövde modelini seçin."
+          : awaiting
+            ? "Otomobil için listeden bir model seçin."
+            : "Otomobil için listeden bir marka seçin."
+      );
+      return;
+    }
+    if (isOtomobilSeriesLeafAwaitingBodyVariant(detailCategoryKey)) {
+      setError(
+        "BMW için önce seriyi, ardından gövde modelini seçin (örn. 1 Serisi › 116d)."
       );
       return;
     }

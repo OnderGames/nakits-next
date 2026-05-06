@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode
+} from "react";
 import {
   CATEGORY_GROUPS,
   GAYRIMENKUL_KONUT_INTERMEDIATE_KEY,
@@ -11,7 +18,11 @@ import {
   compositeCategoryKey,
   getOtomobilModelsForBrand,
   getTasitlarOtomobilBrandSlugAwaitingModel,
-  isTasitlarOtomobilFinalListingKey,
+  isReadyListingCategoryKey,
+  listingsOtomobilBmwSeriesRows,
+  listingsOtomobilBmwVariantsForSeries,
+  listingsOtomobilParseBmwModelRest,
+  isOtomobilSeriesLeafAwaitingBodyVariant,
   tryParseOtomobilBrandIntermediateSubSlug,
   tryParseOtomobilBrandOnlyLeafSubSlug,
   konutLeafCategorySubSlug,
@@ -205,7 +216,16 @@ export default function CategoryMillerPicker({
     if (gmSlug === "tasitlar") {
       const model = tryParseOtomobilModelLeafSubSlug(subPart);
       if (model) {
-        return `${selectedGroup.name} › Otomobil › ${model.brandName} › ${model.modelName}`;
+        const modelSegments = model.modelName
+          .split("›")
+          .map((x) => x.trim())
+          .filter(Boolean);
+        return [
+          selectedGroup.name,
+          "Otomobil",
+          model.brandName,
+          ...modelSegments
+        ].join(" › ");
       }
       const brandOnly = tryParseOtomobilBrandOnlyLeafSubSlug(subPart);
       if (brandOnly) {
@@ -298,7 +318,33 @@ export default function CategoryMillerPicker({
       ? getTasitlarOtomobilBrandSlugAwaitingModel(detailCategoryKey)
       : null;
 
-  const showOtomobilModelColumn = Boolean(brandSlugAwaitingModel);
+  const BMW_OTOMOBIL_PREFIX = "tasitlar.otomobil-bmw";
+
+  function bmwModelTailFromDetailKey(key: string): string {
+    const t = key.trim();
+    if (t === BMW_OTOMOBIL_PREFIX) return "";
+    if (t.startsWith(`${BMW_OTOMOBIL_PREFIX}-`)) {
+      return t.slice(BMW_OTOMOBIL_PREFIX.length + 1);
+    }
+    return "";
+  }
+
+  const bmwParsed = listingsOtomobilParseBmwModelRest(
+    bmwModelTailFromDetailKey(detailCategoryKey)
+  );
+
+  const isBmwOtomobilBranch =
+    groupSlug === "tasitlar" &&
+    (detailCategoryKey === BMW_OTOMOBIL_PREFIX ||
+      detailCategoryKey.startsWith(`${BMW_OTOMOBIL_PREFIX}-`));
+
+  const showOtomobilBmwSeriesColumn = isBmwOtomobilBranch;
+
+  const showOtomobilBmwVariantColumn =
+    isBmwOtomobilBranch && Boolean(bmwParsed.seriesSlug);
+
+  const showFlatOtomobilModelColumn =
+    Boolean(brandSlugAwaitingModel) && brandSlugAwaitingModel !== "bmw";
 
   /** Mobil: çoklu sütun taşinca son (aktif) sütunu yatayda görünür kılar */
   useLayoutEffect(() => {
@@ -333,7 +379,9 @@ export default function CategoryMillerPicker({
     showSatKirColumn,
     showKonutPropColumn,
     showOtomobilMarkaColumn,
-    showOtomobilModelColumn
+    showFlatOtomobilModelColumn,
+    showOtomobilBmwSeriesColumn,
+    showOtomobilBmwVariantColumn
   ]);
 
   function renderSecondColumnSubRow(sub: SubcategoryDef) {
@@ -375,7 +423,7 @@ export default function CategoryMillerPicker({
     const showChevronOtomobil =
       sub.drilldown === "otomobil-marka" &&
       rowSel &&
-      !isTasitlarOtomobilFinalListingKey(detailCategoryKey);
+      !isReadyListingCategoryKey(detailCategoryKey);
 
     return (
       <li key={sub.slug} className="category-miller__item">
@@ -419,7 +467,7 @@ export default function CategoryMillerPicker({
                 ✓
               </span>
             )}
-          {isTasitlarOtomobilFinalListingKey(detailCategoryKey) &&
+          {isReadyListingCategoryKey(detailCategoryKey) &&
             sub.drilldown === "otomobil-marka" && (
               <span className="category-miller__ok" aria-hidden>
                 ✓
@@ -597,10 +645,14 @@ export default function CategoryMillerPicker({
                   ? detailCategoryKey === intermediateKey || modelPickedHere
                   : detailCategoryKey === intermediateKey;
                 const showChevronBrand =
-                  Boolean(models?.length) && sel && !modelPickedHere;
+                  Boolean(models?.length) &&
+                  sel &&
+                  !isReadyListingCategoryKey(detailCategoryKey);
                 const showOkBrand =
-                  (models?.length && modelPickedHere) ||
-                  (!models?.length && detailCategoryKey === intermediateKey);
+                  (!models?.length && detailCategoryKey === intermediateKey) ||
+                  (Boolean(models?.length) &&
+                    modelPickedHere &&
+                    isReadyListingCategoryKey(detailCategoryKey));
                 return (
                   <li key={m.slug} className="category-miller__item">
                     <button
@@ -634,7 +686,110 @@ export default function CategoryMillerPicker({
           </div>
         )}
 
-        {showOtomobilModelColumn && brandSlugAwaitingModel ? (
+        {showOtomobilBmwSeriesColumn ? (
+          <div className="category-miller__col category-miller__col--active">
+            <ul
+              className="category-miller__list"
+              role="listbox"
+              aria-label="BMW serisi"
+            >
+              {listingsOtomobilBmwSeriesRows().map((seri) => {
+                const leafKey = compositeCategoryKey(
+                  "tasitlar",
+                  `otomobil-bmw-${seri.slug}`
+                );
+                const sel =
+                  detailCategoryKey === leafKey ||
+                  (Boolean(bmwParsed.variantSlugFull) &&
+                    bmwParsed.seriesSlug === seri.slug);
+                const variantPickedForSeries =
+                  bmwParsed.seriesSlug === seri.slug &&
+                  Boolean(bmwParsed.variantSlugFull);
+                return (
+                  <li key={seri.slug} className="category-miller__item">
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      role="option"
+                      aria-selected={sel}
+                      className={
+                        sel
+                          ? "category-miller__row category-miller__row--selected"
+                          : "category-miller__row"
+                      }
+                      onClick={() => onCategoryKeyChange(leafKey)}
+                    >
+                      <span className="category-miller__row-label">{seri.name}</span>
+                      {detailCategoryKey === leafKey &&
+                      isOtomobilSeriesLeafAwaitingBodyVariant(
+                        detailCategoryKey
+                      ) ? (
+                        <span className="category-miller__chevron" aria-hidden>
+                          ›
+                        </span>
+                      ) : null}
+                      {variantPickedForSeries ? (
+                        <span className="category-miller__ok" aria-hidden>
+                          ✓
+                        </span>
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
+
+        {showOtomobilBmwVariantColumn ? (
+          <div className="category-miller__col category-miller__col--active">
+            <ul
+              className="category-miller__list"
+              role="listbox"
+              aria-label="BMW modeli"
+            >
+              {listingsOtomobilBmwVariantsForSeries(bmwParsed.seriesSlug).map(
+                (variant) => {
+                  const leafKey = compositeCategoryKey(
+                    "tasitlar",
+                    `otomobil-bmw-${variant.slugFull}`
+                  );
+                  const sel = detailCategoryKey === leafKey;
+                  return (
+                    <li
+                      key={variant.slugFull}
+                      className="category-miller__item"
+                    >
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        role="option"
+                        aria-selected={sel}
+                        className={
+                          sel
+                            ? "category-miller__row category-miller__row--selected"
+                            : "category-miller__row"
+                        }
+                        onClick={() => onCategoryKeyChange(leafKey)}
+                      >
+                        <span className="category-miller__row-label">
+                          {variant.label}
+                        </span>
+                        {sel && (
+                          <span className="category-miller__ok" aria-hidden>
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                }
+              )}
+            </ul>
+          </div>
+        ) : null}
+
+        {showFlatOtomobilModelColumn && brandSlugAwaitingModel ? (
           <div className="category-miller__col category-miller__col--active">
             <ul
               className="category-miller__list"
@@ -644,7 +799,7 @@ export default function CategoryMillerPicker({
               {groupOtomobilModelsBySeries(
                 getOtomobilModelsForBrand(brandSlugAwaitingModel) ?? []
               ).flatMap((series) => {
-                const items: React.ReactNode[] = [
+                const items: ReactNode[] = [
                   ...(series.seriesLabel
                     ? [
                         <li
@@ -809,7 +964,8 @@ export default function CategoryMillerPicker({
         </p>
       ) : groupSlug === "tasitlar" ? (
         <p className="category-miller__hint meta">
-          Otomobilde sırayla alt tür, marka ve model; bisiklet, motosiklet vb.
+          Otomobilde sırayla alt tür, marka; BMW&apos;de ardından seri ve gövde
+          modeli; diğer markalarda model tek sütunda. Bisiklet, motosiklet vb.
           tek seçimde biter.
         </p>
       ) : hideMainGroupColumn ? (
