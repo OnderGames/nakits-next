@@ -4986,6 +4986,261 @@ span.listing-seller__name--plain {
   }
 }
 
+/* Yönetim paneli ana sayfa · güvenli alan, mobil nav ve araç çubukları */
+.admin-moderation-page {
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.admin-moderation-page__title {
+  font-size: clamp(1.35rem, 5.2vw, 1.85rem);
+  letter-spacing: -0.02em;
+}
+
+.admin-moderation-page__intro {
+  line-height: 1.52;
+}
+
+.admin-moderation-page__intro-mobile {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .admin-moderation-page__intro-desktop {
+    display: none;
+  }
+
+  .admin-moderation-page__intro-mobile {
+    display: block;
+  }
+}
+
+@media (max-width: 860px) {
+  .admin-moderation-page .admin-dashboard-stats-row {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .admin-moderation-page .admin-listing-stats__shell {
+    padding: 15px 16px;
+    border-radius: 14px;
+  }
+
+  .admin-moderation-page .admin-panel-nav {
+    border-radius: 16px;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.06) inset,
+      0 12px 40px rgba(15, 23, 42, 0.08);
+    background: linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--card) 94%, var(--panel-bg, #f8fafc)) 0%,
+      var(--card) 100%
+    );
+  }
+
+  .admin-moderation-page .admin-panel-nav__title {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  }
+
+  .admin-moderation-page .admin-panel-content {
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    min-height: 35vh;
+  }
+
+  .admin-moderation-page .admin-panel-content .panel {
+    border-radius: 14px;
+  }
+
+  .admin-moderation-page
+    .admin-moderation-list-panel
+    > .admin-moderation-toolbar:first-of-type {
+    gap: 8px;
+    justify-content: stretch;
+  }
+
+  .admin-moderation-page
+    .admin-moderation-list-panel
+    > .admin-moderation-toolbar:first-of-type
+    > .btn {
+    flex: 1 1 calc(50% - 4px);
+    min-width: calc(50% - 10px);
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  /* Kullanıcı yönetimi · araç çubuğu */
+  .admin-moderation-page .admin-users-panel .admin-moderation-toolbar--secondary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .admin-moderation-page .admin-users-panel .admin-moderation-toolbar__field {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    width: 100%;
+    max-width: none !important;
+  }
+
+  .admin-moderation-page
+    .admin-users-panel
+    .admin-moderation-toolbar__field
+    input[type="search"] {
+    width: 100%;
+    max-width: none;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .admin-moderation-page .admin-users-panel .admin-moderation-toolbar--secondary > .btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  /* Kategoriler · sihirbaz ve formlar */
+  .admin-moderation-page .admin-categories-panel .admin-cat-wizard {
+    padding: 14px 16px;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-cat-wizard__step-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-cat-wizard__step-head .btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-moderation-toolbar__field {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-moderation-toolbar__field select,
+  .admin-moderation-page .admin-categories-panel .admin-moderation-toolbar__field input[type="text"] {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-cat-wizard__preview {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-cat-wizard__preview .btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-categories-add {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-categories-add__btn {
+    width: 100%;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-categories-add .btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-categories-toolbar .btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-cat-wizard__sub-tile {
+    min-height: 44px;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-categories-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-categories-actions .btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .admin-moderation-page .admin-categories-scroll {
+    margin: 0 -4px;
+    padding: 0 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-moderation-page .admin-panel-nav__list {
+    gap: 10px;
+  }
+
+  .admin-moderation-page .admin-panel-nav__item {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+
+  .admin-moderation-page .admin-panel-nav__btn {
+    min-height: 48px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+    background: color-mix(in srgb, var(--panel-bg, #f8fafc) 92%, var(--card));
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+  }
+
+  .admin-moderation-page .admin-panel-nav__btn--active {
+    border-color: rgba(37, 99, 235, 0.45);
+    box-shadow: none;
+  }
+
+  .admin-moderation-page
+    .admin-moderation-list-panel
+    > .admin-moderation-toolbar:first-of-type
+    > .btn {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-cat-wizard {
+    padding: 12px 12px;
+    border-radius: 14px;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-cat-wizard__sub-grid li {
+    flex: 1 1 calc(50% - 4px);
+    min-width: calc(50% - 4px);
+    max-width: 100%;
+  }
+
+  .admin-moderation-page .admin-categories-panel .admin-cat-wizard__sub-tile {
+    min-height: 48px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-moderation-page .admin-users-panel .admin-moderation-toolbar__field input[type="search"],
+  .admin-moderation-page .admin-users-panel .admin-moderation-toolbar--secondary > .btn {
+    min-height: 48px;
+  }
+}
+
 /* Yönetim paneli: sol menü + içerik */
 .admin-panel-layout {
   display: flex;

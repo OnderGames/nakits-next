@@ -473,11 +473,16 @@ export default function AdminModerationPage() {
   }
 
   return (
-    <div className="account-page">
-      <h1 className="section-title">Yönetim paneli</h1>
-      <p className="meta" style={{ marginTop: -6, marginBottom: 14 }}>
-        Sol menü sırası: ilanlar, duyuru, kullanıcı yönetimi, kategoriler, sözleşme ve politikalar,
-        şikayetler, site ayarları.
+    <div className="account-page admin-moderation-page">
+      <h1 className="section-title admin-moderation-page__title">Yönetim paneli</h1>
+      <p className="meta admin-moderation-page__intro" style={{ marginTop: -6, marginBottom: 14 }}>
+        <span className="admin-moderation-page__intro-desktop">
+          Sol menü sırası: ilanlar, duyuru, kullanıcı yönetimi, kategoriler, sözleşme ve politikalar,
+          şikayetler, site ayarları.
+        </span>
+        <span className="admin-moderation-page__intro-mobile">
+          Sekmelerden bölüm seçin; özet kutularından ilan / üye sayılarına gidin.
+        </span>
       </p>
 
       <div className="admin-dashboard-stats-row">
