@@ -115,7 +115,7 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
     });
   }, [lightboxOpen, images.length]);
 
-  /** Büyük görüntüle: kaydırma pozisyonu → sayaç / ref */
+  /** Tam ekran lightbox: kaydırma pozisyonu → sayaç / ref */
   useEffect(() => {
     if (!lightboxOpen || images.length <= 1) return;
     const el = lightboxStripRef.current;
@@ -317,15 +317,10 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
         tabIndex={0}
         onMouseEnter={() => setGalleryHover(true)}
         onMouseLeave={() => setGalleryHover(false)}
-        aria-label={`${title} fotoğrafları — odaklayıp sol ve sağ ok ile gezinebilir veya büyük görüntüleyebilirsiniz`}
+        aria-label={`${title} fotoğrafları — odaklayıp sol ve sağ ok ile gezinebilir veya tam ekran önizlemesi açabilirsiniz`}
         style={{ position: "relative", width: "100%" }}
       >
         <div className="listing-gallery-toolbar">
-          {images.length > 1 ? (
-            <span className="listing-gallery-toolbar__hint meta">
-              Çoklu fotoğraf: kaydırın veya ok tuşlarıyla gezinin.
-            </span>
-          ) : null}
           <button
             type="button"
             className="btn btn-outline listing-gallery-toolbar__enlarge"
@@ -335,7 +330,7 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
               setLightboxOpen(true);
             }}
           >
-            Büyük görüntüle
+            Tam ekran
           </button>
         </div>
 
@@ -387,7 +382,6 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
         </div>
 
         {images.length > 1 && (
-          <>
             <div className="listing-gallery-controls">
               <button
                 type="button"
@@ -444,19 +438,10 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
                 Sonraki ›
               </button>
             </div>
-            <p className="meta listing-gallery-footnote">
-              Parmakla veya fareyle kaydırın. Fare galerinin üzerindeyken veya
-              alanı klavye ile odakladığınızda{" "}
-              <kbd className="listing-gallery-kbd">←</kbd>{" "}
-              <kbd className="listing-gallery-kbd">→</kbd> ile gezinin;{" "}
-              <strong>Büyük görüntüle</strong> ile tam ekrana yakın önizleme ve
-              aynı ok kısayolları.
-            </p>
-          </>
         )}
         {images.length === 1 ? (
           <p className="meta listing-gallery-footnote listing-gallery-footnote--single">
-            Daha net görmek için <strong>Büyük görüntüle</strong> kullanabilirsiniz.
+            Daha net görmek için <strong>Tam ekran</strong> kullanabilirsiniz.
           </p>
         ) : null}
       </div>

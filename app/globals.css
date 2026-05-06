@@ -4230,7 +4230,7 @@ span.listing-seller__name--plain {
   margin-top: 16px;
 }
 
-/* İlan detayı: fotoğraf galerisi + büyük görüntü (lightbox) */
+/* İlan detayı: fotoğraf galerisi + tam ekran (lightbox) */
 .listing-gallery-root {
   outline: none;
 }
