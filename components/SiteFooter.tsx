@@ -26,6 +26,10 @@ export default function SiteFooter() {
           <span className="site-footer__sep" aria-hidden>
             ·
           </span>
+          <Link href="/yasakli-urunler">Yasaklı ürünler</Link>
+          <span className="site-footer__sep" aria-hidden>
+            ·
+          </span>
           <Link href="/privacy-policy">Privacy Policy</Link>
           <span className="site-footer__sep" aria-hidden>
             ·

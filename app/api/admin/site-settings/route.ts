@@ -4,6 +4,7 @@ import {
   hasAdminPower,
   verifyModerationStaff
 } from "@/lib/admin-auth";
+import { BROADCAST_NOTIFICATION_MAX_LEN } from "@/lib/broadcast-notification";
 import {
   HOMEPAGE_THEME_DEFAULT,
   HOMEPAGE_THEMES,
@@ -28,7 +29,9 @@ export async function GET(request: Request) {
 
   const { data, error } = await adminSb
     .from("site_settings")
-    .select("homepage_theme, listing_duration_days")
+    .select(
+      "homepage_theme, listing_duration_days, broadcast_notification_body, broadcast_notification_updated_at"
+    )
     .eq("id", 1)
     .maybeSingle();
 
@@ -46,9 +49,22 @@ export async function GET(request: Request) {
       ?.listing_duration_days
   );
 
+  const row = data as {
+    broadcast_notification_body?: string | null;
+    broadcast_notification_updated_at?: string | null;
+  } | null;
+
   return Response.json({
     homepage_theme: theme,
-    listing_duration_days: durationDays
+    listing_duration_days: durationDays,
+    broadcast_notification_body:
+      typeof row?.broadcast_notification_body === "string"
+        ? row.broadcast_notification_body
+        : "",
+    broadcast_notification_updated_at:
+      row?.broadcast_notification_updated_at != null
+        ? String(row.broadcast_notification_updated_at)
+        : null
   });
 }
 
@@ -63,7 +79,11 @@ export async function PATCH(request: Request) {
     return Response.json({ error: getServiceRoleMissingMessage() }, { status: 503 });
   }
 
-  let body: { homepage_theme?: string; listing_duration_days?: number };
+  let body: {
+    homepage_theme?: string;
+    listing_duration_days?: number;
+    broadcast_notification_body?: string;
+  };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -94,9 +114,38 @@ export async function PATCH(request: Request) {
     durationUpdate = normalizeListingDurationDays(body.listing_duration_days);
   }
 
-  if (themeUpdate === undefined && durationUpdate === undefined) {
+  let broadcastBody: string | undefined;
+  if (body.broadcast_notification_body !== undefined) {
+    if (!hasAdminPower(v)) {
+      return Response.json(
+        { error: "Site bildirimi metnini yalnızca tam yönetici değiştirebilir." },
+        { status: 403 }
+      );
+    }
+    broadcastBody =
+      typeof body.broadcast_notification_body === "string"
+        ? body.broadcast_notification_body.trim()
+        : "";
+    if (broadcastBody.length > BROADCAST_NOTIFICATION_MAX_LEN) {
+      return Response.json(
+        {
+          error: `Duyuru metni en fazla ${BROADCAST_NOTIFICATION_MAX_LEN} karakter olabilir.`
+        },
+        { status: 400 }
+      );
+    }
+  }
+
+  if (
+    themeUpdate === undefined &&
+    durationUpdate === undefined &&
+    broadcastBody === undefined
+  ) {
     return Response.json(
-      { error: "Güncellenecek alan yok (homepage_theme veya listing_duration_days)." },
+      {
+        error:
+          "Güncellenecek alan yok (homepage_theme, listing_duration_days veya broadcast_notification_body)."
+      },
       { status: 400 }
     );
   }
@@ -106,6 +155,12 @@ export async function PATCH(request: Request) {
   };
   if (themeUpdate !== undefined) patch.homepage_theme = themeUpdate;
   if (durationUpdate !== undefined) patch.listing_duration_days = durationUpdate;
+  if (broadcastBody !== undefined) {
+    patch.broadcast_notification_body = broadcastBody;
+    patch.broadcast_notification_updated_at = broadcastBody.length
+      ? new Date().toISOString()
+      : null;
+  }
 
   const { error } = await adminSb
     .from("site_settings")
@@ -118,7 +173,9 @@ export async function PATCH(request: Request) {
 
   const { data: row } = await adminSb
     .from("site_settings")
-    .select("homepage_theme, listing_duration_days")
+    .select(
+      "homepage_theme, listing_duration_days, broadcast_notification_body, broadcast_notification_updated_at"
+    )
     .eq("id", 1)
     .maybeSingle();
 
@@ -131,9 +188,22 @@ export async function PATCH(request: Request) {
     (row as { listing_duration_days?: number | null } | null)?.listing_duration_days
   );
 
+  const br = row as {
+    broadcast_notification_body?: string | null;
+    broadcast_notification_updated_at?: string | null;
+  } | null;
+
   return Response.json({
     ok: true,
     homepage_theme: themeOut,
-    listing_duration_days: durationOut
+    listing_duration_days: durationOut,
+    broadcast_notification_body:
+      typeof br?.broadcast_notification_body === "string"
+        ? br.broadcast_notification_body
+        : "",
+    broadcast_notification_updated_at:
+      br?.broadcast_notification_updated_at != null
+        ? String(br.broadcast_notification_updated_at)
+        : null
   });
 }

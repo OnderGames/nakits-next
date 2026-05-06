@@ -1,28 +1,25 @@
 import LegalHtmlBody from "@/components/legal/LegalHtmlBody";
-import UyelikSozlesmesiBody from "@/components/legal/UyelikSozlesmesiBody";
+import YasakliUrunlerBody from "@/components/legal/YasakliUrunlerBody";
 import { getLegalPage, legalPageMetadata } from "@/lib/legal-pages";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return legalPageMetadata("uyelik-sozlesmesi");
+  return legalPageMetadata("yasakli-urunler");
 }
 
-export default async function MembershipAgreementPage() {
-  const row = await getLegalPage("uyelik-sozlesmesi");
+export default async function YasakliUrunlerPage() {
+  const row = await getLegalPage("yasakli-urunler");
 
   return (
     <main className="container">
       <p style={{ marginBottom: 16 }}>
-        <Link
-          href="/register"
-          style={{ color: "var(--primary)", textDecoration: "underline" }}
-        >
-          ← Üye olmaya dön
+        <Link href="/" style={{ color: "var(--primary)", textDecoration: "underline" }}>
+          ← Ana sayfaya dön
         </Link>
       </p>
       <article className="panel legal-static-article" style={{ maxWidth: 720, lineHeight: 1.65 }}>
-        {row ? <LegalHtmlBody html={row.body_html} /> : <UyelikSozlesmesiBody />}
+        {row ? <LegalHtmlBody html={row.body_html} /> : <YasakliUrunlerBody />}
       </article>
     </main>
   );

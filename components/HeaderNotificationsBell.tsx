@@ -9,6 +9,13 @@ import {
   useState
 } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import {
+  BROADCAST_NOTIFICATION_ID_PREFIX,
+  isSyntheticBroadcastNotificationId,
+  parseBroadcastNotificationTimestamp,
+  setBroadcastNotificationSeenAt,
+  isBroadcastNotificationUnread
+} from "@/lib/broadcast-notification";
 import { formatRelativeTimeTr } from "@/lib/listings-data";
 import {
   countMyUnreadNotifications,
@@ -18,6 +25,7 @@ import {
   notifyNotificationsRefresh,
   type AppNotificationRow
 } from "@/lib/notifications";
+import { fetchBroadcastNotificationPublic } from "@/lib/site-settings";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
@@ -43,12 +51,34 @@ export default function HeaderNotificationsBell({
     if (!sb) return;
     setLoading(true);
     try {
-      const [rows, unread] = await Promise.all([
+      const [rows, unread, bc] = await Promise.all([
         fetchMyNotifications(sb, userId),
-        countMyUnreadNotifications(sb, userId)
+        countMyUnreadNotifications(sb, userId),
+        fetchBroadcastNotificationPublic(sb)
       ]);
-      setItems(rows);
-      setUnreadCount(unread);
+
+      const bTrim = bc.body.trim();
+      let merged = rows;
+      let totalUnread = unread;
+
+      if (bTrim && bc.updatedAt) {
+        const unreadBc = isBroadcastNotificationUnread(bc.body, bc.updatedAt);
+        if (unreadBc) totalUnread += 1;
+        merged = [
+          {
+            id: `${BROADCAST_NOTIFICATION_ID_PREFIX}${bc.updatedAt}`,
+            body: bTrim,
+            listingId: null,
+            readAt: unreadBc ? null : bc.updatedAt,
+            createdAt: bc.updatedAt,
+            type: "site_broadcast"
+          },
+          ...rows
+        ];
+      }
+
+      setItems(merged);
+      setUnreadCount(totalUnread);
     } catch {
       setItems([]);
       setUnreadCount(0);
@@ -148,6 +178,15 @@ export default function HeaderNotificationsBell({
   function handleOpenItem(n: AppNotificationRow) {
     setOpen(false);
     onCloseDrawer?.();
+    if (isSyntheticBroadcastNotificationId(n.id)) {
+      const ts = parseBroadcastNotificationTimestamp(n.id);
+      if (ts) {
+        setBroadcastNotificationSeenAt(ts);
+        notifyNotificationsRefresh();
+        void load();
+      }
+      return;
+    }
     if (!hasSupabaseConfig || n.readAt) return;
     const sb = getSupabaseBrowser();
     if (!sb) return;
@@ -164,6 +203,10 @@ export default function HeaderNotificationsBell({
     setMarkAllBusy(true);
     try {
       await markAllMyNotificationsRead(sb, userId);
+      const bc = await fetchBroadcastNotificationPublic(sb);
+      if (bc.body.trim() && bc.updatedAt) {
+        setBroadcastNotificationSeenAt(bc.updatedAt);
+      }
       notifyNotificationsRefresh();
       await load();
     } finally {
@@ -240,8 +283,13 @@ export default function HeaderNotificationsBell({
                   const href =
                     n.listingId != null ? `/listings/${n.listingId}` : null;
 
+                  const isBroadcast = n.type === "site_broadcast";
+
                   const content = (
                     <>
+                      {isBroadcast ? (
+                        <span className="nav-notif__broadcast-pill">Site duyurusu</span>
+                      ) : null}
                       <p
                         className={
                           unread
@@ -257,12 +305,14 @@ export default function HeaderNotificationsBell({
                     </>
                   );
 
+                  const broadcastCls = isBroadcast ? " nav-notif__item--broadcast" : "";
+
                   return (
                     <li key={n.id}>
                       {href ? (
                         <Link
                           href={href}
-                          className={`nav-notif__item ${unread ? "nav-notif__item--unread" : ""}`}
+                          className={`nav-notif__item ${unread ? "nav-notif__item--unread" : ""}${broadcastCls}`}
                           onClick={() => handleOpenItem(n)}
                         >
                           {content}
@@ -270,7 +320,7 @@ export default function HeaderNotificationsBell({
                       ) : (
                         <button
                           type="button"
-                          className={`nav-notif__item nav-notif__item--plain ${unread ? "nav-notif__item--unread" : ""}`}
+                          className={`nav-notif__item nav-notif__item--plain ${unread ? "nav-notif__item--unread" : ""}${broadcastCls}`}
                           onClick={() => handleOpenItem(n)}
                         >
                           {content}

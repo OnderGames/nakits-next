@@ -914,6 +914,24 @@ main.container {
   font-weight: 700;
 }
 
+.nav-notif__item--broadcast {
+  border: 1px solid rgba(234, 88, 12, 0.22);
+  background: rgba(254, 243, 199, 0.35);
+}
+
+.nav-notif__broadcast-pill {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9a3412;
+  background: rgba(251, 191, 36, 0.35);
+}
+
 .nav-notif__item-time {
   display: block;
   margin-top: 6px;
@@ -4661,6 +4679,76 @@ span.listing-seller__name--plain {
   cursor: pointer;
 }
 
+.legal-page-dynamic {
+  font-size: 15px;
+}
+
+.legal-page-dynamic :where(h1, .section-title) {
+  font-size: clamp(1.35rem, 2.5vw, 1.6rem);
+  font-weight: 800;
+  margin-top: 0;
+  letter-spacing: -0.02em;
+}
+
+.legal-page-dynamic :where(h2, h3) {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  margin-top: 24px;
+}
+
+.legal-page-dynamic :where(h3) {
+  font-size: 16px;
+}
+
+.legal-page-dynamic :where(p, li) {
+  margin: 0 0 8px;
+}
+
+.legal-page-dynamic :where(ul, ol) {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.legal-page-dynamic :where(a) {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.legal-page-dynamic :where(section) {
+  margin-top: 24px;
+}
+
+.legal-page-dynamic :where(.meta) {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.admin-legal-pages__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 360px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.admin-broadcast-notification__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 120px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
 .admin-mod-main-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -4682,6 +4770,220 @@ span.listing-seller__name--plain {
   font-weight: 800;
   background: #fee2e2;
   color: #991b1b;
+}
+
+/* Yönetim paneli · ilan / üye sayaçları (yan yana) */
+.admin-dashboard-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.admin-dashboard-stats-row > section {
+  flex: 1 1 280px;
+  max-width: 100%;
+  display: flex;
+}
+
+.admin-dashboard-stats-row > section .admin-listing-stats__shell {
+  max-width: none;
+  width: 100%;
+  flex: 1;
+  box-sizing: border-box;
+}
+
+/* Tek başına kullanılırsa (geri uyumluluk) */
+.admin-listing-stats {
+  margin-bottom: 0;
+}
+
+.admin-listing-stats__shell {
+  max-width: 640px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: linear-gradient(
+    155deg,
+    rgba(59, 130, 246, 0.09) 0%,
+    var(--card) 38%,
+    var(--card) 100%
+  );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 10px 36px rgba(15, 23, 42, 0.07);
+}
+
+.admin-listing-stats__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-listing-stats__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.admin-listing-stats__refresh {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 7px 12px;
+  min-height: 0;
+}
+
+.admin-listing-stats__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-listing-stats__grid--members {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-listing-stats--members .admin-listing-stats__shell {
+  background: linear-gradient(
+    155deg,
+    rgba(16, 185, 129, 0.1) 0%,
+    var(--card) 38%,
+    var(--card) 100%
+  );
+}
+
+.admin-listing-stats__tile--members-total {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, #10b981 16%, transparent) 0%,
+    color-mix(in srgb, var(--panel-bg, #fff) 95%, transparent) 100%
+  );
+}
+
+.admin-listing-stats__tile--member-active .admin-listing-stats__value {
+  color: #15803d;
+}
+
+.admin-listing-stats__tile--member-blocked .admin-listing-stats__value {
+  color: #b45309;
+}
+
+.admin-listing-stats__tile--member-staff .admin-listing-stats__value {
+  color: #7c3aed;
+}
+
+.admin-listing-stats__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  background: color-mix(in srgb, var(--panel-bg, #f8fafc) 88%, transparent);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    border-color 0.14s ease;
+}
+
+.admin-listing-stats__tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
+  border-color: color-mix(in srgb, var(--accent, #3b82f6) 40%, var(--border));
+}
+
+.admin-listing-stats__tile:focus-visible {
+  outline: 2px solid var(--accent, #3b82f6);
+  outline-offset: 2px;
+}
+
+.admin-listing-stats__tile--total {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent, #3b82f6) 14%, transparent) 0%,
+    color-mix(in srgb, var(--panel-bg, #fff) 95%, transparent) 100%
+  );
+}
+
+.admin-listing-stats__tile--total .admin-listing-stats__value {
+  font-size: 2rem;
+}
+
+.admin-listing-stats__tile--pending .admin-listing-stats__value {
+  color: #c2410c;
+}
+
+.admin-listing-stats__tile--active .admin-listing-stats__value {
+  color: #15803d;
+}
+
+.admin-listing-stats__tile--sold .admin-listing-stats__value {
+  color: #0369a1;
+}
+
+.admin-listing-stats__tile--rejected .admin-listing-stats__value {
+  color: #b91c1c;
+}
+
+.admin-listing-stats__label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.055em;
+  color: var(--muted, #64748b);
+}
+
+.admin-listing-stats__value {
+  font-size: 1.55rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+
+.admin-listing-stats__hint {
+  margin: 12px 0 0 !important;
+  font-size: 12px;
+}
+
+.admin-listing-stats__error {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #b91c1c;
+}
+
+@media (max-width: 520px) {
+  .admin-listing-stats__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-listing-stats__grid--members {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-listing-stats__tile--total {
+    grid-column: 1 / -1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .admin-listing-stats__tile--total .admin-listing-stats__value {
+    font-size: 1.75rem;
+  }
 }
 
 /* Yönetim paneli: sol menü + içerik */

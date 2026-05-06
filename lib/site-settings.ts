@@ -72,6 +72,32 @@ export async function fetchListingDurationDaysPublic(
   );
 }
 
+export async function fetchBroadcastNotificationPublic(
+  sb: SupabaseClient
+): Promise<{ body: string; updatedAt: string | null }> {
+  const { data, error } = await sb
+    .from("site_settings")
+    .select("broadcast_notification_body, broadcast_notification_updated_at")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (error || !data) {
+    return { body: "", updatedAt: null };
+  }
+  const row = data as {
+    broadcast_notification_body?: string | null;
+    broadcast_notification_updated_at?: string | null;
+  };
+  const body =
+    typeof row.broadcast_notification_body === "string"
+      ? row.broadcast_notification_body
+      : "";
+  const u = row.broadcast_notification_updated_at;
+  const updatedAt =
+    u != null && String(u).trim() ? String(u).trim() : null;
+  return { body, updatedAt };
+}
+
 export async function getHomepageTheme(
   sb: SupabaseClient
 ): Promise<HomepageTheme> {

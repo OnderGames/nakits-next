@@ -15,7 +15,11 @@ import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
 import AdminCategoriesSection from "./AdminCategoriesSection";
+import AdminLegalPagesSection from "./AdminLegalPagesSection";
 import AdminListingReportsSection from "./AdminListingReportsSection";
+import AdminBroadcastNotificationSection from "./AdminBroadcastNotificationSection";
+import AdminListingStatsCard from "./AdminListingStatsCard";
+import AdminMemberStatsCard from "./AdminMemberStatsCard";
 import AdminSiteListingDurationSection from "./AdminSiteListingDurationSection";
 import AdminUserManagementSection from "./AdminUserManagementSection";
 
@@ -26,6 +30,7 @@ type RiskListingFilter = "all" | "risk";
 /** Sol menü bölümleri */
 type AdminPanelSection =
   | "settings"
+  | "legal"
   | "categories"
   | "listings"
   | "reports"
@@ -302,6 +307,19 @@ export default function AdminModerationPage() {
     void refreshReportOpenBadge();
   }, [refreshReportOpenBadge]);
 
+  const openListingsWithFilter = useCallback(
+    (f: ListingFilter) => {
+      setPanelSection("listings");
+      setFilter(f);
+      void loadListings(f);
+    },
+    [loadListings]
+  );
+
+  const openUsersSection = useCallback(() => {
+    setPanelSection("users");
+  }, []);
+
   useEffect(() => {
     if (!moderationStaff || !checkedStaff) return;
     void refreshReportOpenBadge();
@@ -456,10 +474,23 @@ export default function AdminModerationPage() {
   return (
     <div className="account-page">
       <h1 className="section-title">Yönetim paneli</h1>
-      <p className="meta" style={{ marginTop: -6, marginBottom: 18 }}>
-        Sol menüden bölüm seçin: site ayarları, kategoriler, ilanlar, şikayetler ve kullanıcı
-        yönetimi.
+      <p className="meta" style={{ marginTop: -6, marginBottom: 14 }}>
+        Sol menüden bölüm seçin: site ayarları, sözleşme/politika metinleri, kategoriler, ilanlar,
+        şikayetler ve kullanıcı yönetimi.
       </p>
+
+      <div className="admin-dashboard-stats-row">
+        <AdminListingStatsCard
+          enabled={moderationStaff && checkedStaff}
+          getAuthHeaders={authHeaders}
+          onOpenListings={openListingsWithFilter}
+        />
+        <AdminMemberStatsCard
+          enabled={moderationStaff && checkedStaff}
+          getAuthHeaders={authHeaders}
+          onOpenUsers={openUsersSection}
+        />
+      </div>
 
       <div className="admin-panel-layout">
         <nav
@@ -485,6 +516,24 @@ export default function AdminModerationPage() {
                   <span className="admin-panel-nav__hint">
                     İlan yayın süresi
                   </span>
+                </span>
+              </button>
+            </li>
+            <li className="admin-panel-nav__item">
+              <button
+                type="button"
+                className={
+                  panelSection === "legal"
+                    ? "admin-panel-nav__btn admin-panel-nav__btn--stack admin-panel-nav__btn--active"
+                    : "admin-panel-nav__btn admin-panel-nav__btn--stack"
+                }
+                aria-current={panelSection === "legal" ? "page" : undefined}
+                disabled={busyId !== null}
+                onClick={() => setPanelSection("legal")}
+              >
+                <span>
+                  Sözleşme ve politikalar
+                  <span className="admin-panel-nav__hint">KVKK, yasaklı liste</span>
                 </span>
               </button>
             </li>
@@ -561,8 +610,23 @@ export default function AdminModerationPage() {
 
         <div className="admin-panel-content">
           {panelSection === "settings" ? (
-            <AdminSiteListingDurationSection
+            <>
+              <AdminSiteListingDurationSection
+                enabled={moderationStaff && checkedStaff}
+                getAuthHeaders={authHeaders}
+              />
+              <AdminBroadcastNotificationSection
+                enabled={moderationStaff && checkedStaff}
+                adminPower={fullAdminPower}
+                getAuthHeaders={authHeaders}
+              />
+            </>
+          ) : null}
+
+          {panelSection === "legal" ? (
+            <AdminLegalPagesSection
               enabled={moderationStaff && checkedStaff}
+              adminPower={fullAdminPower}
               getAuthHeaders={authHeaders}
             />
           ) : null}

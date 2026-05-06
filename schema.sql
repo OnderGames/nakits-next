@@ -695,6 +695,8 @@ create table if not exists site_settings (
     ),
   listing_duration_days smallint not null default 30
     check (listing_duration_days >= 7 and listing_duration_days <= 365),
+  broadcast_notification_body text not null default '',
+  broadcast_notification_updated_at timestamptz,
   updated_at timestamptz not null default now()
 );
 insert into site_settings (id, homepage_theme, listing_duration_days)
@@ -702,3 +704,28 @@ values (1, 'v2', 30)
 on conflict (id) do nothing;
 alter table site_settings enable row level security;
 create policy "site_settings read all" on site_settings for select using (true);
+
+-- Metin sayfaları (sözleşme, KVKK, politikalar); ayrıntı: sql/migration_site_legal_pages.sql
+create table if not exists public.site_legal_pages (
+  slug text primary key constraint site_legal_pages_slug_allowed check (
+    slug in (
+      'uyelik-sozlesmesi',
+      'gizlilik-politikasi',
+      'terms-of-service',
+      'privacy-policy',
+      'yasakli-urunler'
+    )
+  ),
+  page_title text not null default '',
+  meta_description text not null default '',
+  body_html text not null default '',
+  updated_at timestamptz not null default now()
+);
+create index if not exists site_legal_pages_updated_at_idx
+  on public.site_legal_pages (updated_at desc);
+alter table public.site_legal_pages enable row level security;
+drop policy if exists "site_legal_pages read all" on public.site_legal_pages;
+create policy "site_legal_pages read all"
+  on public.site_legal_pages
+  for select
+  using (true);
