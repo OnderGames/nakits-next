@@ -4174,6 +4174,144 @@ span.listing-seller__name--plain {
   color: #991b1b;
 }
 
+/* Yönetim paneli: sol menü + içerik */
+.admin-panel-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-top: 4px;
+}
+
+.admin-panel-nav {
+  flex: 0 0 220px;
+  position: sticky;
+  top: 12px;
+  align-self: flex-start;
+  padding: 14px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.admin-panel-nav__title {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted, #64748b);
+}
+
+.admin-panel-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-panel-nav__btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.admin-panel-nav__btn:hover {
+  background: var(--panel-bg, #f1f5f9);
+}
+
+.admin-panel-nav__btn--stack {
+  align-items: flex-start;
+}
+
+.admin-panel-nav__btn--active {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.35);
+  color: var(--primary, #2563eb);
+}
+
+.admin-panel-nav__hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted, #64748b);
+}
+
+.admin-panel-nav__badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-panel-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Önceki üst üste margin’leri tek sütunda sıfırla */
+.admin-panel-content .admin-site-listing-duration,
+.admin-panel-content .admin-listing-reports,
+.admin-panel-content .admin-users-panel {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 860px) {
+  .admin-panel-layout {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .admin-panel-nav {
+    flex: none;
+    width: 100%;
+    position: static;
+    padding: 12px;
+  }
+
+  .admin-panel-nav__list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .admin-panel-nav__item {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 140px;
+  }
+
+  .admin-panel-nav__btn {
+    min-height: 44px;
+    flex-wrap: wrap;
+  }
+}
+
 .listing-report-panel__trigger {
   margin-top: 4px;
 }

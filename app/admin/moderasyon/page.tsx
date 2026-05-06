@@ -22,6 +22,9 @@ type ListingFilter = "all" | "pending" | "active" | "sold" | "rejected";
 
 type RiskListingFilter = "all" | "risk";
 
+/** Sol menü bölümleri */
+type AdminPanelSection = "settings" | "listings" | "reports" | "users";
+
 const FILTER_LABEL: Record<ListingFilter, string> = {
   all: "Tümü",
   pending: "Onay bekleyen",
@@ -146,7 +149,8 @@ export default function AdminModerationPage() {
   const [sortKey, setSortKey] = useState<SortOption>("created_desc");
   const [searchQuery, setSearchQuery] = useState("");
   const [riskFilter, setRiskFilter] = useState<RiskListingFilter>("all");
-  const [modTab, setModTab] = useState<"listings" | "reports">("listings");
+  const [panelSection, setPanelSection] =
+    useState<AdminPanelSection>("listings");
   const [reportOpenCount, setReportOpenCount] = useState<number | null>(null);
 
   const authHeaders = useCallback(async () => {
@@ -295,9 +299,11 @@ export default function AdminModerationPage() {
   }, [moderationStaff, checkedStaff, refreshReportOpenBadge]);
 
   useEffect(() => {
-    if (!moderationStaff || !checkedStaff || modTab !== "listings") return;
+    if (!moderationStaff || !checkedStaff || panelSection !== "listings") {
+      return;
+    }
     void loadListings(filter);
-  }, [filter, moderationStaff, checkedStaff, modTab, loadListings]);
+  }, [filter, moderationStaff, checkedStaff, panelSection, loadListings]);
 
   async function setStatus(id: string, status: "active" | "rejected") {
     setBusyId(id);
@@ -396,45 +402,101 @@ export default function AdminModerationPage() {
     <div className="account-page">
       <h1 className="section-title">Yönetim paneli</h1>
       <p className="meta" style={{ marginTop: -6, marginBottom: 18 }}>
-        İlanları onaylayın ve yönetin, şikayetlere bakın; ilan yayın süresi ve kullanıcı ayarları
-        burada.
+        Sol menüden bölüm seçin: site ayarları, ilanlar, şikayetler ve kullanıcı yönetimi.
       </p>
 
-      <AdminSiteListingDurationSection
-        enabled={moderationStaff && checkedStaff}
-        getAuthHeaders={authHeaders}
-      />
+      <div className="admin-panel-layout">
+        <nav
+          className="admin-panel-nav"
+          aria-label="Yönetim paneli bölümleri"
+        >
+          <p className="admin-panel-nav__title">Bölümler</p>
+          <ul className="admin-panel-nav__list">
+            <li className="admin-panel-nav__item">
+              <button
+                type="button"
+                className={
+                  panelSection === "settings"
+                    ? "admin-panel-nav__btn admin-panel-nav__btn--stack admin-panel-nav__btn--active"
+                    : "admin-panel-nav__btn admin-panel-nav__btn--stack"
+                }
+                aria-current={panelSection === "settings" ? "page" : undefined}
+                disabled={busyId !== null}
+                onClick={() => setPanelSection("settings")}
+              >
+                <span>
+                  Site ayarları
+                  <span className="admin-panel-nav__hint">
+                    İlan yayın süresi
+                  </span>
+                </span>
+              </button>
+            </li>
+            <li className="admin-panel-nav__item">
+              <button
+                type="button"
+                className={
+                  panelSection === "listings"
+                    ? "admin-panel-nav__btn admin-panel-nav__btn--active"
+                    : "admin-panel-nav__btn"
+                }
+                aria-current={panelSection === "listings" ? "page" : undefined}
+                disabled={busyId !== null}
+                onClick={() => setPanelSection("listings")}
+              >
+                İlanlar
+              </button>
+            </li>
+            <li className="admin-panel-nav__item">
+              <button
+                type="button"
+                className={
+                  panelSection === "reports"
+                    ? "admin-panel-nav__btn admin-panel-nav__btn--active"
+                    : "admin-panel-nav__btn"
+                }
+                aria-current={panelSection === "reports" ? "page" : undefined}
+                disabled={busyId !== null}
+                onClick={() => {
+                  setPanelSection("reports");
+                  void refreshReportOpenBadge();
+                }}
+              >
+                <span>Şikayetler</span>
+                {reportOpenCount !== null && reportOpenCount > 0 ? (
+                  <span className="admin-panel-nav__badge" aria-label={`Açık şikayet: ${reportOpenCount}`}>
+                    {reportOpenCount}
+                  </span>
+                ) : null}
+              </button>
+            </li>
+            <li className="admin-panel-nav__item">
+              <button
+                type="button"
+                className={
+                  panelSection === "users"
+                    ? "admin-panel-nav__btn admin-panel-nav__btn--active"
+                    : "admin-panel-nav__btn"
+                }
+                aria-current={panelSection === "users" ? "page" : undefined}
+                disabled={busyId !== null}
+                onClick={() => setPanelSection("users")}
+              >
+                Kullanıcı yönetimi
+              </button>
+            </li>
+          </ul>
+        </nav>
 
-      <div className="admin-mod-main-tabs" role="tablist" aria-label="Yönetim paneli sekmeleri">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={modTab === "listings"}
-          className={modTab === "listings" ? "btn btn-primary" : "btn btn-outline"}
-          disabled={busyId !== null}
-          onClick={() => setModTab("listings")}
-        >
-          İlanlar
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={modTab === "reports"}
-          className={modTab === "reports" ? "btn btn-primary" : "btn btn-outline"}
-          disabled={busyId !== null}
-          onClick={() => {
-            setModTab("reports");
-            void refreshReportOpenBadge();
-          }}
-        >
-          Şikayetler
-          {reportOpenCount !== null && reportOpenCount > 0 ? (
-            <span className="admin-mod-main-tabs__badge">{reportOpenCount}</span>
+        <div className="admin-panel-content">
+          {panelSection === "settings" ? (
+            <AdminSiteListingDurationSection
+              enabled={moderationStaff && checkedStaff}
+              getAuthHeaders={authHeaders}
+            />
           ) : null}
-        </button>
-      </div>
 
-      {modTab === "listings" ? (
+          {panelSection === "listings" ? (
         <>
           <p className="meta" style={{ marginBottom: 16 }}>
             Durum, sıralama ve arama ile daraltın. &quot;Yasaklı ürün uyarısı&quot; filtresi
@@ -674,19 +736,25 @@ export default function AdminModerationPage() {
         )}
           </section>
         </>
-      ) : (
-        <AdminListingReportsSection
-          enabled={moderationStaff && checkedStaff}
-          getAuthHeaders={authHeaders}
-          onReportsUpdated={handleReportsUpdated}
-        />
-      )}
+          ) : null}
 
-      <AdminUserManagementSection
-        enabled={moderationStaff && checkedStaff}
-        adminPower={fullAdminPower}
-        getAuthHeaders={authHeaders}
-      />
+          {panelSection === "reports" ? (
+            <AdminListingReportsSection
+              enabled={moderationStaff && checkedStaff}
+              getAuthHeaders={authHeaders}
+              onReportsUpdated={handleReportsUpdated}
+            />
+          ) : null}
+
+          {panelSection === "users" ? (
+            <AdminUserManagementSection
+              enabled={moderationStaff && checkedStaff}
+              adminPower={fullAdminPower}
+              getAuthHeaders={authHeaders}
+            />
+          ) : null}
+        </div>
+      </div>
 
       <p className="meta" style={{ marginTop: 20 }}>
         <Link href="/">Ana sayfa</Link>
