@@ -191,7 +191,7 @@ export default function Header() {
             />
           </Link>
 
-          {homeMobileBrowse ? <NavHomeCategoryButton /> : null}
+          {isMobileNav === true ? <NavHomeCategoryButton /> : null}
 
           {guestMobileInline ? (
             <div className="nav-mobile-bar nav-mobile-bar--guest">

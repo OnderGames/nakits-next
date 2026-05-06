@@ -38,6 +38,8 @@ type Props = {
    * erişilebilirlik için `aria-label` kullan.
    */
   embedded?: boolean;
+  /** Mobil çekmece vb.: bir kategori linkine tıklanınca (sayfa geçişinden önce) çağrılır */
+  onCategoryNavigate?: () => void;
 };
 
 function buildCategoryHref(
@@ -118,7 +120,8 @@ export default function HomeCategorySidebar({
   counts,
   selectedCategoryKey = null,
   preserveParams = null,
-  embedded = false
+  embedded = false,
+  onCategoryNavigate = undefined
 }: Props) {
   const groupSlugFromSelection = useMemo(() => {
     if (!selectedCategoryKey?.trim()) return null;
@@ -275,6 +278,7 @@ export default function HomeCategorySidebar({
         }
         href={buildCategoryHref(compositeKey, preserveParams)}
         aria-current={active ? "page" : undefined}
+        onClick={() => onCategoryNavigate?.()}
       >
         <span className="home-category-sidebar__sub-name">{label}</span>
         <span className="home-category-sidebar__count">
@@ -593,6 +597,7 @@ export default function HomeCategorySidebar({
                             preserveParams
                           )}
                           aria-current={active ? "page" : undefined}
+                          onClick={() => onCategoryNavigate?.()}
                         >
                           <span className="home-category-sidebar__sub-name">
                             {row.label}

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { FavoritesProvider } from "@/components/FavoritesProvider";
 import Header from "@/components/Header";
+import HomeCategoryDrawer from "@/components/HomeCategoryDrawer";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MessagesPeekDock from "@/components/MessagesPeekDock";
 import SiteFooter from "@/components/SiteFooter";
@@ -54,6 +55,7 @@ export default function RootLayout({
           {children}
           <SiteFooter />
           <MobileBottomNav />
+          <HomeCategoryDrawer />
           <MessagesPeekDock />
         </FavoritesProvider>
       </body>

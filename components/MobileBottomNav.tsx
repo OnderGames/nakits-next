@@ -173,11 +173,10 @@ export default function MobileBottomNav() {
         />
 
         <TapItem
-          href={pathname !== "/" ? "/listings" : undefined}
-          onClick={pathname === "/" ? () => openHomeCategoryDrawer() : undefined}
           label="Arama"
           active={pathname.startsWith("/listings")}
           icon={<IconSearch active={pathname.startsWith("/listings")} />}
+          onClick={() => openHomeCategoryDrawer()}
         />
 
         <div className="mobile-bottom-nav__fab-slot" aria-hidden>

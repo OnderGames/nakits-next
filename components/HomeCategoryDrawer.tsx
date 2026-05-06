@@ -1,29 +1,62 @@
 "use client";
 
 import HomeCategorySidebar from "@/components/HomeCategorySidebar";
+import { buildListingCountsByCategoryKey } from "@/lib/category-counts";
+import { fetchPublicListings } from "@/lib/listings-data";
+import { listings as mockListings } from "@/lib/mock-data";
 import { HOME_CATEGORY_DRAWER_OPEN_EVENT } from "@/lib/open-home-category-drawer";
+import { hasSupabaseConfig } from "@/lib/supabase";
+import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import type { FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import type { FormEvent, MouseEvent } from "react";
 import {
+  Suspense,
   useCallback,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState
 } from "react";
 
-type Props = {
-  counts: Record<string, number>;
-};
+async function resolveCategoryCounts(): Promise<Record<string, number>> {
+  if (hasSupabaseConfig) {
+    const sb = getSupabaseBrowser();
+    if (sb) {
+      const listings = await fetchPublicListings(sb);
+      return buildListingCountsByCategoryKey(listings);
+    }
+  }
+  return buildListingCountsByCategoryKey(mockListings);
+}
 
-export default function HomeCategoryDrawer({ counts }: Props) {
+function HomeCategoryDrawerContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const titleId = useId();
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const prevActiveRef = useRef<HTMLElement | null>(null);
+  const countsFetchedRef = useRef(false);
+
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [countsLoading, setCountsLoading] = useState(false);
+
+  const preserveParams = useMemo(() => {
+    const qp = searchParams.get("q")?.trim();
+    const city = searchParams.get("city") ?? undefined;
+    const district = searchParams.get("district") ?? undefined;
+    if (!qp && !city && !district) return null;
+    return {
+      q: qp || undefined,
+      city,
+      district
+    };
+  }, [searchParams]);
+
+  const selectedCategoryKey = searchParams.get("category")?.trim() || null;
 
   const close = useCallback(() => {
     setOpen(false);
@@ -62,6 +95,34 @@ export default function HomeCategoryDrawer({ counts }: Props) {
   }, []);
 
   useEffect(() => {
+    if (!open || countsFetchedRef.current) return;
+
+    let cancelled = false;
+
+    async function run() {
+      setCountsLoading(true);
+      try {
+        const next = await resolveCategoryCounts();
+        if (!cancelled) setCounts(next);
+      } catch {
+        if (!cancelled) {
+          setCounts(buildListingCountsByCategoryKey(mockListings));
+        }
+      } finally {
+        if (!cancelled) {
+          setCountsLoading(false);
+          countsFetchedRef.current = true;
+        }
+      }
+    }
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -73,9 +134,17 @@ export default function HomeCategoryDrawer({ counts }: Props) {
   function submitKeyword(e: FormEvent) {
     e.preventDefault();
     const trimmed = q.trim();
-    router.push(trimmed ? `/listings?q=${encodeURIComponent(trimmed)}` : "/listings");
+    router.push(
+      trimmed ? `/listings?q=${encodeURIComponent(trimmed)}` : "/listings"
+    );
     close();
     setQ("");
+  }
+
+  function onAllListingsClick(e: MouseEvent<HTMLAnchorElement>) {
+    e.preventDefault();
+    router.push("/listings");
+    close();
   }
 
   if (!open) return null;
@@ -133,14 +202,25 @@ export default function HomeCategoryDrawer({ counts }: Props) {
         </form>
 
         <p className="home-category-drawer__hint meta">
-          <Link href="/listings" onClick={close}>
+          <Link href="/listings" onClick={onAllListingsClick}>
             Tüm ilanlar — şehir ve ilçe filtresi
           </Link>
         </p>
 
         <div className="home-category-drawer__scroll">
+          {countsLoading ? (
+            <p className="home-category-drawer__loading meta" role="status">
+              Kategoriler yükleniyor…
+            </p>
+          ) : null}
           <div className="home-category-drawer__sidebar-mount">
-            <HomeCategorySidebar counts={counts} embedded />
+            <HomeCategorySidebar
+              counts={counts}
+              embedded
+              preserveParams={preserveParams}
+              selectedCategoryKey={selectedCategoryKey}
+              onCategoryNavigate={close}
+            />
           </div>
         </div>
       </section>
@@ -148,3 +228,14 @@ export default function HomeCategoryDrawer({ counts }: Props) {
   );
 }
 
+/**
+ * Mobilde tüm sayfalarda: soldan kategori paneli.
+ * Sayfa değiştirmeden açılır; kategori seçilince kapanır ve `/listings?category=…` listelenir.
+ */
+export default function HomeCategoryDrawer() {
+  return (
+    <Suspense fallback={null}>
+      <HomeCategoryDrawerContent />
+    </Suspense>
+  );
+}

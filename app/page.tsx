@@ -1,5 +1,4 @@
 import Link from "next/link";
-import HomeCategoryDrawer from "@/components/HomeCategoryDrawer";
 import HomeCategorySidebar from "@/components/HomeCategorySidebar";
 import ListingCardPublic from "@/components/ListingCardPublic";
 import { buildListingCountsByCategoryKey } from "@/lib/category-counts";
@@ -37,8 +36,6 @@ export default async function HomePage() {
         <div className="home-category-sidebar-wrap">
           <HomeCategorySidebar counts={categoryCounts} />
         </div>
-
-        <HomeCategoryDrawer counts={categoryCounts} />
 
         <div className="home-satariz-main">
           {!hasSupabaseConfig && (
