@@ -321,6 +321,40 @@ export function tryParseOtomobilModelLeafSubSlug(subSlug: string): {
   return null;
 }
 
+/**
+ * Katalogda tanımlı olmayan model yaprakları (`otomobil-ford-yeni-model`).
+ * Admin veya veritabanında eklenen slug’lar için `parseCategoryKey` / `sqlCategorySlugToKey` uyumu.
+ */
+export function tryParseOtomobilDynamicModelLeafSubSlug(subSlug: string): {
+  brandSlug: string;
+  brandName: string;
+  modelSlug: string;
+} | null {
+  if (tryParseOtomobilModelLeafSubSlug(subSlug)) return null;
+  const prefix = "otomobil-";
+  if (!subSlug.startsWith(prefix)) return null;
+  const rest = subSlug.slice(prefix.length);
+  const brands = [...OTOMOBIL_MARKALARI].sort(
+    (a, b) => b.slug.length - a.slug.length
+  );
+  for (const b of brands) {
+    const p = `${b.slug}-`;
+    if (!rest.startsWith(p)) continue;
+    const modelSlug = rest.slice(p.length);
+    if (!modelSlug.length) continue;
+    return { brandSlug: b.slug, brandName: b.name, modelSlug };
+  }
+  return null;
+}
+
+function formatOtomobilDynamicModelLabel(modelSlug: string): string {
+  return modelSlug
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 /** Modelli olmayan marka yaprağı: `otomobil-ford` */
 export function tryParseOtomobilBrandOnlyLeafSubSlug(subSlug: string): {
   brandSlug: string;
@@ -360,7 +394,8 @@ export function isTasitlarOtomobilFinalListingKey(key: string): boolean {
   const rest = t.slice("tasitlar.".length);
   return (
     tryParseOtomobilModelLeafSubSlug(rest) != null ||
-    tryParseOtomobilBrandOnlyLeafSubSlug(rest) != null
+    tryParseOtomobilBrandOnlyLeafSubSlug(rest) != null ||
+    tryParseOtomobilDynamicModelLeafSubSlug(rest) != null
   );
 }
 
@@ -792,6 +827,18 @@ export function parseCategoryKey(key: string): ParsedCategorySlug | null {
           }
         };
       }
+      const dynModel = tryParseOtomobilDynamicModelLeafSubSlug(subSlug);
+      if (dynModel) {
+        return {
+          group,
+          sub: {
+            slug: subSlug,
+            name: `Otomobil › ${dynModel.brandName} › ${formatOtomobilDynamicModelLabel(
+              dynModel.modelSlug
+            )}`
+          }
+        };
+      }
     }
 
     if (group.slug === "gayrimenkul") {
@@ -900,7 +947,8 @@ export function sqlCategorySlugToKey(sqlSlug: string): string | null {
       if (
         tryParseOtomobilModelLeafSubSlug(subSlug) ||
         tryParseOtomobilBrandOnlyLeafSubSlug(subSlug) ||
-        tryParseOtomobilBrandIntermediateSubSlug(subSlug)
+        tryParseOtomobilBrandIntermediateSubSlug(subSlug) ||
+        tryParseOtomobilDynamicModelLeafSubSlug(subSlug)
       ) {
         return compositeCategoryKey(group.slug, subSlug);
       }
