@@ -216,6 +216,7 @@ main.container {
   width: auto;
   height: 44px;
   border-radius: 8px;
+  object-fit: contain;
 }
 
 .menu {
@@ -478,7 +479,7 @@ main.container {
 
   .nav-mobile-inline-guest .brand-mark {
     flex-shrink: 0;
-    padding: 6px 8px 6px 6px;
+    padding: 8px 8px;
     margin-left: -2px;
   }
 
@@ -487,7 +488,7 @@ main.container {
   }
 
   .nav-mobile-inline-guest .brand-mark__logo {
-    height: 34px;
+    height: 30px;
   }
 
   .nav-mobile-bar--guest {
@@ -579,7 +580,7 @@ main.container {
 
   .nav--auth-mobile-tray .brand-mark {
     flex-shrink: 0;
-    padding: 6px 8px 6px 6px;
+    padding: 8px 8px;
     margin-left: -2px;
   }
 
@@ -588,7 +589,7 @@ main.container {
   }
 
   .nav--auth-mobile-tray .brand-mark__logo {
-    height: 34px;
+    height: 30px;
   }
 
   /* Üst çubukta masaüstü tarzı hesap düğmesi (mobil çekmece detayı yerine) */
