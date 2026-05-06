@@ -3351,6 +3351,61 @@ form .row {
   word-break: break-word;
 }
 
+.listing-detail-spec {
+  margin: 14px 0 16px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bg) 55%, var(--card));
+}
+
+.listing-detail-spec__row {
+  display: grid;
+  grid-template-columns: minmax(96px, 120px) minmax(0, 1fr);
+  gap: 10px 16px;
+  padding: 10px 14px;
+  margin: 0;
+  border-bottom: 1px solid var(--border);
+  align-items: baseline;
+}
+
+.listing-detail-spec__row:last-child {
+  border-bottom: none;
+}
+
+.listing-detail-spec dt {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.listing-detail-spec dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 480px) {
+  .listing-detail-spec__row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .listing-detail-spec dt {
+    font-size: 11px;
+  }
+}
+
 .listing-detail-fav {
   flex-shrink: 0;
 }

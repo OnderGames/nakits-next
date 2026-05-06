@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ListingReportPanel from "@/components/ListingReportPanel";
 import ListingDetailFavoriteBar from "@/components/ListingDetailFavoriteBar";
 import ListingOwnerFavoriteStat from "@/components/ListingOwnerFavoriteStat";
+import ListingDetailSpecTable from "@/components/ListingDetailSpecTable";
 import ListingGalleryCarousel from "@/components/ListingGalleryCarousel";
 import ListingMessagePanel from "@/components/ListingMessagePanel";
 import { formatCategoryDisplay, formatPrice } from "@/lib/categories";
@@ -51,17 +52,16 @@ export default async function ListingDetailPage({ params }: Props) {
             />
           </div>
           <p className="price">{formatPrice(listing.price)}</p>
-          <p>
-            {listing.district?.trim()
-              ? `${listing.city} · ${listing.district.trim()}`
-              : listing.city}
-          </p>
+          <ListingDetailSpecTable
+            city={listing.city}
+            district={listing.district}
+            listingCode={listing.listingCode}
+            categoryKey={listing.categoryKey}
+            title={listing.title}
+            modelYear={listing.modelYear}
+            vehicleKm={listing.vehicleKm}
+          />
           <p className="meta">{formatCategoryDisplay(listing.categoryKey)}</p>
-          {listing.listingCode && (
-            <p className="meta">
-              İlan no: <strong>{listing.listingCode}</strong>
-            </p>
-          )}
           <ListingOwnerFavoriteStat
             sellerId={listing.sellerId}
             favoriteCount={listing.favoriteCount}

@@ -36,6 +36,8 @@ export const listings: Listing[] = [
     title: "Temiz Honda Civic 2018",
     categoryKey: "tasitlar.otomobil",
     city: "İzmir",
+    modelYear: 2018,
+    vehicleKm: 120000,
     price: 845000,
     image:
       "https://images.unsplash.com/photo-1493238792000-8113da705763?auto=format&fit=crop&w=1200&q=80",

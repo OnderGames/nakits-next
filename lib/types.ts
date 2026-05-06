@@ -27,4 +27,8 @@ export type Listing = {
   expiresAt?: string;
   /** Favoriye ekleyen sayısı (DB tetikleyici; satıcı özeti için) */
   favoriteCount?: number;
+  /** Vasıta ilanı: model yılı (DB `model_year`) */
+  modelYear?: number;
+  /** Vasıta ilanı: kilometre (DB `vehicle_km`) */
+  vehicleKm?: number;
 };

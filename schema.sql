@@ -57,7 +57,17 @@ create table if not exists listings (
   favorite_count int not null default 0 check (favorite_count >= 0),
   /** Tarayıcıda görünen ilan no (6–9 hane, benzersiz); paylaşım ve arama için */
   listing_code text not null,
+  /** Vasıta: kullanıcı girişli model yılı */
+  model_year smallint,
+  /** Vasıta: kilometre (tam sayı) */
+  vehicle_km integer,
   constraint listings_listing_code_digits check (listing_code ~ '^[0-9]{6,9}$'),
+  constraint listings_model_year_check check (
+    model_year is null or (model_year >= 1950 and model_year <= 2050)
+  ),
+  constraint listings_vehicle_km_check check (
+    vehicle_km is null or (vehicle_km >= 0 and vehicle_km <= 9999999)
+  ),
   unique (listing_code)
 );
 

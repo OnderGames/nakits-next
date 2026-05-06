@@ -40,6 +40,8 @@ type ListingRow = {
   status?: string;
   description?: string | null;
   favorite_count?: number | string | null;
+  model_year?: number | string | null;
+  vehicle_km?: number | string | null;
   categories: CategoryEmbed;
   profiles: ProfileEmbed;
   listing_images: ImageRow[] | null;
@@ -87,10 +89,20 @@ function normalizeListingRow(raw: unknown): ListingRow {
       r.favorite_count != null && r.favorite_count !== ""
         ? (r.favorite_count as number | string)
         : undefined,
+    model_year: r.model_year as number | string | null | undefined,
+    vehicle_km: r.vehicle_km as number | string | null | undefined,
     categories,
     profiles,
     listing_images
   };
+}
+
+function optionalYearKmInt(v: unknown): number | undefined {
+  if (v == null || v === "") return undefined;
+  const n =
+    typeof v === "number" ? v : parseInt(String(v), 10);
+  if (!Number.isFinite(n)) return undefined;
+  return n;
 }
 
 function mapRowToListing(row: ListingRow): Listing {
@@ -130,7 +142,9 @@ function mapRowToListing(row: ListingRow): Listing {
     sellerId: row.seller_id,
     sellerPublicCode: row.profiles?.public_code?.trim() || undefined,
     expiresAt: row.expires_at ?? undefined,
-    favoriteCount
+    favoriteCount,
+    modelYear: optionalYearKmInt(row.model_year),
+    vehicleKm: optionalYearKmInt(row.vehicle_km)
   };
 }
 
@@ -146,6 +160,8 @@ const listSelectNoDistrictNoFav = `
   expires_at,
   status,
   description,
+  model_year,
+  vehicle_km,
   categories ( slug ),
   profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
@@ -163,6 +179,8 @@ const listSelectNoFavCount = `
   expires_at,
   status,
   description,
+  model_year,
+  vehicle_km,
   categories ( slug ),
   profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
@@ -180,6 +198,8 @@ const listSelectNoDistrict = `
   status,
   description,
   favorite_count,
+  model_year,
+  vehicle_km,
   categories ( slug ),
   profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
@@ -198,6 +218,8 @@ const listSelect = `
   status,
   description,
   favorite_count,
+  model_year,
+  vehicle_km,
   categories ( slug ),
   profiles!seller_id ( full_name, public_code ),
   listing_images ( image_url, sort_order )
@@ -248,6 +270,8 @@ const listingEditSelect = `
       condition,
       status,
       expires_at,
+      model_year,
+      vehicle_km,
       categories ( slug ),
       listing_images ( id, image_url, sort_order )
     `;
@@ -263,6 +287,8 @@ const listingEditSelectNoDistrict = `
       condition,
       status,
       expires_at,
+      model_year,
+      vehicle_km,
       categories ( slug ),
       listing_images ( id, image_url, sort_order )
     `;
@@ -484,6 +510,8 @@ export type ListingForEdit = {
   galleryImages: { id: string; imageUrl: string }[];
   status?: Listing["status"];
   expiresAt?: string;
+  modelYear?: number;
+  vehicleKm?: number;
 };
 
 type ListingEditRowRaw = {
@@ -502,6 +530,8 @@ type ListingEditRowRaw = {
     | { id: string; image_url: string; sort_order: number }[]
     | null;
   expires_at?: string;
+  model_year?: number | string | null;
+  vehicle_km?: number | string | null;
 };
 
 export async function fetchListingForEdit(
@@ -546,7 +576,9 @@ export async function fetchListingForEdit(
     coverImageUrl: images[0]?.image_url ?? FALLBACK_IMAGE,
     galleryImages,
     status: row.status as Listing["status"] | undefined,
-    expiresAt: row.expires_at ?? undefined
+    expiresAt: row.expires_at ?? undefined,
+    modelYear: optionalYearKmInt(row.model_year),
+    vehicleKm: optionalYearKmInt(row.vehicle_km)
   };
 }
 

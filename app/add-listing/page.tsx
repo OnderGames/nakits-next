@@ -38,6 +38,8 @@ import {
   fetchListingDurationDaysPublic,
   LISTING_DURATION_DEFAULT_DAYS
 } from "@/lib/site-settings";
+import { isTasitlarListingCategoryKey } from "@/lib/listing-detail-spec";
+import { parseModelYearInput } from "@/lib/vehicle-fields";
 import { MAX_LISTING_PHOTOS } from "@/lib/listing-photos";
 import { countSellerOpenListings } from "@/lib/listings-data";
 import {
@@ -53,6 +55,12 @@ function mapListingInsertError(message: string | undefined): string {
     lower.includes("expires at")
   ) {
     return "Veritabanında ilan süresi sütunu eksik. Supabase → SQL Editor’da sql/migration_listing_expires_quota.sql dosyasını çalıştırın.";
+  }
+  if (
+    lower.includes("model_year") ||
+    lower.includes("vehicle_km")
+  ) {
+    return "Veritabanında vasıta alanları eksik. Supabase → SQL Editor’da sql/migration_listings_vehicle_year_km.sql dosyasını çalıştırın.";
   }
   if (
     lower.includes("listing_code") ||
@@ -138,7 +146,10 @@ export default function AddListingPage() {
   const [listingDurationDays, setListingDurationDays] = useState(
     LISTING_DURATION_DEFAULT_DAYS
   );
+  const [vehicleModelYearStr, setVehicleModelYearStr] = useState("");
+  const [vehicleKmText, setVehicleKmText] = useState("");
   const livePriceInput = useLiveTrPriceInput(priceText, setPriceText);
+  const liveKmInput = useLiveTrPriceInput(vehicleKmText, setVehicleKmText);
   const [photosNormalizing, setPhotosNormalizing] = useState(false);
   const [phase, setPhase] = useState<AddListingPhase>("main");
   const skipSubAutoAdvanceRef = useRef(false);
@@ -327,6 +338,35 @@ export default function AddListingPage() {
       setError("Geçerli bir fiyat girin.");
       return;
     }
+
+    const vasita = isTasitlarListingCategoryKey(detailCategoryKey);
+    let modelYearIns: number | null = null;
+    let vehicleKmIns: number | null = null;
+    if (vasita) {
+      const ys = vehicleModelYearStr.trim();
+      if (!ys) {
+        setError("Vasıta ilanlarında model yılı zorunludur.");
+        return;
+      }
+      const y = parseModelYearInput(ys);
+      if (y == null) {
+        setError("Model yılı 1950–2050 arasında bir tam sayı olmalı.");
+        return;
+      }
+      modelYearIns = y;
+
+      if (!vehicleKmText.trim()) {
+        setError("Vasıta ilanlarında kilometre zorunludur.");
+        return;
+      }
+      const km = Math.round(parsePriceInput(vehicleKmText));
+      if (!Number.isFinite(km) || km < 0 || km > 9999999) {
+        setError("Kilometre geçerli bir tam sayı olmalı (örn. 120.000).");
+        return;
+      }
+      vehicleKmIns = km;
+    }
+
     if (photos.length === 0) {
       setError("En az bir fotoğraf seçin (en fazla 8).");
       return;
@@ -382,7 +422,9 @@ export default function AddListingPage() {
           condition: "used",
           show_phone_on_listing: false,
           expires_at: listingExpiresAtIsoFromDays(listingDurationDays),
-          listing_code
+          listing_code,
+          model_year: vasita ? modelYearIns : null,
+          vehicle_km: vasita ? vehicleKmIns : null
         })
         .select("id")
         .single();
@@ -480,6 +522,8 @@ export default function AddListingPage() {
     setListingCity("");
     setListingDistrict("");
     setPriceText("");
+    setVehicleModelYearStr("");
+    setVehicleKmText("");
     event.currentTarget.reset();
   };
 
@@ -711,6 +755,51 @@ export default function AddListingPage() {
               </select>
             </div>
           </div>
+
+          {isTasitlarListingCategoryKey(detailCategoryKey) ? (
+            <div className="row" style={{ marginTop: 10 }}>
+              <div>
+                <label htmlFor="listing-model-year">Model yılı (zorunlu)</label>
+                <input
+                  id="listing-model-year"
+                  name="vehicle_model_year"
+                  type="number"
+                  inputMode="numeric"
+                  min={1950}
+                  max={2050}
+                  step={1}
+                  required
+                  placeholder="Örn: 2018"
+                  value={vehicleModelYearStr}
+                  onChange={(e) => setVehicleModelYearStr(e.target.value)}
+                  disabled={submitting}
+                />
+                <p className="meta" style={{ marginTop: 6, marginBottom: 0 }}>
+                  1950–2050 arası; ilan özetinde gösterilir.
+                </p>
+              </div>
+              <div>
+                <label htmlFor="listing-km">Kilometre (zorunlu)</label>
+                <input
+                  ref={liveKmInput.inputRef}
+                  id="listing-km"
+                  name="vehicle_km"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  required
+                  placeholder="Örn: 120.000"
+                  value={vehicleKmText}
+                  onChange={liveKmInput.onChange}
+                  onBlur={liveKmInput.onBlur}
+                  disabled={submitting}
+                />
+                <p className="meta" style={{ marginTop: 6, marginBottom: 0 }}>
+                  Tam sayı km; binlik ayırıcı kullanabilirsiniz.
+                </p>
+              </div>
+            </div>
+          ) : null}
 
           <div style={{ marginTop: 10 }}>
             <label htmlFor="listing-desc">Açıklama</label>

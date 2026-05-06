@@ -22,6 +22,8 @@ import {
   parsePriceInput,
   sqlCategorySlugFromKey
 } from "@/lib/categories";
+import { isTasitlarListingCategoryKey } from "@/lib/listing-detail-spec";
+import { parseModelYearInput } from "@/lib/vehicle-fields";
 import { useLiveTrPriceInput } from "@/lib/use-live-tr-price-input";
 import AddListingMainCategoryGrid from "@/components/AddListingMainCategoryGrid";
 import CategoryMillerPicker from "@/components/CategoryMillerPicker";
@@ -132,7 +134,13 @@ export default function EditListingPage() {
   const [editCity, setEditCity] = useState("");
   const [editDistrict, setEditDistrict] = useState("");
   const [editPriceText, setEditPriceText] = useState("");
+  const [editVehicleModelYearStr, setEditVehicleModelYearStr] = useState("");
+  const [editVehicleKmText, setEditVehicleKmText] = useState("");
   const livePriceInput = useLiveTrPriceInput(editPriceText, setEditPriceText);
+  const liveKmEditInput = useLiveTrPriceInput(
+    editVehicleKmText,
+    setEditVehicleKmText
+  );
   const [phase, setPhase] = useState<EditListingPhase>("main");
   const skipSubAutoAdvanceRef = useRef(false);
   const prevCategoryReadyRef = useRef(false);
@@ -249,6 +257,16 @@ export default function EditListingPage() {
       setEditCity(row.city);
       setEditDistrict(row.district ?? "");
       setEditPriceText(formatPriceInputDisplay(row.price));
+      setEditVehicleModelYearStr(
+        row.modelYear != null && Number.isFinite(row.modelYear)
+          ? String(Math.round(row.modelYear))
+          : ""
+      );
+      setEditVehicleKmText(
+        row.vehicleKm != null && Number.isFinite(row.vehicleKm)
+          ? formatPriceInputDisplay(Math.round(row.vehicleKm))
+          : ""
+      );
       setListingFetchDone(true);
     })();
     return () => {
@@ -356,6 +374,35 @@ export default function EditListingPage() {
       setError("Geçerli bir fiyat girin.");
       return;
     }
+
+    const vasita = isTasitlarListingCategoryKey(detailCategoryKey);
+    let modelYearVal: number | null = null;
+    let vehicleKmVal: number | null = null;
+    if (vasita) {
+      const ys = editVehicleModelYearStr.trim();
+      if (!ys) {
+        setError("Vasıta ilanlarında model yılı zorunludur.");
+        return;
+      }
+      const y = parseModelYearInput(ys);
+      if (y == null) {
+        setError("Model yılı 1950–2050 arasında bir tam sayı olmalı.");
+        return;
+      }
+      modelYearVal = y;
+
+      if (!editVehicleKmText.trim()) {
+        setError("Vasıta ilanlarında kilometre zorunludur.");
+        return;
+      }
+      const km = Math.round(parsePriceInput(editVehicleKmText));
+      if (!Number.isFinite(km) || km < 0 || km > 9999999) {
+        setError("Kilometre geçerli bir tam sayı olmalı (örn. 120.000).");
+        return;
+      }
+      vehicleKmVal = km;
+    }
+
     if (slides.length === 0) {
       setError("En az bir fotoğraf bulunmalıdır.");
       return;
@@ -390,7 +437,9 @@ export default function EditListingPage() {
         district: districtVal || null,
         condition,
         show_phone_on_listing: false,
-        category_id: catRow.id
+        category_id: catRow.id,
+        model_year: vasita ? modelYearVal : null,
+        vehicle_km: vasita ? vehicleKmVal : null
       })
       .eq("id", listing.id)
       .eq("seller_id", user.id);
@@ -779,6 +828,43 @@ export default function EditListingPage() {
               </select>
             </div>
           </div>
+
+          {isTasitlarListingCategoryKey(detailCategoryKey) ? (
+            <div className="row" style={{ marginTop: 10 }}>
+              <div>
+                <label htmlFor="edit-model-year">Model yılı (zorunlu)</label>
+                <input
+                  id="edit-model-year"
+                  type="number"
+                  inputMode="numeric"
+                  min={1950}
+                  max={2050}
+                  step={1}
+                  required
+                  placeholder="Örn: 2018"
+                  value={editVehicleModelYearStr}
+                  onChange={(e) => setEditVehicleModelYearStr(e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+              <div>
+                <label htmlFor="edit-km">Kilometre (zorunlu)</label>
+                <input
+                  ref={liveKmEditInput.inputRef}
+                  id="edit-km"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  required
+                  placeholder="Örn: 120.000"
+                  value={editVehicleKmText}
+                  onChange={liveKmEditInput.onChange}
+                  onBlur={liveKmEditInput.onBlur}
+                  disabled={submitting}
+                />
+              </div>
+            </div>
+          ) : null}
 
           <div style={{ marginTop: 10 }}>
             <label htmlFor="edit-desc">Açıklama</label>
