@@ -7,6 +7,7 @@ export type SubcategoryDef = {
 
 /** Otomobil altı marka (slug URL/güvenli; name ekranda birebir) */
 export const OTOMOBIL_MARKALARI = [
+  { slug: "bmw", name: "BMW" },
   { slug: "chery", name: "Chery" },
   { slug: "citroen", name: "Citroën" },
   { slug: "fiat", name: "Fiat" },
@@ -28,6 +29,18 @@ export type OtomobilMarkaModelDef = { slug: string; name: string };
 export const OTOMOBIL_MARKA_MODELS: Partial<
   Record<(typeof OTOMOBIL_MARKALARI)[number]["slug"], readonly OtomobilMarkaModelDef[]>
 > = {
+  bmw: [
+    { slug: "1-serisi", name: "1 Serisi" },
+    { slug: "2-serisi", name: "2 Serisi" },
+    { slug: "3-serisi", name: "3 Serisi" },
+    { slug: "4-serisi", name: "4 Serisi" },
+    { slug: "5-serisi", name: "5 Serisi" },
+    { slug: "6-serisi", name: "6 Serisi" },
+    { slug: "7-serisi", name: "7 Serisi" },
+    { slug: "8-serisi", name: "8 Serisi" },
+    { slug: "i-serisi", name: "i Serisi" },
+    { slug: "m-serisi", name: "M Serisi" }
+  ],
   chery: [
     { slug: "alia", name: "Alia" },
     { slug: "chance", name: "Chance" },

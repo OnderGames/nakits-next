@@ -1,6 +1,7 @@
 -- Otomobil altı marka yaprakları (lib/categories.ts OTOMOBIL_MARKALARI ile uyumlu).
 insert into categories (slug, name)
 values
+  ('tasitlar_otomobil-bmw', 'Otomobil › BMW'),
   ('tasitlar_otomobil-chery', 'Otomobil › Chery'),
   ('tasitlar_otomobil-citroen', 'Otomobil › Citroën'),
   ('tasitlar_otomobil-fiat', 'Otomobil › Fiat'),
