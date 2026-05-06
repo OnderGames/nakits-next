@@ -185,11 +185,17 @@ function ListingsPageInner() {
   return (
     <main className="container">
       <div className="home-satariz-layout">
-        <HomeCategorySidebar
-          counts={categoryCounts}
-          selectedCategoryKey={category || null}
-          preserveParams={{ q, city, district }}
-        />
+        {/*
+          Mobilde sol kategori ağacı gizlenir (ana sayfa ile aynı); kategori
+          soldan çekmece + filtredeki select ile — önce ilan listesi görünsün.
+        */}
+        <div className="home-category-sidebar-wrap">
+          <HomeCategorySidebar
+            counts={categoryCounts}
+            selectedCategoryKey={category || null}
+            preserveParams={{ q, city, district }}
+          />
+        </div>
         <div className="home-satariz-main">
       <h1 className="section-title">Tüm İlanlar</h1>
       <section className="panel">
