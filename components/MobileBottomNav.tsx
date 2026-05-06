@@ -179,26 +179,30 @@ export default function MobileBottomNav() {
           onClick={() => openHomeCategoryDrawer()}
         />
 
-        <div className="mobile-bottom-nav__fab-slot" aria-hidden>
+        <div className="mobile-bottom-nav__fab-slot">
           <Link
             href="/add-listing"
-            className={`mobile-bottom-nav__fab${pathname.startsWith("/add-listing") ? " mobile-bottom-nav__fab--active" : ""}`}
-            aria-label="İlan ver"
+            className={`mobile-bottom-nav__fab-link${pathname.startsWith("/add-listing") ? " mobile-bottom-nav__fab-link--active" : ""}`}
           >
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden
+            <span
+              className={`mobile-bottom-nav__fab${pathname.startsWith("/add-listing") ? " mobile-bottom-nav__fab--active" : ""}`}
             >
-              <path
-                d="M12 5v14M5 12h14"
-                stroke="#fff"
-                strokeWidth={2.4}
-                strokeLinecap="round"
-              />
-            </svg>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden
+              >
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="#fff"
+                  strokeWidth={2.4}
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
+            <span className="mobile-bottom-nav__fab-label">İlan ver</span>
           </Link>
         </div>
 
