@@ -53,6 +53,11 @@ function buildCategoryHref(
 
 const GM = "gayrimenkul";
 
+function displayOtomobilModelLabel(name: string): string {
+  const i = name.lastIndexOf("›");
+  return i === -1 ? name : name.slice(i + 1).trim();
+}
+
 function gayrimenkulSubFromKey(key: string | null | undefined): string | null {
   if (!key?.trim()) return null;
   const t = key.trim();
@@ -420,7 +425,10 @@ export default function HomeCategorySidebar({
                             );
                             return (
                               <li key={mod.slug}>
-                                {renderSubLink(compositeKey, mod.name)}
+                                {renderSubLink(
+                                  compositeKey,
+                                  displayOtomobilModelLabel(mod.name)
+                                )}
                               </li>
                             );
                           })}

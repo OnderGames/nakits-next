@@ -39,6 +39,11 @@ export type CategoryMillerPickerProps = {
 /** @deprecated isim uyumu için — `isIntermediateGayrimenkulListingKey` kullanın */
 export const GAYRIMENKUL_KONUT_DRAFT_KEY = GAYRIMENKUL_KONUT_INTERMEDIATE_KEY;
 
+function displayOtomobilModelLabel(name: string): string {
+  const i = name.lastIndexOf("›");
+  return i === -1 ? name : name.slice(i + 1).trim();
+}
+
 export default function CategoryMillerPicker({
   groupSlug,
   detailCategoryKey,
@@ -615,7 +620,7 @@ export default function CategoryMillerPicker({
                         onClick={() => onCategoryKeyChange(leafKey)}
                       >
                         <span className="category-miller__row-label">
-                          {mod.name}
+                          {displayOtomobilModelLabel(mod.name)}
                         </span>
                         {sel && (
                           <span className="category-miller__ok" aria-hidden>
