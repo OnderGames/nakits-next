@@ -877,9 +877,12 @@ main.container {
   padding: 6px;
 }
 
+.nav-notif__item-wrap {
+  position: relative;
+}
+
 .nav-notif__item,
 .nav-notif__item--plain {
-  position: relative;
   display: block;
   width: 100%;
   text-align: left;

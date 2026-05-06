@@ -335,16 +335,6 @@ export default function HeaderNotificationsBell({
                       <span className="nav-notif__item-time">
                         {formatRelativeTimeTr(n.createdAt)}
                       </span>
-                      <button
-                        type="button"
-                        className="nav-notif__item-close"
-                        aria-label="Bildirimi sil"
-                        title="Sil"
-                        disabled={deletingId === n.id}
-                        onClick={(e) => void handleDeleteItem(e, n)}
-                      >
-                        ×
-                      </button>
                     </>
                   );
 
@@ -352,23 +342,35 @@ export default function HeaderNotificationsBell({
 
                   return (
                     <li key={n.id}>
-                      {href ? (
-                        <Link
-                          href={href}
-                          className={`nav-notif__item ${unread ? "nav-notif__item--unread" : ""}${broadcastCls}`}
-                          onClick={() => handleOpenItem(n)}
-                        >
-                          {content}
-                        </Link>
-                      ) : (
+                      <div className="nav-notif__item-wrap">
+                        {href ? (
+                          <Link
+                            href={href}
+                            className={`nav-notif__item ${unread ? "nav-notif__item--unread" : ""}${broadcastCls}`}
+                            onClick={() => handleOpenItem(n)}
+                          >
+                            {content}
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            className={`nav-notif__item nav-notif__item--plain ${unread ? "nav-notif__item--unread" : ""}${broadcastCls}`}
+                            onClick={() => handleOpenItem(n)}
+                          >
+                            {content}
+                          </button>
+                        )}
                         <button
                           type="button"
-                          className={`nav-notif__item nav-notif__item--plain ${unread ? "nav-notif__item--unread" : ""}${broadcastCls}`}
-                          onClick={() => handleOpenItem(n)}
+                          className="nav-notif__item-close"
+                          aria-label="Bildirimi sil"
+                          title="Sil"
+                          disabled={deletingId === n.id}
+                          onClick={(e) => void handleDeleteItem(e, n)}
                         >
-                          {content}
+                          ×
                         </button>
-                      )}
+                      </div>
                     </li>
                   );
                 })}
