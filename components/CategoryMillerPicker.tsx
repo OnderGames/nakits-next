@@ -44,6 +44,44 @@ function displayOtomobilModelLabel(name: string): string {
   return i === -1 ? name : name.slice(i + 1).trim();
 }
 
+type OtomobilSeriesGroup = {
+  seriesLabel: string;
+  seriesSlug: string | null;
+  models: Array<{ slug: string; label: string }>;
+};
+
+function groupOtomobilModelsBySeries(
+  models: readonly { slug: string; name: string }[]
+): OtomobilSeriesGroup[] {
+  const groups = new Map<string, OtomobilSeriesGroup>();
+  for (const mod of models) {
+    const parts = mod.name.split("›").map((x) => x.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      const seriesLabel = parts[0];
+      const modelLabel = parts.slice(1).join(" › ");
+      const current = groups.get(seriesLabel);
+      if (current) {
+        current.models.push({ slug: mod.slug, label: modelLabel });
+      } else {
+        groups.set(seriesLabel, {
+          seriesLabel,
+          seriesSlug: null,
+          models: [{ slug: mod.slug, label: modelLabel }]
+        });
+      }
+      continue;
+    }
+    const seriesLabel = displayOtomobilModelLabel(mod.name);
+    const current = groups.get(seriesLabel);
+    if (current) {
+      current.seriesSlug = mod.slug;
+    } else {
+      groups.set(seriesLabel, { seriesLabel, seriesSlug: mod.slug, models: [] });
+    }
+  }
+  return [...groups.values()];
+}
+
 export default function CategoryMillerPicker({
   groupSlug,
   detailCategoryKey,
@@ -598,14 +636,58 @@ export default function CategoryMillerPicker({
               role="listbox"
               aria-label="Otomobil modeli"
             >
-              {(getOtomobilModelsForBrand(brandSlugAwaitingModel) ?? []).map(
-                (mod) => {
+              {groupOtomobilModelsBySeries(
+                getOtomobilModelsForBrand(brandSlugAwaitingModel) ?? []
+              ).flatMap((series) => {
+                const items: React.ReactNode[] = [
+                  <li
+                    key={`series-${series.seriesLabel}`}
+                    className="category-miller__item category-miller__item--section"
+                  >
+                    <div className="category-miller__section-label">
+                      <span className="category-miller__section-label-text">
+                        {series.seriesLabel}
+                      </span>
+                    </div>
+                  </li>
+                ];
+                if (series.seriesSlug) {
+                  const seriesKey = compositeCategoryKey(
+                    "tasitlar",
+                    `otomobil-${brandSlugAwaitingModel}-${series.seriesSlug}`
+                  );
+                  const selSeries = detailCategoryKey === seriesKey;
+                  items.push(
+                    <li key={`all-${series.seriesSlug}`} className="category-miller__item">
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        role="option"
+                        aria-selected={selSeries}
+                        className={
+                          selSeries
+                            ? "category-miller__row category-miller__row--selected"
+                            : "category-miller__row"
+                        }
+                        onClick={() => onCategoryKeyChange(seriesKey)}
+                      >
+                        <span className="category-miller__row-label">Tüm modeller</span>
+                        {selSeries && (
+                          <span className="category-miller__ok" aria-hidden>
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                }
+                for (const mod of series.models) {
                   const leafKey = compositeCategoryKey(
                     "tasitlar",
                     `otomobil-${brandSlugAwaitingModel}-${mod.slug}`
                   );
                   const sel = detailCategoryKey === leafKey;
-                  return (
+                  items.push(
                     <li key={mod.slug} className="category-miller__item">
                       <button
                         type="button"
@@ -619,9 +701,7 @@ export default function CategoryMillerPicker({
                         }
                         onClick={() => onCategoryKeyChange(leafKey)}
                       >
-                        <span className="category-miller__row-label">
-                          {displayOtomobilModelLabel(mod.name)}
-                        </span>
+                        <span className="category-miller__row-label">{mod.label}</span>
                         {sel && (
                           <span className="category-miller__ok" aria-hidden>
                             ✓
@@ -631,7 +711,8 @@ export default function CategoryMillerPicker({
                     </li>
                   );
                 }
-              )}
+                return items;
+              })}
             </ul>
           </div>
         ) : null}

@@ -58,6 +58,44 @@ function displayOtomobilModelLabel(name: string): string {
   return i === -1 ? name : name.slice(i + 1).trim();
 }
 
+type OtomobilSeriesGroup = {
+  seriesLabel: string;
+  seriesSlug: string | null;
+  models: Array<{ slug: string; label: string }>;
+};
+
+function groupOtomobilModelsBySeries(
+  models: readonly { slug: string; name: string }[]
+): OtomobilSeriesGroup[] {
+  const groups = new Map<string, OtomobilSeriesGroup>();
+  for (const mod of models) {
+    const parts = mod.name.split("›").map((x) => x.trim()).filter(Boolean);
+    if (parts.length >= 2) {
+      const seriesLabel = parts[0];
+      const modelLabel = parts.slice(1).join(" › ");
+      const current = groups.get(seriesLabel);
+      if (current) {
+        current.models.push({ slug: mod.slug, label: modelLabel });
+      } else {
+        groups.set(seriesLabel, {
+          seriesLabel,
+          seriesSlug: null,
+          models: [{ slug: mod.slug, label: modelLabel }]
+        });
+      }
+      continue;
+    }
+    const seriesLabel = displayOtomobilModelLabel(mod.name);
+    const current = groups.get(seriesLabel);
+    if (current) {
+      current.seriesSlug = mod.slug;
+    } else {
+      groups.set(seriesLabel, { seriesLabel, seriesSlug: mod.slug, models: [] });
+    }
+  }
+  return [...groups.values()];
+}
+
 function gayrimenkulSubFromKey(key: string | null | undefined): string | null {
   if (!key?.trim()) return null;
   const t = key.trim();
@@ -418,17 +456,57 @@ export default function HomeCategorySidebar({
                           <SummaryCount n={brandTotal} />
                         </summary>
                         <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
-                          {models.map((mod) => {
-                            const compositeKey = compositeCategoryKey(
-                              "tasitlar",
-                              `otomobil-${m.slug}-${mod.slug}`
+                          {groupOtomobilModelsBySeries(models).map((series) => {
+                            const seriesCompositeKey = series.seriesSlug
+                              ? compositeCategoryKey(
+                                  "tasitlar",
+                                  `otomobil-${m.slug}-${series.seriesSlug}`
+                                )
+                              : null;
+                            const seriesCount = sumListingCountsWhere(
+                              counts,
+                              (k) => {
+                                if (seriesCompositeKey && k === seriesCompositeKey) return true;
+                                if (!series.seriesSlug) return false;
+                                return k.startsWith(
+                                  `tasitlar.otomobil-${m.slug}-${series.seriesSlug}-`
+                                );
+                              }
                             );
                             return (
-                              <li key={mod.slug}>
-                                {renderSubLink(
-                                  compositeKey,
-                                  displayOtomobilModelLabel(mod.name)
-                                )}
+                              <li key={series.seriesLabel}>
+                                <details className="home-category-sidebar__nest-details">
+                                  <summary className="home-category-sidebar__nest-summary">
+                                    {seriesCompositeKey ? (
+                                      <span className="home-category-sidebar__nest-summary-label">
+                                        {series.seriesLabel}
+                                      </span>
+                                    ) : (
+                                      <span className="home-category-sidebar__nest-summary-label">
+                                        {series.seriesLabel}
+                                      </span>
+                                    )}
+                                    <SummaryCount n={seriesCount} />
+                                  </summary>
+                                  <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
+                                    {seriesCompositeKey ? (
+                                      <li key={`${series.seriesLabel}-all`}>
+                                        {renderSubLink(seriesCompositeKey, "Tüm modeller")}
+                                      </li>
+                                    ) : null}
+                                    {series.models.map((mod) => {
+                                      const compositeKey = compositeCategoryKey(
+                                        "tasitlar",
+                                        `otomobil-${m.slug}-${mod.slug}`
+                                      );
+                                      return (
+                                        <li key={mod.slug}>
+                                          {renderSubLink(compositeKey, mod.label)}
+                                        </li>
+                                      );
+                                    })}
+                                  </ul>
+                                </details>
                               </li>
                             );
                           })}
