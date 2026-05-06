@@ -4241,6 +4241,15 @@ span.listing-seller__name--plain {
   border-radius: 12px;
 }
 
+/* Mobilde tek kaydırmada birden fazla slayt atlamayı önler (scroll-snap Level 2) */
+.listing-gallery-strip {
+  overscroll-behavior-x: contain;
+}
+
+.listing-gallery-strip > .listing-gallery-slide {
+  scroll-snap-stop: always;
+}
+
 .listing-gallery-toolbar {
   display: flex;
   flex-wrap: wrap;

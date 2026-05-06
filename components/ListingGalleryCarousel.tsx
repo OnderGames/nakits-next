@@ -265,7 +265,6 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
             gap: 0,
             overflowX: "auto",
             scrollSnapType: "x mandatory",
-            scrollBehavior: "smooth",
             WebkitOverflowScrolling: "touch",
             borderRadius: 12,
             border: "1px solid var(--border)",
@@ -277,6 +276,7 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
           {images.map((src, i) => (
             <div
               key={`${src}-${i}`}
+              className="listing-gallery-slide"
               style={{
                 flex: "0 0 100%",
                 scrollSnapAlign: "start",
