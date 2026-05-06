@@ -30,6 +30,7 @@ type RiskListingFilter = "all" | "risk";
 /** Sol menü bölümleri */
 type AdminPanelSection =
   | "settings"
+  | "announcement"
   | "legal"
   | "categories"
   | "listings"
@@ -475,8 +476,8 @@ export default function AdminModerationPage() {
     <div className="account-page">
       <h1 className="section-title">Yönetim paneli</h1>
       <p className="meta" style={{ marginTop: -6, marginBottom: 14 }}>
-        Sol menüden bölüm seçin: site ayarları, sözleşme/politika metinleri, kategoriler, ilanlar,
-        şikayetler ve kullanıcı yönetimi.
+        Sol menü sırası: ilanlar, duyuru, kullanıcı yönetimi, kategoriler, sözleşme ve politikalar,
+        şikayetler, site ayarları.
       </p>
 
       <div className="admin-dashboard-stats-row">
@@ -503,18 +504,33 @@ export default function AdminModerationPage() {
               <button
                 type="button"
                 className={
-                  panelSection === "settings"
+                  panelSection === "listings"
+                    ? "admin-panel-nav__btn admin-panel-nav__btn--active"
+                    : "admin-panel-nav__btn"
+                }
+                aria-current={panelSection === "listings" ? "page" : undefined}
+                disabled={busyId !== null}
+                onClick={() => setPanelSection("listings")}
+              >
+                İlanlar
+              </button>
+            </li>
+            <li className="admin-panel-nav__item">
+              <button
+                type="button"
+                className={
+                  panelSection === "announcement"
                     ? "admin-panel-nav__btn admin-panel-nav__btn--stack admin-panel-nav__btn--active"
                     : "admin-panel-nav__btn admin-panel-nav__btn--stack"
                 }
-                aria-current={panelSection === "settings" ? "page" : undefined}
+                aria-current={panelSection === "announcement" ? "page" : undefined}
                 disabled={busyId !== null}
-                onClick={() => setPanelSection("settings")}
+                onClick={() => setPanelSection("announcement")}
               >
                 <span>
-                  Site ayarları
+                  Duyuru
                   <span className="admin-panel-nav__hint">
-                    İlan yayın süresi
+                    Tüm üyeler · bildirim çanı
                   </span>
                 </span>
               </button>
@@ -523,18 +539,15 @@ export default function AdminModerationPage() {
               <button
                 type="button"
                 className={
-                  panelSection === "legal"
-                    ? "admin-panel-nav__btn admin-panel-nav__btn--stack admin-panel-nav__btn--active"
-                    : "admin-panel-nav__btn admin-panel-nav__btn--stack"
+                  panelSection === "users"
+                    ? "admin-panel-nav__btn admin-panel-nav__btn--active"
+                    : "admin-panel-nav__btn"
                 }
-                aria-current={panelSection === "legal" ? "page" : undefined}
+                aria-current={panelSection === "users" ? "page" : undefined}
                 disabled={busyId !== null}
-                onClick={() => setPanelSection("legal")}
+                onClick={() => setPanelSection("users")}
               >
-                <span>
-                  Sözleşme ve politikalar
-                  <span className="admin-panel-nav__hint">KVKK, yasaklı liste</span>
-                </span>
+                Kullanıcı yönetimi
               </button>
             </li>
             <li className="admin-panel-nav__item">
@@ -556,15 +569,18 @@ export default function AdminModerationPage() {
               <button
                 type="button"
                 className={
-                  panelSection === "listings"
-                    ? "admin-panel-nav__btn admin-panel-nav__btn--active"
-                    : "admin-panel-nav__btn"
+                  panelSection === "legal"
+                    ? "admin-panel-nav__btn admin-panel-nav__btn--stack admin-panel-nav__btn--active"
+                    : "admin-panel-nav__btn admin-panel-nav__btn--stack"
                 }
-                aria-current={panelSection === "listings" ? "page" : undefined}
+                aria-current={panelSection === "legal" ? "page" : undefined}
                 disabled={busyId !== null}
-                onClick={() => setPanelSection("listings")}
+                onClick={() => setPanelSection("legal")}
               >
-                İlanlar
+                <span>
+                  Sözleşme ve politikalar
+                  <span className="admin-panel-nav__hint">KVKK, yasaklı liste</span>
+                </span>
               </button>
             </li>
             <li className="admin-panel-nav__item">
@@ -594,15 +610,20 @@ export default function AdminModerationPage() {
               <button
                 type="button"
                 className={
-                  panelSection === "users"
-                    ? "admin-panel-nav__btn admin-panel-nav__btn--active"
-                    : "admin-panel-nav__btn"
+                  panelSection === "settings"
+                    ? "admin-panel-nav__btn admin-panel-nav__btn--stack admin-panel-nav__btn--active"
+                    : "admin-panel-nav__btn admin-panel-nav__btn--stack"
                 }
-                aria-current={panelSection === "users" ? "page" : undefined}
+                aria-current={panelSection === "settings" ? "page" : undefined}
                 disabled={busyId !== null}
-                onClick={() => setPanelSection("users")}
+                onClick={() => setPanelSection("settings")}
               >
-                Kullanıcı yönetimi
+                <span>
+                  Site ayarları
+                  <span className="admin-panel-nav__hint">
+                    İlan yayın süresi
+                  </span>
+                </span>
               </button>
             </li>
           </ul>
@@ -610,17 +631,18 @@ export default function AdminModerationPage() {
 
         <div className="admin-panel-content">
           {panelSection === "settings" ? (
-            <>
-              <AdminSiteListingDurationSection
-                enabled={moderationStaff && checkedStaff}
-                getAuthHeaders={authHeaders}
-              />
-              <AdminBroadcastNotificationSection
-                enabled={moderationStaff && checkedStaff}
-                adminPower={fullAdminPower}
-                getAuthHeaders={authHeaders}
-              />
-            </>
+            <AdminSiteListingDurationSection
+              enabled={moderationStaff && checkedStaff}
+              getAuthHeaders={authHeaders}
+            />
+          ) : null}
+
+          {panelSection === "announcement" ? (
+            <AdminBroadcastNotificationSection
+              enabled={moderationStaff && checkedStaff}
+              adminPower={fullAdminPower}
+              getAuthHeaders={authHeaders}
+            />
           ) : null}
 
           {panelSection === "legal" ? (
