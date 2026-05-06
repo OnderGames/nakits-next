@@ -4375,13 +4375,40 @@ span.listing-seller__name--plain {
 
 .listing-gallery-lightbox__stage {
   position: relative;
-  flex: 1;
-  min-height: min(72vh, 780px);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: min(48vh, 520px);
+  min-width: 0;
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
   background: #020617;
   border: 1px solid rgba(248, 250, 252, 0.08);
+}
+
+/* Çoklu foto: yatay kaydırma (mobil parmak) + snap; tek img yine .stage içinde */
+.listing-gallery-lightbox__strip {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  gap: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.listing-gallery-lightbox__strip > .listing-gallery-lightbox__slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+  position: relative;
+  height: 100%;
+  min-height: min(40vh, 480px);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .listing-gallery-lightbox__img {

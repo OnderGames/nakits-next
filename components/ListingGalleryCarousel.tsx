@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState
 } from "react";
@@ -16,6 +17,7 @@ type Props = {
 
 export default function ListingGalleryCarousel({ images, title }: Props) {
   const stripRef = useRef<HTMLDivElement>(null);
+  const lightboxStripRef = useRef<HTMLDivElement>(null);
   const galleryRootRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef(0);
   const lightboxIndexRef = useRef(0);
@@ -54,6 +56,21 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
     [images.length]
   );
 
+  const scrollLightboxToIndex = useCallback(
+    (index: number, behavior: ScrollBehavior = "smooth") => {
+      const el = lightboxStripRef.current;
+      if (!el || images.length === 0) return;
+      const clamped = Math.max(0, Math.min(index, images.length - 1));
+      const slide = el.children.item(clamped) as HTMLElement | null;
+      slide?.scrollIntoView({
+        behavior,
+        inline: "start",
+        block: "nearest"
+      });
+    },
+    [images.length]
+  );
+
   useEffect(() => {
     const el = stripRef.current;
     if (!el || images.length <= 1) return;
@@ -79,6 +96,45 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
     };
   }, [lightboxOpen]);
 
+  /** Açılışta scroll senkronundan önce şeridi doğru indexe getir (layout aşamasında) */
+  useLayoutEffect(() => {
+    if (!lightboxOpen || images.length <= 1) return;
+    const el = lightboxStripRef.current;
+    if (!el) return;
+    const idx = Math.min(lightboxIndexRef.current, images.length - 1);
+    const slideW = el.firstElementChild?.clientWidth ?? el.clientWidth;
+    if (slideW > 0) {
+      el.scrollLeft = idx * slideW;
+      return;
+    }
+    const slide = el.children.item(idx) as HTMLElement | null;
+    slide?.scrollIntoView({
+      inline: "start",
+      block: "nearest",
+      behavior: "instant"
+    });
+  }, [lightboxOpen, images.length]);
+
+  /** Büyük görüntüle: kaydırma pozisyonu → sayaç / ref */
+  useEffect(() => {
+    if (!lightboxOpen || images.length <= 1) return;
+    const el = lightboxStripRef.current;
+    if (!el) return;
+
+    const sync = () => {
+      const slideW = el.firstElementChild?.clientWidth ?? el.clientWidth;
+      if (slideW <= 0) return;
+      const idx = Math.round(el.scrollLeft / slideW);
+      const next = Math.min(idx, images.length - 1);
+      setLightboxIndex(next);
+      lightboxIndexRef.current = next;
+    };
+
+    el.addEventListener("scroll", sync, { passive: true });
+    sync();
+    return () => el.removeEventListener("scroll", sync);
+  }, [lightboxOpen, images.length]);
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (lightboxOpen && e.key === "Escape") {
@@ -94,12 +150,12 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
       if (lightboxOpen) {
         if (e.key === "ArrowLeft") {
           e.preventDefault();
-          setLightboxIndex((i) => Math.max(0, i - 1));
+          scrollLightboxToIndex(lightboxIndexRef.current - 1, "smooth");
           return;
         }
         if (e.key === "ArrowRight") {
           e.preventDefault();
-          setLightboxIndex((i) => Math.min(images.length - 1, i + 1));
+          scrollLightboxToIndex(lightboxIndexRef.current + 1, "smooth");
           return;
         }
       }
@@ -125,7 +181,13 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [images.length, lightboxOpen, galleryHover, scrollToIndex]);
+  }, [
+    images.length,
+    lightboxOpen,
+    galleryHover,
+    scrollToIndex,
+    scrollLightboxToIndex
+  ]);
 
   if (images.length === 0) {
     return null;
@@ -170,19 +232,41 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
             </button>
           </div>
           <div className="listing-gallery-lightbox__stage">
-            {/* Native img: Next/Image remount + optimizer gecikmesi titremeye yol açıyordu */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={images[lightboxIndex]}
-              alt={
-                images.length > 1
-                  ? `${title} — fotoğraf ${lightboxIndex + 1} / ${images.length}`
-                  : title
-              }
-              className="listing-gallery-lightbox__img"
-              decoding="async"
-              fetchPriority="high"
-            />
+            {images.length > 1 ? (
+              <div
+                ref={lightboxStripRef}
+                className="listing-gallery-lightbox__strip"
+                aria-roledescription="carousel"
+                aria-label={`${title} — büyük fotoğraflar`}
+              >
+                {images.map((src, i) => (
+                  <div
+                    key={`lb-${src}-${i}`}
+                    className="listing-gallery-lightbox__slide"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={src}
+                      alt={`${title} — fotoğraf ${i + 1} / ${images.length}`}
+                      className="listing-gallery-lightbox__img"
+                      decoding="async"
+                      fetchPriority={i === lightboxIndex ? "high" : "auto"}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={images[0]}
+                  alt={title}
+                  className="listing-gallery-lightbox__img"
+                  decoding="async"
+                  fetchPriority="high"
+                />
+              </>
+            )}
           </div>
           {images.length > 1 ? (
             <div className="listing-gallery-lightbox__nav">
@@ -191,7 +275,7 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
                 className="btn btn-outline"
                 disabled={lightboxIndex <= 0}
                 onClick={() =>
-                  setLightboxIndex((i) => Math.max(0, i - 1))
+                  scrollLightboxToIndex(lightboxIndex - 1, "smooth")
                 }
                 aria-label="Önceki fotoğraf"
               >
@@ -202,9 +286,7 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
                 className="btn btn-outline"
                 disabled={lightboxIndex >= images.length - 1}
                 onClick={() =>
-                  setLightboxIndex((i) =>
-                    Math.min(images.length - 1, i + 1)
-                  )
+                  scrollLightboxToIndex(lightboxIndex + 1, "smooth")
                 }
                 aria-label="Sonraki fotoğraf"
               >
@@ -214,7 +296,7 @@ export default function ListingGalleryCarousel({ images, title }: Props) {
           ) : null}
           {images.length > 1 ? (
             <p className="listing-gallery-lightbox__hint meta">
-              ← → ile gezin · Esc ile kapat
+              Kaydırın veya ← → ile gezin · Esc ile kapat
             </p>
           ) : (
             <p className="listing-gallery-lightbox__hint meta">
