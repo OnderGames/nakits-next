@@ -155,6 +155,8 @@ export default function AddListingPage() {
   const [phase, setPhase] = useState<AddListingPhase>("main");
   const skipSubAutoAdvanceRef = useRef(false);
   const prevCategoryReadyRef = useRef(false);
+  const galleryPhotoInputRef = useRef<HTMLInputElement>(null);
+  const cameraPhotoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (phase !== "sub") {
@@ -825,29 +827,83 @@ export default function AddListingPage() {
           </div>
 
           <div style={{ marginTop: 10 }}>
-            <label htmlFor="listing-photo">
+            <p
+              id="listing-photo-label"
+              style={{ marginBottom: 8, fontWeight: 600, fontSize: 14 }}
+            >
               Fotoğraflar{" "}
               <span className="meta" style={{ fontWeight: 400 }}>
                 (en az 1, en fazla {MAX_LISTING_PHOTOS})
               </span>
-            </label>
-            <input
-              id="listing-photo"
-              type="file"
-              accept="image/*"
-              multiple
-              disabled={
-                submitting ||
-                photosNormalizing ||
-                photos.length >= MAX_LISTING_PHOTOS
-              }
-              onChange={handlePhotosChange}
-            />
+            </p>
+            <div
+              className="add-listing-photo-picker"
+              role="group"
+              aria-labelledby="listing-photo-label"
+            >
+              <input
+                ref={galleryPhotoInputRef}
+                id="listing-photo-gallery"
+                type="file"
+                accept="image/*"
+                multiple
+                className="add-listing-photo-picker__input"
+                tabIndex={-1}
+                disabled={
+                  submitting ||
+                  photosNormalizing ||
+                  photos.length >= MAX_LISTING_PHOTOS
+                }
+                onChange={handlePhotosChange}
+              />
+              <input
+                ref={cameraPhotoInputRef}
+                id="listing-photo-camera"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="add-listing-photo-picker__input"
+                tabIndex={-1}
+                disabled={
+                  submitting ||
+                  photosNormalizing ||
+                  photos.length >= MAX_LISTING_PHOTOS
+                }
+                onChange={handlePhotosChange}
+              />
+              <div className="add-listing-photo-picker__actions">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  disabled={
+                    submitting ||
+                    photosNormalizing ||
+                    photos.length >= MAX_LISTING_PHOTOS
+                  }
+                  onClick={() => galleryPhotoInputRef.current?.click()}
+                >
+                  Dosya seç
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  disabled={
+                    submitting ||
+                    photosNormalizing ||
+                    photos.length >= MAX_LISTING_PHOTOS
+                  }
+                  onClick={() => cameraPhotoInputRef.current?.click()}
+                >
+                  Kamera
+                </button>
+              </div>
+            </div>
             <p className="meta" style={{ marginTop: 6 }}>
               {photosNormalizing
                 ? "Fotoğraflar standart boyuta getiriliyor…"
                 : `Büyük görseller en fazla ${LISTING_IMAGE_MAX_EDGE_PX} px uzun kenara indirilir ve JPEG olarak kaydedilir.`}{" "}
               Birden fazla seçebilir veya tekrar ekleyerek tamamlayabilirsiniz.
+              Mobilde Kamera ile çekilen fotoğraf da listeye eklenir.
               {photos.length > 0 && (
                 <>
                   {" "}

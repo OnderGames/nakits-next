@@ -129,6 +129,8 @@ export default function EditListingPage() {
   const [galleryNormalizing, setGalleryNormalizing] = useState(false);
   const slidesRef = useRef<EditSlide[]>([]);
   slidesRef.current = slides;
+  const galleryPhotoInputRef = useRef<HTMLInputElement>(null);
+  const cameraPhotoInputRef = useRef<HTMLInputElement>(null);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -890,24 +892,81 @@ export default function EditListingPage() {
           </div>
 
           <div style={{ marginTop: 10 }}>
-            <label htmlFor="edit-gallery-photos">
+            <p
+              id="edit-gallery-photo-label"
+              style={{ marginBottom: 8, fontWeight: 600, fontSize: 14 }}
+            >
               Fotoğraflar{" "}
               <span className="meta" style={{ fontWeight: 400 }}>
                 (en az 1, en fazla {MAX_LISTING_PHOTOS})
               </span>
-            </label>
-            <input
-              id="edit-gallery-photos"
-              type="file"
-              accept="image/*"
-              multiple
-              disabled={submitting || galleryNormalizing}
-              onChange={(e) => void handleGalleryPhotosChange(e)}
-            />
+            </p>
+            <div
+              className="add-listing-photo-picker"
+              role="group"
+              aria-labelledby="edit-gallery-photo-label"
+            >
+              <input
+                ref={galleryPhotoInputRef}
+                id="edit-gallery-photos"
+                type="file"
+                accept="image/*"
+                multiple
+                className="add-listing-photo-picker__input"
+                tabIndex={-1}
+                disabled={
+                  submitting ||
+                  galleryNormalizing ||
+                  slides.length >= MAX_LISTING_PHOTOS
+                }
+                onChange={(e) => void handleGalleryPhotosChange(e)}
+              />
+              <input
+                ref={cameraPhotoInputRef}
+                id="edit-gallery-camera"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="add-listing-photo-picker__input"
+                tabIndex={-1}
+                disabled={
+                  submitting ||
+                  galleryNormalizing ||
+                  slides.length >= MAX_LISTING_PHOTOS
+                }
+                onChange={(e) => void handleGalleryPhotosChange(e)}
+              />
+              <div className="add-listing-photo-picker__actions">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  disabled={
+                    submitting ||
+                    galleryNormalizing ||
+                    slides.length >= MAX_LISTING_PHOTOS
+                  }
+                  onClick={() => galleryPhotoInputRef.current?.click()}
+                >
+                  Dosya seç
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  disabled={
+                    submitting ||
+                    galleryNormalizing ||
+                    slides.length >= MAX_LISTING_PHOTOS
+                  }
+                  onClick={() => cameraPhotoInputRef.current?.click()}
+                >
+                  Kamera
+                </button>
+              </div>
+            </div>
             <p className="meta" style={{ marginTop: 6 }}>
               {galleryNormalizing
                 ? "Fotoğraflar hazırlanıyor…"
-                : "Galeriyi yatay kaydırın; × ile silin, ◀ ▶ ile sırayı değiştirin. İlk fotoğraf kapak olur."}{" "}
+                : "Galeriyi yatay kaydırın; × ile silin, ◀ ▶ ile sırayı değiştirin. İlk fotoğraf kapak olur. Mobilde Kamera ile çekim de eklenebilir."}{" "}
               {slides.length > 0 && (
                 <>
                   Şu an: {slides.length}/{MAX_LISTING_PHOTOS}

@@ -6787,6 +6787,38 @@ span.listing-seller__name--plain {
   hyphens: auto;
 }
 
+/* İlan ver / düzenle: görünür Dosya seç + Kamera; input’lar erişilebilirlik için gizli */
+.add-listing-photo-picker {
+  position: relative;
+}
+
+.add-listing-photo-picker__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.add-listing-photo-picker__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 540px) {
+  .add-listing-photo-picker__actions .btn {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
 .add-listing-cat-chip {
   display: flex;
   flex-wrap: wrap;
