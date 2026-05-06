@@ -46,7 +46,6 @@ function displayOtomobilModelLabel(name: string): string {
 
 type OtomobilSeriesGroup = {
   seriesLabel: string;
-  seriesSlug: string | null;
   models: Array<{ slug: string; label: string }>;
 };
 
@@ -65,19 +64,13 @@ function groupOtomobilModelsBySeries(
       } else {
         groups.set(seriesLabel, {
           seriesLabel,
-          seriesSlug: null,
           models: [{ slug: mod.slug, label: modelLabel }]
         });
       }
       continue;
     }
     const seriesLabel = displayOtomobilModelLabel(mod.name);
-    const current = groups.get(seriesLabel);
-    if (current) {
-      current.seriesSlug = mod.slug;
-    } else {
-      groups.set(seriesLabel, { seriesLabel, seriesSlug: mod.slug, models: [] });
-    }
+    if (!groups.has(seriesLabel)) groups.set(seriesLabel, { seriesLabel, models: [] });
   }
   return [...groups.values()];
 }
@@ -651,36 +644,6 @@ export default function CategoryMillerPicker({
                     </div>
                   </li>
                 ];
-                if (series.seriesSlug) {
-                  const seriesKey = compositeCategoryKey(
-                    "tasitlar",
-                    `otomobil-${brandSlugAwaitingModel}-${series.seriesSlug}`
-                  );
-                  const selSeries = detailCategoryKey === seriesKey;
-                  items.push(
-                    <li key={`all-${series.seriesSlug}`} className="category-miller__item">
-                      <button
-                        type="button"
-                        disabled={disabled}
-                        role="option"
-                        aria-selected={selSeries}
-                        className={
-                          selSeries
-                            ? "category-miller__row category-miller__row--selected"
-                            : "category-miller__row"
-                        }
-                        onClick={() => onCategoryKeyChange(seriesKey)}
-                      >
-                        <span className="category-miller__row-label">Tüm modeller</span>
-                        {selSeries && (
-                          <span className="category-miller__ok" aria-hidden>
-                            ✓
-                          </span>
-                        )}
-                      </button>
-                    </li>
-                  );
-                }
                 for (const mod of series.models) {
                   const leafKey = compositeCategoryKey(
                     "tasitlar",

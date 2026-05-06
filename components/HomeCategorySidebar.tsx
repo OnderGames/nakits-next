@@ -489,11 +489,6 @@ export default function HomeCategorySidebar({
                                     <SummaryCount n={seriesCount} />
                                   </summary>
                                   <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
-                                    {seriesCompositeKey ? (
-                                      <li key={`${series.seriesLabel}-all`}>
-                                        {renderSubLink(seriesCompositeKey, "Tüm modeller")}
-                                      </li>
-                                    ) : null}
                                     {series.models.map((mod) => {
                                       const compositeKey = compositeCategoryKey(
                                         "tasitlar",
