@@ -14,6 +14,7 @@ import { listingDetailHref } from "@/lib/listing-code";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
 
+import AdminCategoriesSection from "./AdminCategoriesSection";
 import AdminListingReportsSection from "./AdminListingReportsSection";
 import AdminSiteListingDurationSection from "./AdminSiteListingDurationSection";
 import AdminUserManagementSection from "./AdminUserManagementSection";
@@ -23,7 +24,12 @@ type ListingFilter = "all" | "pending" | "active" | "sold" | "rejected";
 type RiskListingFilter = "all" | "risk";
 
 /** Sol menü bölümleri */
-type AdminPanelSection = "settings" | "listings" | "reports" | "users";
+type AdminPanelSection =
+  | "settings"
+  | "categories"
+  | "listings"
+  | "reports"
+  | "users";
 
 const FILTER_LABEL: Record<ListingFilter, string> = {
   all: "Tümü",
@@ -451,7 +457,8 @@ export default function AdminModerationPage() {
     <div className="account-page">
       <h1 className="section-title">Yönetim paneli</h1>
       <p className="meta" style={{ marginTop: -6, marginBottom: 18 }}>
-        Sol menüden bölüm seçin: site ayarları, ilanlar, şikayetler ve kullanıcı yönetimi.
+        Sol menüden bölüm seçin: site ayarları, kategoriler, ilanlar, şikayetler ve kullanıcı
+        yönetimi.
       </p>
 
       <div className="admin-panel-layout">
@@ -479,6 +486,21 @@ export default function AdminModerationPage() {
                     İlan yayın süresi
                   </span>
                 </span>
+              </button>
+            </li>
+            <li className="admin-panel-nav__item">
+              <button
+                type="button"
+                className={
+                  panelSection === "categories"
+                    ? "admin-panel-nav__btn admin-panel-nav__btn--active"
+                    : "admin-panel-nav__btn"
+                }
+                aria-current={panelSection === "categories" ? "page" : undefined}
+                disabled={busyId !== null}
+                onClick={() => setPanelSection("categories")}
+              >
+                Kategoriler
               </button>
             </li>
             <li className="admin-panel-nav__item">
@@ -541,6 +563,14 @@ export default function AdminModerationPage() {
           {panelSection === "settings" ? (
             <AdminSiteListingDurationSection
               enabled={moderationStaff && checkedStaff}
+              getAuthHeaders={authHeaders}
+            />
+          ) : null}
+
+          {panelSection === "categories" ? (
+            <AdminCategoriesSection
+              enabled={moderationStaff && checkedStaff}
+              adminPower={fullAdminPower}
               getAuthHeaders={authHeaders}
             />
           ) : null}
