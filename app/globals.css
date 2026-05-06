@@ -7323,6 +7323,13 @@ span.listing-seller__name--plain {
     );
   }
 
+  /** Giriş / kayıt: main.container kullanılmaz */
+  body:has(nav.mobile-bottom-nav) main.auth-split {
+    padding-bottom: calc(
+      max(20px, env(safe-area-inset-bottom)) + var(--mobile-bottom-nav-gap)
+    );
+  }
+
   body:has(nav.mobile-bottom-nav) .site-footer {
     padding-bottom: calc(
       max(24px, env(safe-area-inset-bottom)) + var(--mobile-bottom-nav-gap)

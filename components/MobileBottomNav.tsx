@@ -8,20 +8,13 @@ import { useFavorites } from "@/components/FavoritesProvider";
 import { openHomeCategoryDrawer } from "@/lib/open-home-category-drawer";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
-function shouldHideForPath(pathname: string): boolean {
-  return (
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/register") ||
-    pathname.startsWith("/auth/")
-  );
-}
-
 function isProfileArea(pathname: string): boolean {
   return (
     pathname === "/profile" ||
     pathname.startsWith("/ilanlarim") ||
-    pathname.startsWith("/mesajlar")
+    pathname.startsWith("/mesajlar") ||
+    pathname === "/login" ||
+    pathname === "/register"
   );
 }
 
@@ -163,7 +156,7 @@ export default function MobileBottomNav() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (!pathname || shouldHideForPath(pathname)) return null;
+  if (!pathname) return null;
 
   const accountHref = loggedIn ? "/profile" : "/login";
   const favCount =
