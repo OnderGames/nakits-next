@@ -7,11 +7,13 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState
+  useState,
+  type SVGProps
 } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import HomeCategorySidebar from "@/components/HomeCategorySidebar";
+import ListingsFilterDrawer from "@/components/ListingsFilterDrawer";
 import ListingCard from "@/components/ListingCard";
 import { buildListingCountsByCategoryKey } from "@/lib/category-counts";
 import {
@@ -22,6 +24,12 @@ import {
 } from "@/lib/categories";
 import { listingPlaceMatchesFreeTextQuery } from "@/lib/listing-place-search";
 import { isListingCodeQuery } from "@/lib/listing-code";
+import {
+  isListingsSortKey,
+  LISTINGS_SORT_LABELS,
+  type ListingsSortKey,
+  sortListingsFiltered
+} from "@/lib/listings-sort";
 import { fetchPublicListings } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
@@ -30,49 +38,247 @@ import type { Listing } from "@/lib/types";
 import { getDistrictsForProvince } from "@/lib/turkish-districts";
 import { TURKEY_PROVINCES } from "@/lib/turkish-provinces";
 
-function buildListingsSearch(
-  p: Record<"q" | "city" | "district" | "category", string>
-): string {
+type UrlParts = {
+  q: string;
+  city: string;
+  district: string;
+  category: string;
+  sort?: ListingsSortKey | null;
+};
+
+function buildListingsHref(parts: UrlParts): string {
   const sp = new URLSearchParams();
-  const qt = p.q.trim();
+  const qt = parts.q.trim();
   if (qt) sp.set("q", qt);
-  if (p.city) sp.set("city", p.city);
-  if (p.district) sp.set("district", p.district);
-  if (p.category) sp.set("category", p.category);
-  const s = sp.toString();
-  return s ? `?${s}` : "";
+  if (parts.city) sp.set("city", parts.city);
+  if (parts.district) sp.set("district", parts.district);
+  if (parts.category) sp.set("category", parts.category);
+  if (parts.sort) sp.set("sort", parts.sort);
+  const qs = sp.toString();
+  return qs ? `/listings?${qs}` : "/listings";
 }
+
+function IconFilter(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" {...props}>
+      <path
+        d="M6 4h14M6 10h14M12 22V8M17 22v-5M11 22h6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconSortArrows(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" {...props}>
+      <path
+        d="M8 15l4 4 4-4M8 9l4-4 4 4"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+type FilterFieldsProps = {
+  suffix: "-d" | "-m";
+  q: string;
+  city: string;
+  district: string;
+  category: string;
+  /** Arama yazısı: anında güncellenir */
+  setQ: (v: string) => void;
+  onQControlledChange: (v: string) => void;
+  onCityChange: (v: string) => void;
+  onDistrictChange: (v: string) => void;
+  onCategoryChange: (v: string) => void;
+  /** Masaüstü: doğrudan uygulanır */
+  syncUrlFromSelectsNow: (
+    overrides: Partial<Pick<UrlParts, "q" | "city" | "district" | "category">>
+  ) => void;
+  onDesktopFilterClick: () => void;
+};
+
+function ListingsFilterFields({
+  suffix,
+  q,
+  city,
+  district,
+  category,
+  setQ,
+  onQControlledChange,
+  onCityChange,
+  onDistrictChange,
+  onCategoryChange,
+  syncUrlFromSelectsNow,
+  onDesktopFilterClick
+}: FilterFieldsProps) {
+  const idQ = `listings-q${suffix}`;
+  const idCity = `listings-city${suffix}`;
+  const idDistrict = `listings-district${suffix}`;
+  const idCat = `listings-cat${suffix}`;
+
+  return (
+    <div className="listings-filter-grid">
+      <div className="filter-field">
+        <label htmlFor={idQ}>Arama</label>
+        <input
+          id={idQ}
+          value={q}
+          onChange={(event) => {
+            const v = event.target.value;
+            setQ(v);
+            onQControlledChange(v);
+          }}
+          placeholder="Başlık, satıcı adı veya ilan no (6–9 hane)…"
+        />
+      </div>
+      <div className="filter-field">
+        <label htmlFor={idCity}>İl</label>
+        <select
+          id={idCity}
+          value={city}
+          onChange={(event) => {
+            const v = event.target.value;
+            onCityChange(v);
+            syncUrlFromSelectsNow({ city: v, district: "" });
+          }}
+        >
+          <option value="">Tüm iller</option>
+          {TURKEY_PROVINCES.map((il) => (
+            <option key={il} value={il}>
+              {il}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="filter-field">
+        <label htmlFor={idDistrict}>İlçe</label>
+        <select
+          id={idDistrict}
+          value={district}
+          disabled={!city}
+          onChange={(event) => {
+            const v = event.target.value;
+            onDistrictChange(v);
+            syncUrlFromSelectsNow({ district: v });
+          }}
+          title={!city ? "Önce il seçin" : "İlçe"}
+        >
+          <option value="">
+            {!city ? "Önce il seçin" : "Tüm ilçeler"}
+          </option>
+          {city
+            ? getDistrictsForProvince(city).map((ilce) => (
+                <option key={ilce} value={ilce}>
+                  {ilce}
+                </option>
+              ))
+            : null}
+        </select>
+      </div>
+      <div className="filter-field">
+        <label htmlFor={idCat}>Kategori</label>
+        <select
+          id={idCat}
+          value={category}
+          onChange={(event) => {
+            const v = event.target.value;
+            onCategoryChange(v);
+            syncUrlFromSelectsNow({ category: v });
+          }}
+        >
+          <option value="">Tüm kategoriler</option>
+          {CATEGORY_GROUPS.map((group) =>
+            group.slug === "tasitlar" ? (
+              <Fragment key={group.slug}>
+                {(() => {
+                  const { otomobil, diger } = tasitlarFilterOptgroups();
+                  return (
+                    <>
+                      <optgroup
+                        label={`${group.emoji} ${group.name} · Otomobil`}
+                      >
+                        {otomobil.map((row) => (
+                          <option key={row.reactKey} value={row.compositeKey}>
+                            {row.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup
+                        label={`${group.emoji} ${group.name} · Diğer`}
+                      >
+                        {diger.map((row) => (
+                          <option key={row.reactKey} value={row.compositeKey}>
+                            {row.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </>
+                  );
+                })()}
+              </Fragment>
+            ) : (
+              <optgroup key={group.slug} label={`${group.emoji} ${group.name}`}>
+                {leafRowsForCategoryGroup(group).map((row) => (
+                  <option key={row.reactKey} value={row.compositeKey}>
+                    {row.label}
+                  </option>
+                ))}
+              </optgroup>
+            )
+          )}
+        </select>
+      </div>
+      <div className="filter-field filter-field--action">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={onDesktopFilterClick}
+        >
+          Filtrele
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const SORT_ENTRIES = Object.entries(LISTINGS_SORT_LABELS) as Array<
+  [ListingsSortKey, string]
+>;
 
 function ListingsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const sortDetailsRef = useRef<HTMLDetailsElement>(null);
   const [data, setData] = useState<Listing[]>([]);
   const [ready, setReady] = useState(false);
   const [q, setQ] = useState("");
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const [category, setCategory] = useState("");
+  const [mobileFilterDrawerOpen, setMobileFilterDrawerOpen] = useState(false);
 
   const filtersRef = useRef({ q, city, district, category });
   filtersRef.current = { q, city, district, category };
 
   const qDebounceRef = useRef<number | null>(null);
 
-  const replaceListingsUrl = useCallback(
-    (next: Record<"q" | "city" | "district" | "category", string>) => {
-      const search = buildListingsSearch(next);
-      const path = search ? `/listings${search}` : "/listings";
-      router.replace(path, { scroll: false });
-    },
-    [router]
-  );
-
-  /** URL ↔ state (geri/ileri ve üst menü araması dahil) */
   useEffect(() => {
     setQ(searchParams.get("q") ?? "");
     setCity(searchParams.get("city") ?? "");
     setDistrict(searchParams.get("district") ?? "");
     setCategory(searchParams.get("category") ?? "");
+  }, [searchParams]);
+
+  const sortKey = useMemo((): ListingsSortKey | null => {
+    const s = searchParams.get("sort")?.trim();
+    return isListingsSortKey(s) ? s : null;
   }, [searchParams]);
 
   useEffect(() => {
@@ -101,22 +307,20 @@ function ListingsPageInner() {
     const qTrim = q.trim();
     const qLower = qTrim.toLowerCase();
     const codeExact =
-      qTrim.length > 0 && isListingCodeQuery(qTrim)
-        ? qTrim
-        : null;
+      qTrim.length > 0 && isListingCodeQuery(qTrim) ? qTrim : null;
 
     return data.filter((item) => {
       const titleHit =
         !qLower || item.title.toLowerCase().includes(qLower);
       const sellerHit =
-        !qLower ||
-        item.seller.toLowerCase().includes(qLower);
+        !qLower || item.seller.toLowerCase().includes(qLower);
       const descHit =
         !qLower ||
         (item.description != null &&
           item.description.toLowerCase().includes(qLower));
       const categoryLabelHit =
-        !qLower || categoryKeyMatchesListingSearch(item.categoryKey, qLower);
+        !qLower ||
+        categoryKeyMatchesListingSearch(item.categoryKey, qLower);
       const placeFromQHit =
         !qTrim ||
         listingPlaceMatchesFreeTextQuery(
@@ -136,14 +340,43 @@ function ListingsPageInner() {
         !district ||
         (item.district != null &&
           String(item.district).trim() === district);
-      const matchCategory = !category || item.categoryKey === category;
+      const matchCategory =
+        !category || item.categoryKey === category;
       return matchQ && matchCity && matchDistrict && matchCategory;
     });
   }, [q, city, district, category, data]);
 
+  const displayedListings = useMemo(
+    () => sortListingsFiltered(filtered, sortKey),
+    [filtered, sortKey]
+  );
+
   const categoryCounts = useMemo(
     () => buildListingCountsByCategoryKey(data),
     [data]
+  );
+
+  const navigateToListings = useCallback(
+    (overrides: Partial<UrlParts> = {}) => {
+      const f = filtersRef.current;
+      const merged: UrlParts = {
+        q: overrides.q !== undefined ? overrides.q : f.q,
+        city: overrides.city !== undefined ? overrides.city : f.city,
+        district:
+          overrides.district !== undefined ? overrides.district : f.district,
+        category:
+          overrides.category !== undefined ? overrides.category : f.category,
+        sort:
+          overrides.sort !== undefined
+            ? overrides.sort
+            : (() => {
+                const s = searchParams.get("sort")?.trim();
+                return isListingsSortKey(s) ? s : null;
+              })()
+      };
+      router.replace(buildListingsHref(merged), { scroll: false });
+    },
+    [router, searchParams]
   );
 
   function scheduleSearchUrl(text: string) {
@@ -151,7 +384,7 @@ function ListingsPageInner() {
     qDebounceRef.current = window.setTimeout(() => {
       qDebounceRef.current = null;
       const f = filtersRef.current;
-      replaceListingsUrl({
+      navigateToListings({
         q: text,
         city: f.city,
         district: f.district,
@@ -160,18 +393,48 @@ function ListingsPageInner() {
     }, 380);
   }
 
-  function applyFiltersNow() {
+  /** Masaüstü filtre kutusuyla aynı: mevcut alanları URL’ye yazar */
+  function syncUrlFromSelectsNow(
+    overrides: Partial<
+      Pick<UrlParts, "q" | "city" | "district" | "category">
+    > = {},
+    opts: { flushQDebounce?: boolean } = {}
+  ) {
+    if (opts.flushQDebounce && qDebounceRef.current) {
+      window.clearTimeout(qDebounceRef.current);
+      qDebounceRef.current = null;
+    }
+    const f = filtersRef.current;
+    navigateToListings({
+      q: overrides.q ?? f.q,
+      city: overrides.city ?? f.city,
+      district: overrides.district ?? f.district,
+      category: overrides.category ?? f.category
+    });
+  }
+
+  function applyDesktopFilterClick() {
     if (qDebounceRef.current) {
       window.clearTimeout(qDebounceRef.current);
       qDebounceRef.current = null;
     }
     const f = filtersRef.current;
-    replaceListingsUrl({
+    navigateToListings({
       q: f.q,
       city: f.city,
       district: f.district,
       category: f.category
     });
+  }
+
+  function applyMobileDrawerAndClose() {
+    syncUrlFromSelectsNow(undefined, { flushQDebounce: true });
+    setMobileFilterDrawerOpen(false);
+  }
+
+  function chooseSort(sort: ListingsSortKey) {
+    navigateToListings({ sort });
+    if (sortDetailsRef.current) sortDetailsRef.current.open = false;
   }
 
   if (!ready) {
@@ -182,13 +445,67 @@ function ListingsPageInner() {
     );
   }
 
+  const filterFieldsDesktop = (
+    <ListingsFilterFields
+      suffix="-d"
+      q={q}
+      city={city}
+      district={district}
+      category={category}
+      setQ={setQ}
+      onQControlledChange={(v) => scheduleSearchUrl(v)}
+      onCityChange={(v) => {
+        setCity(v);
+        setDistrict("");
+      }}
+      onDistrictChange={setDistrict}
+      onCategoryChange={setCategory}
+      syncUrlFromSelectsNow={(o) => syncUrlFromSelectsNow(o)}
+      onDesktopFilterClick={applyDesktopFilterClick}
+    />
+  );
+
+  const filterFieldsMobile = (
+    <ListingsFilterFields
+      suffix="-m"
+      q={q}
+      city={city}
+      district={district}
+      category={category}
+      setQ={setQ}
+      onQControlledChange={(v) => scheduleSearchUrl(v)}
+      onCityChange={(v) => {
+        setCity(v);
+        setDistrict("");
+      }}
+      onDistrictChange={setDistrict}
+      onCategoryChange={setCategory}
+      syncUrlFromSelectsNow={(o) => syncUrlFromSelectsNow(o)}
+      onDesktopFilterClick={applyDesktopFilterClick}
+    />
+  );
+
   return (
     <main className="container">
+      <ListingsFilterDrawer
+        open={mobileFilterDrawerOpen}
+        onClose={() => setMobileFilterDrawerOpen(false)}
+        title="Filtrele"
+        footer={
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ width: "100%" }}
+            onClick={applyMobileDrawerAndClose}
+          >
+            Uygula
+          </button>
+        }
+      >
+        {filterFieldsMobile}
+      </ListingsFilterDrawer>
+
       <div className="home-satariz-layout">
-        {/*
-          Mobilde sol kategori ağacı gizlenir (ana sayfa ile aynı); kategori
-          soldan çekmece + filtredeki select ile — önce ilan listesi görünsün.
-        */}
         <div className="home-category-sidebar-wrap">
           <HomeCategorySidebar
             counts={categoryCounts}
@@ -197,174 +514,77 @@ function ListingsPageInner() {
           />
         </div>
         <div className="home-satariz-main">
-      <h1 className="section-title">Tüm İlanlar</h1>
-      <section className="panel">
-        <p className="meta" style={{ margin: "0 0 12px" }}>
-          Filtreler adres çubuğuna yazılır; sayfa bağlantısını kopyalayarak aynı
-          aramayı paylaşabilirsiniz. Arama kutusunda başlık,{" "}
-          <strong>açıklama</strong>, <strong>kategori adı</strong>,{" "}
-          <strong>şehir ve ilçe adı</strong> (örn. «Kadıköy»),{" "}
-          <strong>satıcı adı</strong> veya <strong>6–9 haneli ilan no</strong>{" "}
-          kullanabilirsiniz. İsterseniz önce <strong>il</strong> seçin;
-          ardından <strong>ilçe</strong> menüsü dolar (bu alanlar çıkan listeyi daraltır).
-        </p>
-        <div className="listings-filter-grid">
-          <div className="filter-field">
-            <label htmlFor="listings-q">Arama</label>
-            <input
-              id="listings-q"
-              value={q}
-              onChange={(event) => {
-                const v = event.target.value;
-                setQ(v);
-                scheduleSearchUrl(v);
-              }}
-              placeholder="Başlık, satıcı adı veya ilan no (6–9 hane)…"
-            />
-          </div>
-          <div className="filter-field">
-            <label htmlFor="listings-city">İl</label>
-            <select
-              id="listings-city"
-              value={city}
-              onChange={(event) => {
-                const v = event.target.value;
-                setCity(v);
-                setDistrict("");
-                replaceListingsUrl({
-                  q,
-                  city: v,
-                  district: "",
-                  category
-                });
-              }}
-            >
-              <option value="">Tüm iller</option>
-              {TURKEY_PROVINCES.map((il) => (
-                <option key={il} value={il}>
-                  {il}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="filter-field">
-            <label htmlFor="listings-district">İlçe</label>
-            <select
-              id="listings-district"
-              value={district}
-              disabled={!city}
-              onChange={(event) => {
-                const v = event.target.value;
-                setDistrict(v);
-                replaceListingsUrl({
-                  q,
-                  city,
-                  district: v,
-                  category
-                });
-              }}
-              title={!city ? "Önce il seçin" : "İlçe"}
-            >
-              <option value="">
-                {!city ? "Önce il seçin" : "Tüm ilçeler"}
-              </option>
-              {city
-                ? getDistrictsForProvince(city).map((ilce) => (
-                    <option key={ilce} value={ilce}>
-                      {ilce}
-                    </option>
-                  ))
-                : null}
-            </select>
-          </div>
-          <div className="filter-field">
-            <label htmlFor="listings-cat">Kategori</label>
-            <select
-              id="listings-cat"
-              value={category}
-              onChange={(event) => {
-                const v = event.target.value;
-                setCategory(v);
-                replaceListingsUrl({
-                  q,
-                  city,
-                  district,
-                  category: v
-                });
-              }}
-            >
-              <option value="">Tüm kategoriler</option>
-              {CATEGORY_GROUPS.map((group) =>
-                group.slug === "tasitlar" ? (
-                  <Fragment key={group.slug}>
-                    {(() => {
-                      const { otomobil, diger } = tasitlarFilterOptgroups();
-                      return (
-                        <>
-                          <optgroup
-                            label={`${group.emoji} ${group.name} · Otomobil`}
-                          >
-                            {otomobil.map((row) => (
-                              <option key={row.reactKey} value={row.compositeKey}>
-                                {row.label}
-                              </option>
-                            ))}
-                          </optgroup>
-                          <optgroup
-                            label={`${group.emoji} ${group.name} · Diğer`}
-                          >
-                            {diger.map((row) => (
-                              <option key={row.reactKey} value={row.compositeKey}>
-                                {row.label}
-                              </option>
-                            ))}
-                          </optgroup>
-                        </>
-                      );
-                    })()}
-                  </Fragment>
-                ) : (
-                  <optgroup key={group.slug} label={`${group.emoji} ${group.name}`}>
-                    {leafRowsForCategoryGroup(group).map((row) => (
-                      <option key={row.reactKey} value={row.compositeKey}>
-                        {row.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                )
-              )}
-            </select>
-          </div>
-          <div className="filter-field filter-field--action">
+          <h1 className="section-title">Tüm İlanlar</h1>
+
+          <div className="listings-mobile-toolbar-wrap">
             <button
               type="button"
-              className="btn btn-primary"
-              onClick={applyFiltersNow}
+              className="listings-mobile-toolbar__btn"
+              onClick={() => setMobileFilterDrawerOpen(true)}
+              aria-expanded={mobileFilterDrawerOpen}
             >
+              <IconFilter aria-hidden />
               Filtrele
             </button>
+
+            <details ref={sortDetailsRef} className="listings-sort-details">
+              <summary>
+                <IconSortArrows aria-hidden />
+                Sırala
+              </summary>
+              <div className="listings-sort-dropdown">
+                <p className="listings-sort-dropdown__heading">
+                  Gelişmiş sıralama
+                </p>
+                {SORT_ENTRIES.map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`listings-sort-option${sortKey === key ? " listings-sort-option--current" : ""}`}
+                    onClick={() => chooseSort(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </details>
           </div>
-        </div>
-      </section>
 
-      {filtered.length === 0 && (
-        <section className="panel account-empty-panel" style={{ marginTop: 14 }}>
-          <p className="account-empty-panel__text">
-            {hasSupabaseConfig
-              ? "Henüz yayındaki ilan yok veya filtreye uygun ilan bulunamadı."
-              : "Filtreye uygun ilan yok."}
-          </p>
-          <Link className="btn btn-outline account-empty-panel__cta" href="/add-listing">
-            İlan ver
-          </Link>
-        </section>
-      )}
+          <section className="panel listings-desktop-filters-panel">
+            <p className="meta" style={{ margin: "0 0 12px" }}>
+              Filtreler adres çubuğuna yazılır; sayfa bağlantısını kopyalayarak aynı
+              aramayı paylaşabilirsiniz. Arama kutusunda başlık,{" "}
+              <strong>açıklama</strong>, <strong>kategori adı</strong>,{" "}
+              <strong>şehir ve ilçe adı</strong> (örn. «Kadıköy»),{" "}
+              <strong>satıcı adı</strong> veya <strong>6–9 haneli ilan no</strong>{" "}
+              kullanabilirsiniz. İsterseniz önce <strong>il</strong> seçin;
+              ardından <strong>ilçe</strong> menüsü dolar (bu alanlar çıkan listeyi daraltır).
+            </p>
+            {filterFieldsDesktop}
+          </section>
 
-      <section className="cards cards--vitrin" style={{ marginTop: 14 }}>
-        {filtered.map((listing) => (
-          <ListingCard key={listing.id} listing={listing} presentation="vitrin" />
-        ))}
-      </section>
+          {displayedListings.length === 0 && (
+            <section className="panel account-empty-panel" style={{ marginTop: 14 }}>
+              <p className="account-empty-panel__text">
+                {hasSupabaseConfig
+                  ? "Henüz yayındaki ilan yok veya filtreye uygun ilan bulunamadı."
+                  : "Filtreye uygun ilan yok."}
+              </p>
+              <Link className="btn btn-outline account-empty-panel__cta" href="/add-listing">
+                İlan ver
+              </Link>
+            </section>
+          )}
+
+          <section className="cards cards--vitrin" style={{ marginTop: 14 }}>
+            {displayedListings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                presentation="vitrin"
+              />
+            ))}
+          </section>
         </div>
       </div>
     </main>
