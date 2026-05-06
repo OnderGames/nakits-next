@@ -3,16 +3,19 @@
  * Menü bağlantıları üst bardaki Hesabım açılır menüsünde; burada yalnız içerik.
  */
 export default function AccountShell({
-  children
+  children,
+  crumb = "Üye paneli"
 }: {
   children: React.ReactNode;
+  /** Admin rotalarında örn. «Yönetim paneli» */
+  crumb?: string;
 }) {
   return (
     <main className="account-shell">
       <div className="account-shell__container">
         <p className="account-shell__crumb">
           <span className="account-shell__crumb-dot" aria-hidden />
-          Üye paneli
+          {crumb}
         </p>
 
         <div className="account-shell__main">{children}</div>

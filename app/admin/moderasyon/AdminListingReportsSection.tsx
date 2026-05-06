@@ -120,7 +120,7 @@ export default function AdminListingReportsSection({
       </h2>
       <p className="meta" style={{ margin: "0 14px 14px", lineHeight: 1.55 }}>
         Kullanıcıların ilettiği ilan şikayetleri. İnceleyip kaydı kapatabilirsiniz; ilanın kendisi
-        için ilan moderasyon bölümünü kullanın.
+        için «İlanlar» sekmesini kullanın.
         {openCount > 0 ? (
           <>
             {" "}

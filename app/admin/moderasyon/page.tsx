@@ -134,7 +134,7 @@ function filterRows(list: AdminListingRow[], query: string): AdminListingRow[] {
 
 export default function AdminModerationPage() {
   const [ready, setReady] = useState(false);
-  /** Moderasyon paneli (ADMIN_EMAILS veya moderator/admin rolü) */
+  /** Yönetim paneli erişimi (ADMIN_EMAILS veya moderator/admin rolü) */
   const [moderationStaff, setModerationStaff] = useState(false);
   /** Tam yönetici: kullanıcı silme + rol yükseltme */
   const [fullAdminPower, setFullAdminPower] = useState(false);
@@ -360,7 +360,7 @@ export default function AdminModerationPage() {
   if (!hasSupabaseConfig) {
     return (
       <div className="account-page">
-        <h1 className="section-title">Moderasyon</h1>
+        <h1 className="section-title">Yönetim paneli</h1>
         <p className="notice">Supabase yapılandırması yok.</p>
       </div>
     );
@@ -369,9 +369,9 @@ export default function AdminModerationPage() {
   if (!moderationStaff) {
     return (
       <div className="account-page">
-        <h1 className="section-title">Moderasyon</h1>
+        <h1 className="section-title">Yönetim paneli</h1>
         <section className="panel">
-          <p>Bu sayfaya yalnızca moderasyon yetkisi olanlar erişebilir.</p>
+          <p>Bu sayfaya yalnızca yönetim paneli erişimi olanlar girebilir.</p>
           <p className="meta" style={{ marginTop: 10 }}>
             Giriş yapmış olmalı ve{" "}
             <code style={{ fontSize: 13 }}>ADMIN_EMAILS</code> ile tanımlı olmalı{" "}
@@ -394,14 +394,18 @@ export default function AdminModerationPage() {
 
   return (
     <div className="account-page">
-      <h1 className="section-title">Moderasyon</h1>
+      <h1 className="section-title">Yönetim paneli</h1>
+      <p className="meta" style={{ marginTop: -6, marginBottom: 18 }}>
+        İlanları onaylayın ve yönetin, şikayetlere bakın; ilan yayın süresi ve kullanıcı ayarları
+        burada.
+      </p>
 
       <AdminSiteListingDurationSection
         enabled={moderationStaff && checkedStaff}
         getAuthHeaders={authHeaders}
       />
 
-      <div className="admin-mod-main-tabs" role="tablist" aria-label="Moderasyon bölümleri">
+      <div className="admin-mod-main-tabs" role="tablist" aria-label="Yönetim paneli sekmeleri">
         <button
           type="button"
           role="tab"

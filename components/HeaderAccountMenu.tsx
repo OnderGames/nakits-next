@@ -177,7 +177,7 @@ export default function HeaderAccountMenu({ user, onCloseDrawer }: Props) {
       ? "Moderatör hesabı"
       : staffRole === "admin"
         ? "Yönetici hesabı"
-        : "Moderasyon yetkisi"
+        : "Yönetim paneli erişimi"
     : null;
   const greeting = displayName || email?.split("@")[0] || "Üye";
   const initials = userInitials(metaReady ? greeting : "", email);

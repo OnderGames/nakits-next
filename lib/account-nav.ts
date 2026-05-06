@@ -11,9 +11,9 @@ export type AccountNavItemDef = {
   icon: AccountNavIconName;
 };
 
-/** Yöneticiler: moderation + üye bağlantıları */
+/** Yönetim paneli (/admin/moderasyon) + üye bağlantıları */
 export const ADMIN_ACCOUNT_NAV_ITEMS: AccountNavItemDef[] = [
-  { href: "/admin/moderasyon", label: "Moderasyon", icon: "moderation" }
+  { href: "/admin/moderasyon", label: "Yönetim paneli", icon: "moderation" }
 ];
 
 export const MEMBER_ACCOUNT_NAV_ITEMS: AccountNavItemDef[] = [

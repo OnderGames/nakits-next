@@ -5,5 +5,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AccountShell>{children}</AccountShell>;
+  return (
+    <AccountShell crumb="Yönetim paneli">{children}</AccountShell>
+  );
 }
