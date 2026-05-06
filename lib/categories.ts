@@ -664,10 +664,133 @@ export function listingsOtomobilParseBmwModelRest(modelRest: string): {
   return parseBmwModelRestForListings(modelRest);
 }
 
-/** Kategori `<select>`: marka seçildikten sonra alt alanlarla yönetildiği için hep kapı anahtarı */
+/** İlan filtresi: Konut kapısı ve ara/yaprak anahtarları */
+export function buildGayrimenkulKonutListingsCategoryKey(
+  txn: "" | (typeof KONUT_LISTING_KINDS)[number]["slug"],
+  prop: "" | (typeof KONUT_PROPERTY_TYPES)[number]["slug"]
+): string {
+  if (!txn) return "gayrimenkul.konut";
+  const mid = `konut-${txn}`;
+  if (!prop) return compositeCategoryKey("gayrimenkul", mid);
+  return compositeCategoryKey(
+    "gayrimenkul",
+    konutLeafCategorySubSlug(txn, prop)
+  );
+}
+
+export function parseGayrimenkulKonutListingsParts(categoryKey: string): {
+  txn: "" | (typeof KONUT_LISTING_KINDS)[number]["slug"];
+  prop: "" | (typeof KONUT_PROPERTY_TYPES)[number]["slug"];
+} | null {
+  const k = categoryKey.trim();
+  if (!k.startsWith("gayrimenkul.")) return null;
+  const sub = k.slice("gayrimenkul.".length);
+  if (sub === "konut") return { txn: "", prop: "" };
+  if (!sub.startsWith("konut-")) return null;
+  const leaf = tryParseKonutLeafSubSlug(sub);
+  if (leaf) {
+    return {
+      txn: leaf.txn,
+      prop: leaf.prop
+    };
+  }
+  for (const t of KONUT_LISTING_KINDS) {
+    if (sub === `konut-${t.slug}`) return { txn: t.slug, prop: "" };
+  }
+  return null;
+}
+
+export type GayrimenkulEmlakKindDrilldown = {
+  gateKey: string;
+  baseSlug: string;
+  baseLabel: string;
+  txn: "" | (typeof KONUT_LISTING_KINDS)[number]["slug"];
+};
+
+/** İş yeri, arsa vb.: kapı `gayrimenkul.{base}` veya yaprak `…-{satilik|kiralik}` */
+export function parseGayrimenkulEmlakKindListingsDrilldown(
+  categoryKey: string
+): GayrimenkulEmlakKindDrilldown | null {
+  const k = categoryKey.trim();
+  if (!k.startsWith("gayrimenkul.")) return null;
+  const rest = k.slice("gayrimenkul.".length);
+  const gm = CATEGORY_GROUPS.find((g) => g.slug === "gayrimenkul");
+  if (!gm) return null;
+  const mids = gm.subs.filter((s) => s.drilldown === "emlak-listing-kind");
+  const bases = mids.map((m) => m.slug).sort((a, b) => b.length - a.length);
+  for (const base of bases) {
+    const def = mids.find((m) => m.slug === base);
+    if (!def) continue;
+    if (rest === base) {
+      return {
+        gateKey: compositeCategoryKey("gayrimenkul", base),
+        baseSlug: base,
+        baseLabel: def.name,
+        txn: ""
+      };
+    }
+    for (const t of KONUT_LISTING_KINDS) {
+      if (rest === `${base}-${t.slug}`) {
+        return {
+          gateKey: compositeCategoryKey("gayrimenkul", base),
+          baseSlug: base,
+          baseLabel: def.name,
+          txn: t.slug
+        };
+      }
+    }
+  }
+  return null;
+}
+
+export function buildGayrimenkulEmlakKindListingsCategoryKey(
+  baseSlug: string,
+  txn: "" | (typeof KONUT_LISTING_KINDS)[number]["slug"]
+): string {
+  if (!txn) return compositeCategoryKey("gayrimenkul", baseSlug);
+  return compositeCategoryKey("gayrimenkul", `${baseSlug}-${txn}`);
+}
+
+/** İlanlar filtresi: Emlak grubunda uzun “Konut › Satılık › …” yerine tek satır (Konut, İş yeri, …) */
+export function gayrimenkulListingsFilterRows(): ReadonlyArray<{
+  reactKey: string;
+  compositeKey: string;
+  label: string;
+}> {
+  const gm = CATEGORY_GROUPS.find((g) => g.slug === "gayrimenkul")!;
+  const rows: Array<{ reactKey: string; compositeKey: string; label: string }> =
+    [];
+  for (const sub of gm.subs) {
+    if (sub.drilldown === "konut") {
+      rows.push({
+        reactKey: "gayrimenkul-konut-gate",
+        compositeKey: "gayrimenkul.konut",
+        label: sub.name
+      });
+    } else if (sub.drilldown === "emlak-listing-kind") {
+      rows.push({
+        reactKey: `${sub.slug}-gate`,
+        compositeKey: compositeCategoryKey("gayrimenkul", sub.slug),
+        label: sub.name
+      });
+    } else {
+      rows.push({
+        reactKey: sub.slug,
+        compositeKey: compositeCategoryKey("gayrimenkul", sub.slug),
+        label: sub.name
+      });
+    }
+  }
+  return rows;
+}
+
+/** Kategori `<select>`: marka / konut / emlak kapıları alt seçimlerle yönetilir */
 export function canonicalListingsCategorySelectValue(categoryKey: string): string {
   const d = parseOtomobilListingsDrilldown(categoryKey);
   if (d) return d.gateKey;
+  if (parseGayrimenkulKonutListingsParts(categoryKey)) return "gayrimenkul.konut";
+  const emlak = parseGayrimenkulEmlakKindListingsDrilldown(categoryKey);
+  if (emlak) return emlak.gateKey;
   return categoryKey.trim();
 }
 
@@ -1143,8 +1266,6 @@ export function tasitlarFilterOptgroups(): {
   diger: ReadonlyArray<{ reactKey: string; compositeKey: string; label: string }>;
 } {
   const group = CATEGORY_GROUPS.find((g) => g.slug === "tasitlar")!;
-  const otomobilSub = group.subs.find((s) => s.slug === "otomobil");
-  const otomobilName = otomobilSub?.name ?? "Otomobil";
   const otomobil: Array<{ reactKey: string; compositeKey: string; label: string }> =
     [];
   for (const m of OTOMOBIL_MARKALARI) {
@@ -1153,14 +1274,14 @@ export function tasitlarFilterOptgroups(): {
       otomobil.push({
         reactKey: `otomobil-${m.slug}`,
         compositeKey: otomobilListingsGateCategoryKey(m.slug),
-        label: `${otomobilName} › ${m.name}`
+        label: m.name
       });
     } else {
       const subSlug = `otomobil-${m.slug}`;
       otomobil.push({
         reactKey: subSlug,
         compositeKey: compositeCategoryKey("tasitlar", subSlug),
-        label: `${otomobilName} › ${m.name}`
+        label: m.name
       });
     }
   }
@@ -1186,8 +1307,13 @@ export function listingsCategoryFilterMatches(
   const F = filterCategoryKey.trim();
   if (!F) return true;
   if (L === F) return true;
-  if (!F.startsWith("tasitlar.")) return false;
-  return L.startsWith(`${F}-`);
+  if (
+    F.startsWith("tasitlar.") ||
+    F.startsWith("gayrimenkul.")
+  ) {
+    return L.startsWith(`${F}-`);
+  }
+  return false;
 }
 
 /** Grup slug'ında tire olabilir; ayırıcı olarak grup.slug + "." ile en uzun eşleşmeyi kullan. */

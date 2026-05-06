@@ -17,16 +17,23 @@ import ListingsFilterDrawer from "@/components/ListingsFilterDrawer";
 import ListingCard from "@/components/ListingCard";
 import { buildListingCountsByCategoryKey } from "@/lib/category-counts";
 import {
+  buildGayrimenkulEmlakKindListingsCategoryKey,
+  buildGayrimenkulKonutListingsCategoryKey,
   buildOtomobilListingsCategoryKey,
   canonicalListingsCategorySelectValue,
   CATEGORY_GROUPS,
   categoryKeyMatchesListingSearch,
+  gayrimenkulListingsFilterRows,
   getSortedFlatOtomobilModelsForListingsFilter,
+  KONUT_LISTING_KINDS,
+  KONUT_PROPERTY_TYPES,
   leafRowsForCategoryGroup,
   listingsCategoryFilterMatches,
   listingsOtomobilBmwSeriesRows,
   listingsOtomobilBmwVariantsForSeries,
   listingsOtomobilParseBmwModelRest,
+  parseGayrimenkulEmlakKindListingsDrilldown,
+  parseGayrimenkulKonutListingsParts,
   parseOtomobilListingsDrilldown,
   tasitlarFilterOptgroups
 } from "@/lib/categories";
@@ -132,8 +139,14 @@ function ListingsFilterFields({
   const idCat = `listings-cat${suffix}`;
   const idOtoSeri = `listings-oto-seri${suffix}`;
   const idOtoModel = `listings-oto-model${suffix}`;
+  const idGmKonutTxn = `listings-gm-konut-txn${suffix}`;
+  const idGmKonutProp = `listings-gm-konut-prop${suffix}`;
+  const idGmEmlakTxn = `listings-gm-emlak-txn${suffix}`;
 
   const otomobilDrilldown = parseOtomobilListingsDrilldown(category);
+  const konutFilterParts = parseGayrimenkulKonutListingsParts(category);
+  const emlakKindFilterParts =
+    parseGayrimenkulEmlakKindListingsDrilldown(category);
   /** Katalogda `›` kullanan tek marka BMW; gelecek markalar için parsing genişletilebilir */
   const hierarchicalSplit = otomobilDrilldown?.hierarchical
     ? listingsOtomobilParseBmwModelRest(otomobilDrilldown.modelRest)
@@ -251,6 +264,14 @@ function ListingsFilterFields({
                   );
                 })()}
               </Fragment>
+            ) : group.slug === "gayrimenkul" ? (
+              <optgroup key={group.slug} label={`${group.emoji} ${group.name}`}>
+                {gayrimenkulListingsFilterRows().map((row) => (
+                  <option key={row.reactKey} value={row.compositeKey}>
+                    {row.label}
+                  </option>
+                ))}
+              </optgroup>
             ) : (
               <optgroup key={group.slug} label={`${group.emoji} ${group.name}`}>
                 {leafRowsForCategoryGroup(group).map((row) => (
@@ -379,6 +400,95 @@ function ListingsFilterFields({
               </select>
             </div>
           )}
+        </div>
+      ) : null}
+      {konutFilterParts != null ? (
+        <div className="listings-filter-otomobil-extra" aria-live="polite">
+          <div className="filter-field">
+            <label htmlFor={idGmKonutTxn}>İşlem</label>
+            <select
+              id={idGmKonutTxn}
+              value={konutFilterParts.txn}
+              onChange={(event) => {
+                const txn = event.target.value as typeof konutFilterParts.txn;
+                const cat = buildGayrimenkulKonutListingsCategoryKey(txn, "");
+                onCategoryChange(cat);
+                syncUrlFromSelectsNow({ category: cat });
+              }}
+            >
+              <option value="">Tüm konut</option>
+              {KONUT_LISTING_KINDS.map((t) => (
+                <option key={t.slug} value={t.slug}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-field">
+            <label htmlFor={idGmKonutProp}>Yapı tipi</label>
+            <select
+              id={idGmKonutProp}
+              value={konutFilterParts.txn ? konutFilterParts.prop : ""}
+              disabled={!konutFilterParts.txn}
+              title={!konutFilterParts.txn ? "Önce işlem seçin" : undefined}
+              onChange={(event) => {
+                const prop = event.target.value as typeof konutFilterParts.prop;
+                const cat = buildGayrimenkulKonutListingsCategoryKey(
+                  konutFilterParts.txn,
+                  prop
+                );
+                onCategoryChange(cat);
+                syncUrlFromSelectsNow({ category: cat });
+              }}
+            >
+              <option value="">
+                {!konutFilterParts.txn
+                  ? "Önce işlem seçin"
+                  : `${
+                      KONUT_LISTING_KINDS.find(
+                        (x) => x.slug === konutFilterParts.txn
+                      )?.name ?? ""
+                    } · tüm tipler`}
+              </option>
+              {KONUT_PROPERTY_TYPES.map((p) => (
+                <option key={p.slug} value={p.slug}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      ) : null}
+      {emlakKindFilterParts != null ? (
+        <div
+          className="listings-filter-otomobil-extra listings-filter-otomobil-extra--flat"
+          aria-live="polite"
+        >
+          <div className="filter-field">
+            <label htmlFor={idGmEmlakTxn}>
+              İşlem ({emlakKindFilterParts.baseLabel})
+            </label>
+            <select
+              id={idGmEmlakTxn}
+              value={emlakKindFilterParts.txn}
+              onChange={(event) => {
+                const txn = event.target.value as typeof emlakKindFilterParts.txn;
+                const cat = buildGayrimenkulEmlakKindListingsCategoryKey(
+                  emlakKindFilterParts.baseSlug,
+                  txn
+                );
+                onCategoryChange(cat);
+                syncUrlFromSelectsNow({ category: cat });
+              }}
+            >
+              <option value="">Tümü</option>
+              {KONUT_LISTING_KINDS.map((t) => (
+                <option key={t.slug} value={t.slug}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       ) : null}
       <div className="filter-field filter-field--action">
