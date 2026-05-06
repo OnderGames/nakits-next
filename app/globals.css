@@ -334,9 +334,9 @@ main.container {
 
 @media (max-width: 959px) {
   :root {
-    --nav-height: 60px;
-    /* Logo satırı + arama satırı için çekmece üst ofseti */
-    --nav-drawer-top: calc(env(safe-area-inset-top, 0px) + 118px);
+    --nav-height: 52px;
+    /* Tek satır üst çubuk + gerektiğinde arama ikinci sıra için çekmece ofseti */
+    --nav-drawer-top: calc(env(safe-area-inset-top, 0px) + 112px);
   }
 
   .nav {
@@ -345,6 +345,12 @@ main.container {
     align-items: center;
     row-gap: 10px;
     padding-bottom: 10px;
+  }
+
+  /** Ana sayfa mobil: üstte ikinci satır yok — dikey boşluğu azalt */
+  .nav.nav-mobile-compact {
+    row-gap: 0;
+    padding-bottom: 6px;
   }
 
   .nav__leading {
@@ -477,6 +483,20 @@ main.container {
     min-width: 0;
   }
 
+  .nav-mobile-inline-guest-home .nav__leading {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  /** Ana sayfa + misafir: logo · arama · Üye Ol · Giriş Yap tek satırda */
+  .nav-mobile-inline-guest-home .nav-mobile-bar--guest {
+    flex-wrap: nowrap;
+    gap: 4px;
+    justify-content: flex-end;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   .nav-mobile-inline-guest .brand-mark {
     flex-shrink: 0;
     padding: 8px 8px;
@@ -503,32 +523,24 @@ main.container {
   }
 
   .nav-mobile-bar__guest-pill {
-    padding: 6px 8px !important;
-    font-size: 11px !important;
-    min-height: 34px;
+    padding: 6px 11px !important;
+    font-size: 13px !important;
+    min-height: 36px;
     font-weight: 600;
     white-space: nowrap;
   }
 
-  .nav-mobile-bar__guest-cta {
-    padding: 6px 9px !important;
-    font-size: 11px !important;
-    min-height: 34px;
-    border-radius: 10px;
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-
   .nav-user-cluster--toolbar-mobile {
-    flex: 1 1 auto;
+    display: flex;
+    flex-shrink: 0;
     justify-content: flex-end;
     align-items: center;
     gap: 4px;
     min-width: 0;
-    max-width: 100%;
+    margin-left: auto;
   }
 
-  /* Girişli mobil üst satır — logo | ortada İlan Ver | sağda zil+hesap */
+  /* Girişli mobil üst satır — logo [, arama] · zil · hesap (İlan ver altta menü/FAB ile) */
   .nav--auth-mobile-tray .nav__leading {
     gap: 6px;
     align-items: center;
@@ -536,30 +548,19 @@ main.container {
   }
 
   .nav--auth-mobile-tray .nav__leading--auth-mobile-toolbar {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 6px;
     width: 100%;
-  }
-
-  .nav-auth-mobile-center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
     min-width: 0;
-  }
-
-  .nav-auth-mobile-cta {
-    flex-shrink: 0;
-    padding: 6px 10px !important;
-    font-size: 12px !important;
-    min-height: 36px;
-    border-radius: 10px;
+    justify-content: flex-start;
   }
 
   .nav__leading--auth-mobile-toolbar .nav-user-cluster--toolbar-mobile {
-    flex: none;
+    flex: 0 0 auto;
+    margin-left: auto;
     justify-content: flex-end;
     width: auto;
     max-width: none;
@@ -3176,6 +3177,14 @@ form .row {
 @media (min-width: 960px) {
   .nav-home-category-trigger {
     display: none !important;
+  }
+}
+
+@media (max-width: 959px) {
+  .nav-mobile-compact .nav-home-category-trigger {
+    width: 40px;
+    height: 40px;
+    margin-left: 0;
   }
 }
 

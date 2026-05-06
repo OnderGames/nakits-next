@@ -175,7 +175,7 @@ export default function Header() {
   return (
     <header className="topbar">
       <div
-        className={`container nav${authMobileToolbar ? " nav--auth-mobile-tray" : ""}${guestMobileInline ? " nav-mobile-inline-guest" : ""}`}
+        className={`container nav${authMobileToolbar ? " nav--auth-mobile-tray" : ""}${guestMobileInline ? " nav-mobile-inline-guest" : ""}${guestMobileInline && homeMobileBrowse ? " nav-mobile-inline-guest-home" : ""}${homeMobileBrowse ? " nav-mobile-compact" : ""}`}
       >
         <div
           className={`nav__leading${showUserClusterToolbar && user ? " nav__leading--auth-mobile-toolbar" : ""}`}
@@ -196,12 +196,6 @@ export default function Header() {
           {guestMobileInline ? (
             <div className="nav-mobile-bar nav-mobile-bar--guest">
               <Link
-                className="nav-cta nav-cta--orange nav-cta--toolbar nav-mobile-bar__guest-cta"
-                href="/add-listing"
-              >
-                İlan Ver
-              </Link>
-              <Link
                 className="nav-pill nav-pill--join nav-mobile-bar__guest-pill"
                 href="/register"
               >
@@ -215,27 +209,11 @@ export default function Header() {
               </Link>
             </div>
           ) : showUserClusterToolbar && user ? (
-            <>
-              <div className="nav-auth-mobile-center">
-                <Link
-                  className="nav-cta nav-cta--orange nav-cta--toolbar nav-auth-mobile-cta"
-                  href="/add-listing"
-                >
-                  İlan Ver
-                </Link>
-              </div>
-              <div className="nav-user-cluster nav-user-cluster--toolbar-mobile">
-                <HeaderNotificationsBell userId={user.id} />
-                <HeaderAccountMenu user={user} />
-              </div>
-            </>
-          ) : (
-            <div className="nav-mobile-bar">
-              <Link className="nav-cta nav-cta--orange nav-cta--toolbar" href="/add-listing">
-                İlan Ver
-              </Link>
+            <div className="nav-user-cluster nav-user-cluster--toolbar-mobile">
+              <HeaderNotificationsBell userId={user.id} />
+              <HeaderAccountMenu user={user} />
             </div>
-          )}
+          ) : null}
         </div>
 
         {!homeMobileBrowse ? (
