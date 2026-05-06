@@ -43,10 +43,7 @@ import { isTasitlarListingCategoryKey } from "@/lib/listing-detail-spec";
 import { parseModelYearInput } from "@/lib/vehicle-fields";
 import { MAX_LISTING_PHOTOS } from "@/lib/listing-photos";
 import { countSellerOpenListings } from "@/lib/listings-data";
-import {
-  LISTING_IMAGE_MAX_EDGE_PX,
-  resizeListingImageForUpload
-} from "@/lib/resize-listing-image";
+import { resizeListingImageForUpload } from "@/lib/resize-listing-image";
 
 function mapListingInsertError(message: string | undefined): string {
   if (!message) return "İlan kaydedilemedi.";
@@ -880,9 +877,9 @@ export default function AddListingPage() {
                     photosNormalizing ||
                     photos.length >= MAX_LISTING_PHOTOS
                   }
-                  onClick={() => galleryPhotoInputRef.current?.click()}
+                  onClick={() => cameraPhotoInputRef.current?.click()}
                 >
-                  Dosya seç
+                  Kamera
                 </button>
                 <button
                   type="button"
@@ -892,18 +889,22 @@ export default function AddListingPage() {
                     photosNormalizing ||
                     photos.length >= MAX_LISTING_PHOTOS
                   }
-                  onClick={() => cameraPhotoInputRef.current?.click()}
+                  onClick={() => galleryPhotoInputRef.current?.click()}
                 >
-                  Kamera
+                  Dosya seç
                 </button>
               </div>
             </div>
             <p className="meta" style={{ marginTop: 6 }}>
               {photosNormalizing
                 ? "Fotoğraflar standart boyuta getiriliyor…"
-                : `Büyük görseller en fazla ${LISTING_IMAGE_MAX_EDGE_PX} px uzun kenara indirilir ve JPEG olarak kaydedilir.`}{" "}
-              Birden fazla seçebilir veya tekrar ekleyerek tamamlayabilirsiniz.
-              Mobilde Kamera ile çekilen fotoğraf da listeye eklenir.
+                : (
+                  <>
+                    Birden fazla seçebilir veya tekrar ekleyerek tamamlayabilirsiniz.
+                    {" "}
+                    Mobilde Kamera ile çekilen fotoğraf da listeye eklenir.
+                  </>
+                )}
               {photos.length > 0 && (
                 <>
                   {" "}

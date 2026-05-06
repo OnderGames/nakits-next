@@ -945,9 +945,9 @@ export default function EditListingPage() {
                     galleryNormalizing ||
                     slides.length >= MAX_LISTING_PHOTOS
                   }
-                  onClick={() => galleryPhotoInputRef.current?.click()}
+                  onClick={() => cameraPhotoInputRef.current?.click()}
                 >
-                  Dosya seç
+                  Kamera
                 </button>
                 <button
                   type="button"
@@ -957,9 +957,9 @@ export default function EditListingPage() {
                     galleryNormalizing ||
                     slides.length >= MAX_LISTING_PHOTOS
                   }
-                  onClick={() => cameraPhotoInputRef.current?.click()}
+                  onClick={() => galleryPhotoInputRef.current?.click()}
                 >
-                  Kamera
+                  Dosya seç
                 </button>
               </div>
             </div>
