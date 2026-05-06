@@ -17,9 +17,17 @@ import ListingsFilterDrawer from "@/components/ListingsFilterDrawer";
 import ListingCard from "@/components/ListingCard";
 import { buildListingCountsByCategoryKey } from "@/lib/category-counts";
 import {
+  buildOtomobilListingsCategoryKey,
+  canonicalListingsCategorySelectValue,
   CATEGORY_GROUPS,
   categoryKeyMatchesListingSearch,
+  getSortedFlatOtomobilModelsForListingsFilter,
   leafRowsForCategoryGroup,
+  listingsCategoryFilterMatches,
+  listingsOtomobilBmwSeriesRows,
+  listingsOtomobilBmwVariantsForSeries,
+  listingsOtomobilParseBmwModelRest,
+  parseOtomobilListingsDrilldown,
   tasitlarFilterOptgroups
 } from "@/lib/categories";
 import { listingPlaceMatchesFreeTextQuery } from "@/lib/listing-place-search";
@@ -122,6 +130,26 @@ function ListingsFilterFields({
   const idCity = `listings-city${suffix}`;
   const idDistrict = `listings-district${suffix}`;
   const idCat = `listings-cat${suffix}`;
+  const idOtoSeri = `listings-oto-seri${suffix}`;
+  const idOtoModel = `listings-oto-model${suffix}`;
+
+  const otomobilDrilldown = parseOtomobilListingsDrilldown(category);
+  /** Katalogda `›` kullanan tek marka BMW; gelecek markalar için parsing genişletilebilir */
+  const hierarchicalSplit = otomobilDrilldown?.hierarchical
+    ? listingsOtomobilParseBmwModelRest(otomobilDrilldown.modelRest)
+    : null;
+  const hierarchicalVariants =
+    hierarchicalSplit?.seriesSlug
+      ? listingsOtomobilBmwVariantsForSeries(hierarchicalSplit.seriesSlug)
+      : [];
+  const flatOtomobilModels =
+    otomobilDrilldown &&
+    !otomobilDrilldown.hierarchical &&
+    otomobilDrilldown.brandSlug
+      ? getSortedFlatOtomobilModelsForListingsFilter(
+          otomobilDrilldown.brandSlug
+        )
+      : [];
 
   return (
     <div className="listings-filter-grid">
@@ -186,7 +214,7 @@ function ListingsFilterFields({
         <label htmlFor={idCat}>Kategori</label>
         <select
           id={idCat}
-          value={category}
+          value={canonicalListingsCategorySelectValue(category)}
           onChange={(event) => {
             const v = event.target.value;
             onCategoryChange(v);
@@ -235,6 +263,124 @@ function ListingsFilterFields({
           )}
         </select>
       </div>
+      {otomobilDrilldown != null ? (
+        <div
+          className={
+            otomobilDrilldown.hierarchical
+              ? "listings-filter-otomobil-extra"
+              : "listings-filter-otomobil-extra listings-filter-otomobil-extra--flat"
+          }
+          aria-live="polite"
+        >
+          {otomobilDrilldown.hierarchical && hierarchicalSplit != null ? (
+            <>
+              <div className="filter-field">
+                <label htmlFor={idOtoSeri}>Seri</label>
+                <select
+                  id={idOtoSeri}
+                  value={hierarchicalSplit.seriesSlug}
+                  onChange={(event) => {
+                    const serie = event.target.value;
+                    const cat = buildOtomobilListingsCategoryKey(
+                      otomobilDrilldown.brandSlug,
+                      serie
+                    );
+                    onCategoryChange(cat);
+                    syncUrlFromSelectsNow({ category: cat });
+                  }}
+                >
+                  <option value="">Tüm {otomobilDrilldown.brandName}</option>
+                  {listingsOtomobilBmwSeriesRows().map((seri) => (
+                    <option key={seri.slug} value={seri.slug}>
+                      {seri.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="filter-field">
+                <label htmlFor={idOtoModel}>Model</label>
+                <select
+                  id={idOtoModel}
+                  value={
+                    hierarchicalSplit.seriesSlug
+                      ? hierarchicalSplit.variantSlugFull
+                      : ""
+                  }
+                  disabled={!hierarchicalSplit.seriesSlug}
+                  title={
+                    !hierarchicalSplit.seriesSlug ? "Önce seri seçin" : undefined
+                  }
+                  onChange={(event) => {
+                    const vf = event.target.value;
+                    const cat = buildOtomobilListingsCategoryKey(
+                      otomobilDrilldown.brandSlug,
+                      vf ||
+                        hierarchicalSplit.seriesSlug ||
+                        ""
+                    );
+                    onCategoryChange(cat);
+                    syncUrlFromSelectsNow({ category: cat });
+                  }}
+                >
+                  <option value="">
+                    {!hierarchicalSplit.seriesSlug
+                      ? "Önce seri seçin"
+                      : (listingsOtomobilBmwSeriesRows().find(
+                          (s) => s.slug === hierarchicalSplit.seriesSlug
+                        )?.name ?? "Bu seri") + " · tüm modeller"}
+                  </option>
+                  {hierarchicalVariants.map((variant) => (
+                    <option key={variant.slugFull} value={variant.slugFull}>
+                      {variant.label}
+                    </option>
+                  ))}
+                  {hierarchicalSplit.seriesSlug &&
+                  hierarchicalSplit.variantSlugFull &&
+                  !hierarchicalVariants.some(
+                    (o) => o.slugFull === hierarchicalSplit.variantSlugFull
+                  ) ? (
+                    <option value={hierarchicalSplit.variantSlugFull}>
+                      {hierarchicalSplit.variantSlugFull.replace(/-/g, " ")}
+                    </option>
+                  ) : null}
+                </select>
+              </div>
+            </>
+          ) : (
+            <div className="filter-field">
+              <label htmlFor={idOtoModel}>Model ({otomobilDrilldown.brandName})</label>
+              <select
+                id={idOtoModel}
+                value={otomobilDrilldown.modelRest}
+                onChange={(event) => {
+                  const slug = event.target.value;
+                  const cat = buildOtomobilListingsCategoryKey(
+                    otomobilDrilldown.brandSlug,
+                    slug
+                  );
+                  onCategoryChange(cat);
+                  syncUrlFromSelectsNow({ category: cat });
+                }}
+              >
+                <option value="">Tüm {otomobilDrilldown.brandName}</option>
+                {flatOtomobilModels.map((model) => (
+                  <option key={model.slug} value={model.slug}>
+                    {model.label}
+                  </option>
+                ))}
+                {otomobilDrilldown.modelRest &&
+                !flatOtomobilModels.some(
+                  (m) => m.slug === otomobilDrilldown.modelRest
+                ) ? (
+                  <option value={otomobilDrilldown.modelRest}>
+                    {otomobilDrilldown.modelRest.replace(/-/g, " ")}
+                  </option>
+                ) : null}
+              </select>
+            </div>
+          )}
+        </div>
+      ) : null}
       <div className="filter-field filter-field--action">
         <button
           type="button"
@@ -340,8 +486,10 @@ function ListingsPageInner() {
         !district ||
         (item.district != null &&
           String(item.district).trim() === district);
-      const matchCategory =
-        !category || item.categoryKey === category;
+      const matchCategory = listingsCategoryFilterMatches(
+        item.categoryKey,
+        category
+      );
       return matchQ && matchCity && matchDistrict && matchCategory;
     });
   }, [q, city, district, category, data]);

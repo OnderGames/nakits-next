@@ -524,6 +524,153 @@ export const OTOMOBIL_MARKA_MODELS: Partial<
   ]
 };
 
+/** İlan filtre seçimi: `tasitlar.otomobil-{marka}` ara adımı */
+export function otomobilListingsGateCategoryKey(brandSlug: string): string {
+  return `tasitlar.otomobil-${brandSlug}`;
+}
+
+const BMW_SERIES_SLUG_RE = /^(\d+|[imz])-serisi$/;
+
+function bmwCatalogModels(): readonly OtomobilMarkaModelDef[] {
+  return OTOMOBIL_MARKA_MODELS.bmw ?? [];
+}
+
+function getSortedBmwSeriesForListingsFilter(): readonly OtomobilMarkaModelDef[] {
+  const series = bmwCatalogModels().filter((m) => BMW_SERIES_SLUG_RE.test(m.slug));
+  const numeric = series.filter((m) => /^\d+-serisi$/.test(m.slug));
+  const letter = series.filter((m) => /^[imz]-serisi$/.test(m.slug));
+  numeric.sort((a, b) => parseInt(a.slug, 10) - parseInt(b.slug, 10));
+  letter.sort((a, b) => a.slug.localeCompare(b.slug));
+  return [...numeric, ...letter];
+}
+
+function getBmwVariantOptionsForSeries(
+  seriesSlug: string
+): ReadonlyArray<{ slugFull: string; label: string }> {
+  const out: Array<{ slugFull: string; label: string }> = [];
+  for (const m of bmwCatalogModels()) {
+    if (m.slug === seriesSlug || !m.slug.startsWith(`${seriesSlug}-`)) continue;
+    const sep = "›";
+    const i = m.name.indexOf(sep);
+    const label =
+      i === -1
+        ? m.slug.slice(seriesSlug.length + 1)
+        : m.name.slice(i + sep.length).trim();
+    out.push({ slugFull: m.slug, label });
+  }
+  out.sort((a, b) => a.label.localeCompare(b.label, "tr"));
+  return out;
+}
+
+function parseBmwModelRestForListings(modelRest: string): {
+  seriesSlug: string;
+  variantSlugFull: string;
+} {
+  if (!modelRest.length) return { seriesSlug: "", variantSlugFull: "" };
+  const seriesRanked = [...getSortedBmwSeriesForListingsFilter()].sort(
+    (a, b) => b.slug.length - a.slug.length
+  );
+  for (const s of seriesRanked) {
+    if (modelRest === s.slug) return { seriesSlug: s.slug, variantSlugFull: "" };
+    if (modelRest.startsWith(`${s.slug}-`)) {
+      return { seriesSlug: s.slug, variantSlugFull: modelRest };
+    }
+  }
+  return { seriesSlug: "", variantSlugFull: modelRest };
+}
+
+export function buildOtomobilListingsCategoryKey(
+  brandSlug: string,
+  modelTail: string
+): string {
+  const gate = otomobilListingsGateCategoryKey(brandSlug);
+  const t = modelTail.trim();
+  if (!t.length) return gate;
+  return `${gate}-${t}`;
+}
+
+export type ParsedOtomobilListingsDrilldown = {
+  gateKey: string;
+  brandSlug: string;
+  brandName: string;
+  hierarchical: boolean;
+  /** Kapıdan sonraki kısım: `bmw` ise `3-serisi`, `fiat` ise `albea` vb. */
+  modelRest: string;
+};
+
+/**
+ * Anahtar bir modelli otomobil markasına (veya onun yaprağına) ise marka seçiciye indirger.
+ */
+export function parseOtomobilListingsDrilldown(
+  categoryKey: string
+): ParsedOtomobilListingsDrilldown | null {
+  const k = categoryKey.trim();
+  if (!k.startsWith("tasitlar.")) return null;
+  const fullSub = k.slice("tasitlar.".length);
+  const prefix = "otomobil-";
+  if (!fullSub.startsWith(prefix)) return null;
+  const afterOto = fullSub.slice(prefix.length);
+  const brands = [...OTOMOBIL_MARKALARI].sort(
+    (a, b) => b.slug.length - a.slug.length
+  );
+  for (const b of brands) {
+    if (!afterOto.startsWith(b.slug)) continue;
+    const tail = afterOto.slice(b.slug.length);
+    if (tail !== "" && !tail.startsWith("-")) continue;
+    const modelRest = tail.startsWith("-") ? tail.slice(1) : "";
+    const models = getOtomobilModelsForBrand(b.slug);
+    if (!models?.length) return null;
+
+    const hierarchical = models.some((m) => m.name.includes("›"));
+    return {
+      gateKey: otomobilListingsGateCategoryKey(b.slug),
+      brandSlug: b.slug,
+      brandName: b.name,
+      hierarchical,
+      modelRest
+    };
+  }
+  return null;
+}
+
+/** Tek satırdaki düz model listesi (Örn. Fiat › Albea) – ada göre sıralı */
+export function getSortedFlatOtomobilModelsForListingsFilter(
+  brandSlug: string
+): ReadonlyArray<{ slug: string; label: string }> {
+  const models = getOtomobilModelsForBrand(brandSlug);
+  if (!models?.length) return [];
+  const out = models.map((m) => ({
+    slug: m.slug,
+    label: m.name
+  }));
+  out.sort((a, b) => a.label.localeCompare(b.label, "tr"));
+  return out;
+}
+
+export function listingsOtomobilBmwSeriesRows(): readonly OtomobilMarkaModelDef[] {
+  return getSortedBmwSeriesForListingsFilter();
+}
+
+export function listingsOtomobilBmwVariantsForSeries(
+  seriesSlug: string
+): ReadonlyArray<{ slugFull: string; label: string }> {
+  return getBmwVariantOptionsForSeries(seriesSlug);
+}
+
+export function listingsOtomobilParseBmwModelRest(modelRest: string): {
+  seriesSlug: string;
+  variantSlugFull: string;
+} {
+  return parseBmwModelRestForListings(modelRest);
+}
+
+/** Kategori `<select>`: marka seçildikten sonra alt alanlarla yönetildiği için hep kapı anahtarı */
+export function canonicalListingsCategorySelectValue(categoryKey: string): string {
+  const d = parseOtomobilListingsDrilldown(categoryKey);
+  if (d) return d.gateKey;
+  return categoryKey.trim();
+}
+
 export function getOtomobilModelsForBrand(
   brandSlug: string
 ): readonly OtomobilMarkaModelDef[] | undefined {
@@ -1003,14 +1150,11 @@ export function tasitlarFilterOptgroups(): {
   for (const m of OTOMOBIL_MARKALARI) {
     const models = getOtomobilModelsForBrand(m.slug);
     if (models?.length) {
-      for (const mod of models) {
-        const subSlug = `otomobil-${m.slug}-${mod.slug}`;
-        otomobil.push({
-          reactKey: subSlug,
-          compositeKey: compositeCategoryKey("tasitlar", subSlug),
-          label: `${otomobilName} › ${m.name} › ${mod.name}`
-        });
-      }
+      otomobil.push({
+        reactKey: `otomobil-${m.slug}`,
+        compositeKey: otomobilListingsGateCategoryKey(m.slug),
+        label: `${otomobilName} › ${m.name}`
+      });
     } else {
       const subSlug = `otomobil-${m.slug}`;
       otomobil.push({
@@ -1028,6 +1172,22 @@ export function tasitlarFilterOptgroups(): {
       label: sub.name
     }));
   return { otomobil, diger };
+}
+
+/**
+ * İlanlar sayfası kategori filtresi: seçim yaprağın kendisiyle eşleşir veya
+ * Vasıta’da daha genel bir önek ise (ör. tüm BMW, tüm 3 Serisi) alt yaprağı da dahil eder.
+ */
+export function listingsCategoryFilterMatches(
+  listingCategoryKey: string,
+  filterCategoryKey: string
+): boolean {
+  const L = listingCategoryKey.trim();
+  const F = filterCategoryKey.trim();
+  if (!F) return true;
+  if (L === F) return true;
+  if (!F.startsWith("tasitlar.")) return false;
+  return L.startsWith(`${F}-`);
 }
 
 /** Grup slug'ında tire olabilir; ayırıcı olarak grup.slug + "." ile en uzun eşleşmeyi kullan. */

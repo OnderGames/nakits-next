@@ -1718,6 +1718,18 @@ button.nav-pill {
   padding-bottom: 1px;
 }
 
+.listings-filter-otomobil-extra {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.listings-filter-otomobil-extra--flat {
+  grid-template-columns: 1fr;
+}
+
 /* ——— İlanlar: mobil araç çubuğu + sıralama + soldan filtre çekmesi ——— */
 
 .listings-mobile-toolbar-wrap {
@@ -1858,6 +1870,10 @@ button.nav-pill {
   grid-template-columns: 1fr;
   gap: 14px;
   padding-bottom: 8px;
+}
+
+.listings-filter-drawer .listings-filter-otomobil-extra {
+  grid-template-columns: 1fr;
 }
 
 .listings-filter-drawer .filter-field--action {
