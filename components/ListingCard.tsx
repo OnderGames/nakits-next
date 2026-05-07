@@ -166,7 +166,13 @@ export default function ListingCard({
     <article className="card">
       <Link href={listingDetailHref(listing)}>
         <div style={{ position: "relative" }}>
-          <Image src={listing.image} alt={listing.title} width={500} height={280} />
+          <Image
+            src={listing.image}
+            alt={listing.title}
+            width={500}
+            height={280}
+            sizes="(max-width: 639px) 100vw, (max-width: 1100px) 50vw, 500px"
+          />
           {!ownerToolbar && !hideFavorite && (
             <FavoriteHeartButton
               listingId={listing.id}

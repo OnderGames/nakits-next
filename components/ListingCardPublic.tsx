@@ -36,7 +36,13 @@ export default function ListingCardPublic({ listing, vitrin }: Props) {
     <article className="card">
       <Link href={href}>
         <div style={{ position: "relative" }}>
-          <Image src={listing.image} alt={listing.title} width={500} height={280} />
+          <Image
+            src={listing.image}
+            alt={listing.title}
+            width={500}
+            height={280}
+            sizes="(max-width: 639px) 100vw, (max-width: 1100px) 50vw, 500px"
+          />
           {(listing.imageUrls?.length ?? 0) > 1 && (
             <span
               style={{

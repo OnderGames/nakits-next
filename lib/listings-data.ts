@@ -365,6 +365,32 @@ export async function fetchPublicListings(
   });
 }
 
+const SITEMAP_LISTING_CAP = 50_000;
+
+/** Sitemap için yalnızca id ve lastmod (anon istemci; yayındaki ilanlar). */
+export async function fetchPublicActiveListingIdsForSitemap(
+  sb: SupabaseClient,
+  maxRows: number = SITEMAP_LISTING_CAP
+): Promise<{ id: string; lastModified: string }[]> {
+  const nowIso = new Date().toISOString();
+  const { data, error } = await sb
+    .from("listings")
+    .select("id, updated_at")
+    .eq("status", "active")
+    .gt("expires_at", nowIso)
+    .order("updated_at", { ascending: false })
+    .limit(maxRows);
+
+  if (error || !data) return [];
+  return data.map((row) => {
+    const r = row as { id: string; updated_at: string };
+    return {
+      id: String(r.id),
+      lastModified: String(r.updated_at)
+    };
+  });
+}
+
 /** Favoriler sırasına göre id listesi — yalnızca yayındaki ve süresi dolmamış ilanlar döner */
 export async function fetchPublicListingsByIds(
   sb: SupabaseClient,

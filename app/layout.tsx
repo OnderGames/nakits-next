@@ -6,6 +6,7 @@ import HomeCategoryDrawer from "@/components/HomeCategoryDrawer";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MessagesPeekDock from "@/components/MessagesPeekDock";
 import SiteFooter from "@/components/SiteFooter";
+import { getSiteOrigin } from "@/lib/site-url";
 import "./globals.css";
 
 const fontSans = Inter({
@@ -15,21 +16,14 @@ const fontSans = Inter({
   variable: "--font-inter"
 });
 
-/** Eski HTML kabuğunun CDN/tarayıcıda uzun süre takılı kalmasını azaltır */
-export const dynamic = "force-dynamic";
-
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover"
 };
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "https://www.nakits.com";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(getSiteOrigin()),
   title: {
     default: "Nakits.com — ikinci el ve sıfır ilan vitrini",
     template: "%s | Nakits.com"

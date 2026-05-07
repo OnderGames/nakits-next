@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ListingReportPanel from "@/components/ListingReportPanel";
@@ -13,22 +15,74 @@ import { isListingCodeQuery } from "@/lib/listing-code";
 import { fetchListingByCode, fetchListingById } from "@/lib/listings-data";
 import { listings as mockListings } from "@/lib/mock-data";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
+import type { Listing } from "@/lib/types";
+
+/** İlan detayı edge önbelleği (güncelleme bir süre sonra yansır) */
+export const revalidate = 30;
 
 type Props = {
   params: Promise<{ id: string }>;
 };
 
+const resolvePublicListingByRouteParam = cache(
+  async function resolvePublicListingByRouteParam(
+    id: string
+  ): Promise<Listing | null> {
+    if (hasSupabaseConfig && supabase) {
+      return isListingCodeQuery(id)
+        ? fetchListingByCode(supabase, id)
+        : fetchListingById(supabase, id);
+    }
+    return (
+      mockListings.find(
+        (x) => x.id === id || x.listingCode === id.trim()
+      ) ?? null
+    );
+  }
+);
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await resolvePublicListingByRouteParam(id);
+  if (!listing) {
+    return { title: "İlan bulunamadı" };
+  }
+  const priceLabel = formatPrice(listing.price);
+  const categoryLabel = formatCategoryDisplay(listing.categoryKey);
+  const place = [listing.city, listing.district].filter(Boolean).join(", ");
+  const description = [listing.title, categoryLabel, place, priceLabel]
+    .filter(Boolean)
+    .join(" · ")
+    .slice(0, 160);
+  const ogImage =
+    listing.imageUrls && listing.imageUrls.length > 0
+      ? listing.imageUrls[0]
+      : listing.image;
+
+  return {
+    title: listing.title,
+    description,
+    openGraph: {
+      title: listing.title,
+      description,
+      type: "website",
+      locale: "tr_TR",
+      siteName: "Nakits.com",
+      ...(ogImage ? { images: [{ url: ogImage }] } : {})
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: listing.title,
+      description,
+      ...(ogImage ? { images: [ogImage] } : {})
+    }
+  };
+}
+
 export default async function ListingDetailPage({ params }: Props) {
   const { id } = await params;
 
-  const listing =
-    hasSupabaseConfig && supabase
-      ? isListingCodeQuery(id)
-        ? await fetchListingByCode(supabase, id)
-        : await fetchListingById(supabase, id)
-      : mockListings.find(
-          (x) => x.id === id || x.listingCode === id.trim()
-        ) ?? null;
+  const listing = await resolvePublicListingByRouteParam(id);
 
   if (!listing) {
     notFound();

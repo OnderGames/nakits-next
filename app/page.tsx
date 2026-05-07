@@ -7,6 +7,9 @@ import { getHomepageTheme } from "@/lib/site-settings";
 import { listings as mockListings } from "@/lib/mock-data";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 
+/** Ana sayfa CDN / önbellek; vitrin birkaç dakika gecikmeli güncellenebilir */
+export const revalidate = 60;
+
 const VITRIN_COUNT = 18;
 
 export default async function HomePage() {
