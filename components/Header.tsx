@@ -2,7 +2,6 @@
 
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import Image from "next/image";
 import {
   usePathname,
   useRouter,
@@ -181,14 +180,10 @@ export default function Header() {
           className={`nav__leading${showUserClusterToolbar && user ? " nav__leading--auth-mobile-toolbar" : ""}`}
         >
           <Link className="brand-mark" href="/" aria-label="Nakits.com — ana sayfa">
-            <Image
-              src="/site-logo.png"
-              alt="Nakits.com"
-              width={220}
-              height={88}
-              className="brand-mark__logo"
-              priority
-            />
+            <span className="brand-mark__text">
+              <span className="brand-mark__nakits">Nakits</span>
+              <span className="brand-mark__domain">.com</span>
+            </span>
           </Link>
 
           {isMobileNav === true ? <NavHomeCategoryButton /> : null}
