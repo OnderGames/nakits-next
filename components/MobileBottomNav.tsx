@@ -18,59 +18,141 @@ function isProfileArea(pathname: string): boolean {
   );
 }
 
-function IconHome({ active }: { active: boolean }) {
-  const c = active ? "#ea580c" : "#475569";
+const NI_ON = "#c2410c";
+const NI_OFF = "#5c6578";
+
+/** Vitrin: vitrin camı / raflar — genel “ev” ikonundan farklı */
+function IconShowcase({ active }: { active: boolean }) {
+  const c = active ? NI_ON : NI_OFF;
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M4 11.6L11.47 5.3a1 1 0 011.06 0L20 11.6V19a2 2 0 01-2 2h-3.75a1 1 0 01-1-1v-5h-4.5v5a1 1 0 01-1 1H6a2 2 0 01-2-2v-7.4z"
+        d="M5 6.5h14a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2V8.5a2 2 0 012-2z"
         stroke={c}
-        strokeWidth={2}
+        strokeWidth={1.75}
         strokeLinejoin="round"
       />
+      <path
+        d="M7 10.5h10M7 14h7"
+        stroke={c}
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        opacity={0.85}
+      />
+      <circle cx="17.5" cy="15" r="1.35" fill={c} opacity={active ? 1 : 0.45} />
     </svg>
   );
 }
 
-function IconSearch({ active }: { active: boolean }) {
-  const c = active ? "#ea580c" : "#475569";
+/** Kategori çekmecesi: katmanlar + keşif imi */
+function IconLayersSearch({ active }: { active: boolean }) {
+  const c = active ? NI_ON : NI_OFF;
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="11" cy="11" r="7" stroke={c} strokeWidth={2} />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M16 16l5 5"
+        d="M4 7.5h10a1.5 1.5 0 001.5-1.5v0A1.5 1.5 0 0014 4.5H4"
         stroke={c}
-        strokeWidth={2}
+        strokeWidth={1.75}
+        strokeLinecap="round"
+      />
+      <path
+        d="M4 12h7a2 2 0 002-2v0a2 2 0 00-2-2H4"
+        stroke={c}
+        strokeWidth={1.75}
+        strokeLinecap="round"
+      />
+      <path
+        d="M4 16.5h5"
+        stroke={c}
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        opacity={0.65}
+      />
+      <circle cx="17.5" cy="16.5" r="3.25" stroke={c} strokeWidth={1.75} />
+      <path
+        d="M19.8 18.8l2.45 2.45"
+        stroke={c}
+        strokeWidth={1.75}
         strokeLinecap="round"
       />
     </svg>
   );
 }
 
-function IconHeart({ active }: { active: boolean }) {
-  const c = active ? "#ea580c" : "#475569";
+/** Kayıtlı ilanlar: yer imi — kalp yerine daha “liste” hissi */
+function IconBookmarkStack({ active }: { active: boolean }) {
+  const c = active ? NI_ON : NI_OFF;
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M12 20.57l-.48-.43C7.62 16.73 5 14.41 5 11.54 5 9.2 6.8 7.4 9.05 7.4c1.74 0 3.43 1 4.06 2.47A4.62 4.62 0 0117 7.4c2.05 0 3.76 1.59 4 3.61.04.35.05.71.03 1.07-.18 3.54-5.62 8.54-9.03 11.49z"
+        d="M6 4.5h12v15l-6-3.6-6 3.6V4.5z"
         stroke={c}
-        strokeWidth={2}
+        strokeWidth={1.75}
         strokeLinejoin="round"
-        fill={active ? "rgba(234,88,12,0.08)" : "none"}
+        fill={active ? "rgba(194,65,12,0.09)" : "none"}
+      />
+      <path
+        d="M9 9h6M9 12.5h4.5"
+        stroke={c}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        opacity={0.75}
       />
     </svg>
   );
 }
 
-function IconUser({ active }: { active: boolean }) {
-  const c = active ? "#ea580c" : "#475569";
+/** Hesap: kimlik kartı silüeti — düz kullanıcı çemberinden farklı */
+function IconMemberCard({ active }: { active: boolean }) {
+  const c = active ? NI_ON : NI_OFF;
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="9" r="4" stroke={c} strokeWidth={2} />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M6 20c0-3.314 2.686-6 6-6s6 2.686 6 6"
+        d="M5 6.5h14a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2v-9a2 2 0 012-2z"
         stroke={c}
-        strokeWidth={2}
+        strokeWidth={1.75}
+        strokeLinejoin="round"
+      />
+      <circle cx="10" cy="11" r="2.25" stroke={c} strokeWidth={1.75} />
+      <path
+        d="M6.5 17.5c.8-1.6 2.2-2.5 3.9-2.5h.2c1.7 0 3.1.9 3.9 2.5"
+        stroke={c}
+        strokeWidth={1.75}
+        strokeLinecap="round"
+      />
+      <path
+        d="M15.5 9h3M15.5 12h3"
+        stroke={c}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        opacity={0.65}
+      />
+    </svg>
+  );
+}
+
+/** İlan ver: ilan kağıdı + artı rozeti */
+function IconListingPlus() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M7 3.5h10l3 3v11a2 2 0 01-2 2H7a2 2 0 01-2-2v-12a2 2 0 012-2z"
+        stroke="#fff"
+        strokeWidth={1.65}
+        strokeLinejoin="round"
+        fill="rgba(255,255,255,0.12)"
+      />
+      <path
+        d="M9 10h6M12 7v6"
+        stroke="#fff"
+        strokeWidth={1.85}
+        strokeLinecap="round"
+      />
+      <circle cx="17.5" cy="6.5" r="3.6" fill="#fff" />
+      <path
+        d="M17.5 4.9v3.2M15.9 6.5h3.2"
+        stroke="#0f766e"
+        strokeWidth={1.5}
         strokeLinecap="round"
       />
     </svg>
@@ -169,13 +251,13 @@ export default function MobileBottomNav() {
           href="/"
           label="Vitrin"
           active={pathname === "/"}
-          icon={<IconHome active={pathname === "/"} />}
+          icon={<IconShowcase active={pathname === "/"} />}
         />
 
         <TapItem
           label="Arama"
           active={pathname.startsWith("/listings")}
-          icon={<IconSearch active={pathname.startsWith("/listings")} />}
+          icon={<IconLayersSearch active={pathname.startsWith("/listings")} />}
           onClick={() => openHomeCategoryDrawer()}
         />
 
@@ -187,20 +269,7 @@ export default function MobileBottomNav() {
             <span
               className={`mobile-bottom-nav__fab${pathname.startsWith("/add-listing") ? " mobile-bottom-nav__fab--active" : ""}`}
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden
-              >
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="#fff"
-                  strokeWidth={2.4}
-                  strokeLinecap="round"
-                />
-              </svg>
+              <IconListingPlus />
             </span>
             <span className="mobile-bottom-nav__fab-label">İlan ver</span>
           </Link>
@@ -211,14 +280,14 @@ export default function MobileBottomNav() {
           label="Favoriler"
           active={pathname.startsWith("/favoriler")}
           badge={favCount}
-          icon={<IconHeart active={pathname.startsWith("/favoriler")} />}
+          icon={<IconBookmarkStack active={pathname.startsWith("/favoriler")} />}
         />
 
         <TapItem
           href={accountHref}
           label="Hesabım"
           active={isProfileArea(pathname)}
-          icon={<IconUser active={isProfileArea(pathname)} />}
+          icon={<IconMemberCard active={isProfileArea(pathname)} />}
         />
       </div>
     </nav>

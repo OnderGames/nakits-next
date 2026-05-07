@@ -167,6 +167,7 @@ export default function RegisterPage() {
             />
             <label
               htmlFor="reg-terms"
+              className="auth-terms-checkbox-label"
               style={{
                 margin: 0,
                 lineHeight: 1.5,
