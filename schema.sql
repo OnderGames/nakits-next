@@ -122,8 +122,8 @@ begin
 
   v_body := case
     when v_direction = 'price_dropped'
-      then v_title || ' (' || v_code || ') favori ilaninizin fiyati dustu.'
-    else v_title || ' (' || v_code || ') favori ilaninizin fiyati yukseldi.'
+      then v_title || ' (' || v_code || ') favori ilanınızın fiyatı düştü.'
+    else v_title || ' (' || v_code || ') favori ilanınızın fiyatı yükseldi.'
   end;
 
   insert into public.notifications (profile_id, type, listing_id, actor_profile_id, body, payload)
@@ -150,6 +150,50 @@ create trigger trg_listings_price_change_notify_favoriters
 after update of price on public.listings
 for each row
 execute function public.trg_listings_price_change_notify_favoriters();
+
+create or replace function public.trg_listings_sold_notify_favoriters()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_title text;
+  v_code text;
+  v_body text;
+begin
+  if new.status is not distinct from old.status or new.status <> 'sold' then
+    return new;
+  end if;
+
+  v_title := coalesce(nullif(trim(new.title), ''), 'İlan');
+  v_code := coalesce(nullif(trim(new.listing_code), ''), '---');
+  v_body := v_title || ' (' || v_code || ') Favori ilanınız satıldı.';
+
+  insert into public.notifications (profile_id, type, listing_id, actor_profile_id, body, payload)
+  select
+    f.profile_id,
+    'favorite_listing_sold',
+    new.id,
+    new.seller_id,
+    v_body,
+    jsonb_build_object(
+      'old_status', old.status,
+      'new_status', new.status
+    )
+  from public.favorites f
+  where f.listing_id = new.id
+    and f.profile_id <> new.seller_id;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_listings_sold_notify_favoriters on public.listings;
+create trigger trg_listings_sold_notify_favoriters
+after update of status on public.listings
+for each row
+execute function public.trg_listings_sold_notify_favoriters();
 
 create table if not exists listing_images (
   id uuid primary key default gen_random_uuid(),

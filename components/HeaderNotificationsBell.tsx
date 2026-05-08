@@ -364,8 +364,11 @@ export default function HeaderNotificationsBell({
               <ul className="nav-notif__list">
                 {items.map((n) => {
                   const unread = !n.readAt;
+                  const disableListingLink = n.type === "favorite_listing_sold";
                   const href =
-                    n.listingId != null ? `/listings/${n.listingId}` : null;
+                    n.listingId != null && !disableListingLink
+                      ? `/listings/${n.listingId}`
+                      : null;
 
                   const isBroadcast = n.type === "site_broadcast";
 
