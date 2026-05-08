@@ -551,14 +551,13 @@ export default function AddListingPage() {
         <h1 className="section-title">İlan ver</h1>
         <section className="panel auth-wall">
           <p>
-            İlan verebilmek için üye olmalı ve giriş yapmalısın. Böylece güvenli
-            bir ilan platformu tutabiliriz.
+            İlan verebilmek için üye olmalı ve giriş yapmalısın.
           </p>
-          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Link className="btn btn-primary" href="/login?next=/add-listing">
+          <div className="auth-wall__actions">
+            <Link className="nav-pill nav-pill--login" href="/login?next=/add-listing">
               Giriş yap
             </Link>
-            <Link className="btn btn-outline" href="/register">
+            <Link className="nav-pill nav-pill--join" href="/register">
               Üye ol
             </Link>
           </div>
@@ -1060,7 +1059,7 @@ export default function AddListingPage() {
           </div>
 
           <button
-            className="btn btn-primary"
+            className="btn btn-nakits-cta"
             style={{ marginTop: 12 }}
             type="submit"
             disabled={submitting || photosNormalizing}
@@ -1105,7 +1104,7 @@ export default function AddListingPage() {
             </p>
             <button
               type="button"
-              className="btn btn-primary add-listing-sent__cta"
+              className="btn btn-nakits-cta add-listing-sent__cta"
               onClick={() => {
                 setSubmissionSuccess(null);
                 router.push("/");
