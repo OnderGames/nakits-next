@@ -12,6 +12,7 @@ import {
   OTOMOBIL_MARKALARI,
   parseCategoryKey
 } from "@/lib/categories";
+import CategoryGroupIcon from "@/components/CategoryGroupIcon";
 import {
   formatListingCountTr,
   sumListingCountsWhere
@@ -115,7 +116,7 @@ function gayrimenkulSubFromKey(key: string | null | undefined): string | null {
   return t.slice(GM.length + 1);
 }
 
-/** Satariz tarzı sol sütun: grup başlıkları + alt kategori linkleri + sayılar */
+/** Ana sayfa sol sütun / mobil çekmece: grup başlıkları + alt kategori + sayılar */
 export default function HomeCategorySidebar({
   counts,
   selectedCategoryKey = null,
@@ -567,8 +568,11 @@ export default function HomeCategorySidebar({
               }}
             >
               <summary className="home-category-sidebar__summary">
-                <span className="home-category-sidebar__emoji" aria-hidden>
-                  {group.emoji}
+                <span
+                  className="home-category-sidebar__group-icon-wrap"
+                  aria-hidden
+                >
+                  <CategoryGroupIcon slug={group.slug} />
                 </span>
                 <span className="home-category-sidebar__group-name">
                   {group.name}

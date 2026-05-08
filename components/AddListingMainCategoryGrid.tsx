@@ -1,5 +1,6 @@
 "use client";
 
+import CategoryGroupIcon from "@/components/CategoryGroupIcon";
 import { CATEGORY_GROUPS } from "@/lib/categories";
 
 type Props = {
@@ -26,8 +27,8 @@ export default function AddListingMainCategoryGrid({
               disabled={disabled}
               onClick={() => onSelectMain(g.slug)}
             >
-              <span className="add-listing-main-cat__emoji" aria-hidden>
-                {g.emoji}
+              <span className="add-listing-main-cat__icon-wrap" aria-hidden>
+                <CategoryGroupIcon slug={g.slug} />
               </span>
               <span className="add-listing-main-cat__name">{g.name}</span>
             </button>

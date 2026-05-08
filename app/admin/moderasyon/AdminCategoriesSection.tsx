@@ -1,6 +1,7 @@
 "use client";
 
 import AddListingMainCategoryGrid from "@/components/AddListingMainCategoryGrid";
+import CategoryGroupIcon from "@/components/CategoryGroupIcon";
 import {
   CATEGORY_GROUPS,
   compositeCategoryKey,
@@ -388,7 +389,10 @@ export default function AdminCategoriesSection({
             <div className="admin-cat-wizard__step">
               <div className="admin-cat-wizard__step-head">
                 <span className="admin-cat-wizard__badge">
-                  {selectedGroup.emoji} {selectedGroup.name}
+                  <span className="admin-cat-wizard__badge-icon" aria-hidden>
+                    <CategoryGroupIcon slug={selectedGroup.slug} />
+                  </span>
+                  {selectedGroup.name}
                 </span>
                 <button
                   type="button"

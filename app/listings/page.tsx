@@ -242,18 +242,14 @@ function ListingsFilterFields({
                   const { otomobil, diger } = tasitlarFilterOptgroups();
                   return (
                     <>
-                      <optgroup
-                        label={`${group.emoji} ${group.name} · Otomobil`}
-                      >
+                      <optgroup label={`${group.name} · Otomobil`}>
                         {otomobil.map((row) => (
                           <option key={row.reactKey} value={row.compositeKey}>
                             {row.label}
                           </option>
                         ))}
                       </optgroup>
-                      <optgroup
-                        label={`${group.emoji} ${group.name} · Diğer`}
-                      >
+                      <optgroup label={`${group.name} · Diğer`}>
                         {diger.map((row) => (
                           <option key={row.reactKey} value={row.compositeKey}>
                             {row.label}
@@ -265,7 +261,7 @@ function ListingsFilterFields({
                 })()}
               </Fragment>
             ) : group.slug === "gayrimenkul" ? (
-              <optgroup key={group.slug} label={`${group.emoji} ${group.name}`}>
+              <optgroup key={group.slug} label={group.name}>
                 {gayrimenkulListingsFilterRows().map((row) => (
                   <option key={row.reactKey} value={row.compositeKey}>
                     {row.label}
@@ -273,7 +269,7 @@ function ListingsFilterFields({
                 ))}
               </optgroup>
             ) : (
-              <optgroup key={group.slug} label={`${group.emoji} ${group.name}`}>
+              <optgroup key={group.slug} label={group.name}>
                 {leafRowsForCategoryGroup(group).map((row) => (
                   <option key={row.reactKey} value={row.compositeKey}>
                     {row.label}

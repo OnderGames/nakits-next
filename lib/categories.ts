@@ -1456,12 +1456,12 @@ export function categoryKeyMatchesListingSearch(
   return false;
 }
 
-/** Kart / detayda gösterilecek satır örn: "📱 Elektronik › Telefon"; konut yaprağı tam zinciri sub.name ile verir */
+/** Kart / detayda gösterilecek satır örn: "Elektronik › Telefon"; ikonlar UI bileşeninde */
 export function formatCategoryDisplay(key: string): string {
   const parsed = parseCategoryKey(key);
   if (!parsed) return key;
   const { group, sub } = parsed;
-  return `${group.emoji} ${group.name} › ${sub.name}`;
+  return `${group.name} › ${sub.name}`;
 }
 
 /** Sadece konum: "İl · ilçe" (ilçe yoksa il). */

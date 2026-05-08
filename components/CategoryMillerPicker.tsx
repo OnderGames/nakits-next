@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode
 } from "react";
+import CategoryGroupIcon from "@/components/CategoryGroupIcon";
 import {
   CATEGORY_GROUPS,
   GAYRIMENKUL_KONUT_INTERMEDIATE_KEY,
@@ -506,12 +507,14 @@ export default function CategoryMillerPicker({
           {hideMainGroupColumn ? "Alt türü seç" : "Adım adım kategori seç"}
         </h2>
         <p className="category-miller__crumb" aria-live="polite">
-          {hideMainGroupColumn && selectedGroup ? (
-            <>
-              <span aria-hidden>{selectedGroup.emoji}</span>{" "}
-            </>
-          ) : null}
-          {crumbText}
+          <span className="category-miller__crumb-inner">
+            {hideMainGroupColumn && selectedGroup ? (
+              <span className="category-miller__crumb-icon" aria-hidden>
+                <CategoryGroupIcon slug={selectedGroup.slug} />
+              </span>
+            ) : null}
+            <span className="category-miller__crumb-text">{crumbText}</span>
+          </span>
         </p>
       </div>
       <div
@@ -544,7 +547,9 @@ export default function CategoryMillerPicker({
                       onClick={() => onPickGroup(group.slug)}
                     >
                       <span className="category-miller__row-label">
-                        <span aria-hidden>{group.emoji}</span>{" "}
+                        <span className="category-miller__row-icon" aria-hidden>
+                          <CategoryGroupIcon slug={group.slug} />
+                        </span>
                         <span>{group.name}</span>
                       </span>
                       {sel && (
