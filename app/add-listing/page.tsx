@@ -870,7 +870,7 @@ export default function AddListingPage() {
               <div className="add-listing-photo-picker__actions">
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-nakits-outline"
                   disabled={
                     submitting ||
                     photosNormalizing ||
@@ -882,7 +882,7 @@ export default function AddListingPage() {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-nakits-outline"
                   disabled={
                     submitting ||
                     photosNormalizing ||

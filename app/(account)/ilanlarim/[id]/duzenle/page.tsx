@@ -556,15 +556,16 @@ export default function EditListingPage() {
     return (
       <div className="account-page">
         <h1 className="section-title">İlan düzenle</h1>
-        <section className="panel">
+        <section className="panel auth-wall">
           <p>Düzenlemek için giriş yapın.</p>
-          <Link
-            className="btn btn-primary"
-            style={{ display: "inline-block", marginTop: 12 }}
-            href={`/login?next=/ilanlarim/${listingId}/duzenle`}
-          >
-            Giriş yap
-          </Link>
+          <div className="auth-wall__actions">
+            <Link
+              className="nav-pill nav-pill--login"
+              href={`/login?next=/ilanlarim/${listingId}/duzenle`}
+            >
+              Giriş yap
+            </Link>
+          </div>
         </section>
       </div>
     );
@@ -939,7 +940,7 @@ export default function EditListingPage() {
               <div className="add-listing-photo-picker__actions">
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-nakits-outline"
                   disabled={
                     submitting ||
                     galleryNormalizing ||
@@ -951,7 +952,7 @@ export default function EditListingPage() {
                 </button>
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-nakits-outline"
                   disabled={
                     submitting ||
                     galleryNormalizing ||
@@ -1137,7 +1138,7 @@ export default function EditListingPage() {
           </div>
 
           <button
-            className="btn btn-primary"
+            className="btn btn-nakits-cta"
             style={{ marginTop: 12 }}
             type="submit"
             disabled={submitting || galleryNormalizing}

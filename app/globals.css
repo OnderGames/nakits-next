@@ -1302,26 +1302,35 @@ main.container {
   gap: 10px;
   width: 100%;
   margin-top: 4px;
-  padding: 10px 12px;
-  border: 1px dashed rgba(148, 163, 184, 0.9);
-  border-radius: 10px;
-  background: rgba(248, 250, 252, 0.9);
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--vitrin-orange) 22%, var(--border));
+  border-radius: 12px;
+  background: linear-gradient(
+    165deg,
+    #ffffff 0%,
+    color-mix(in srgb, var(--vitrin-orange) 4%, #f8fafc) 100%
+  );
   font-size: 14px;
   font-weight: 700;
-  color: var(--muted);
+  color: #64748b;
   cursor: pointer;
   transition:
     border-color 0.14s ease,
     background 0.14s ease,
-    color 0.14s ease;
+    color 0.14s ease,
+    box-shadow 0.14s ease;
   font-family: inherit;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.88) inset;
   -webkit-tap-highlight-color: transparent;
 }
 
 .nav-account__signout-btn:hover {
-  border-color: #cbd5e1;
+  border-color: color-mix(in srgb, var(--vitrin-orange) 42%, #cbd5e1);
   background: #fff;
   color: var(--text);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 4px 14px rgba(234, 88, 12, 0.08);
 }
 
 .nav-account__signout-btn--dropdown {
@@ -1528,6 +1537,63 @@ button.nav-pill {
 
 .btn-outline:hover {
   background: #eef0ff;
+}
+
+/* İkincil CTA — hesap / yönetim / kart araç çubuğu (teal + vitrin turuncu) */
+.btn-nakits-outline,
+a.btn-nakits-outline {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 2px solid
+    color-mix(in srgb, #14b8a6 50%, var(--vitrin-orange) 50%) !important;
+  color: #0f766e !important;
+  background: linear-gradient(
+    165deg,
+    #ffffff 0%,
+    color-mix(in srgb, #14b8a6 6%, #f8fafc) 100%
+  ) !important;
+  border-radius: 12px !important;
+  padding: 10px 16px !important;
+  font-weight: 700 !important;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  text-align: center;
+  text-decoration: none;
+  line-height: 1.2;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 3px rgba(15, 23, 42, 0.06);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-nakits-outline:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--vitrin-orange) 62%, #14b8a6 38%) !important;
+  color: #c2410c !important;
+  background: color-mix(in srgb, var(--vitrin-orange) 7%, #fff) !important;
+  filter: brightness(1.02);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.92) inset,
+    0 4px 14px rgba(234, 88, 12, 0.14);
+}
+
+button.btn-nakits-outline {
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.btn-nakits-outline:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: none;
 }
 
 .auth-wall p {
@@ -4462,6 +4528,12 @@ span.listing-seller__name--plain {
   justify-content: center;
 }
 
+.listing-contact-cta__btn.nav-pill {
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+}
+
 .listing-contact-seller {
   display: flex;
   align-items: center;
@@ -5298,13 +5370,13 @@ span.listing-seller__name--plain {
 }
 
 .admin-cat-wizard__sub-tile:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--accent, #2563eb) 55%, var(--border));
+  border-color: color-mix(in srgb, #14b8a6 50%, var(--vitrin-orange) 50%);
   box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06);
 }
 
 .admin-cat-wizard__sub-tile--active {
-  border-color: var(--accent, #2563eb);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #2563eb) 22%, transparent);
+  border-color: #0d9488;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #14b8a6 28%, transparent);
 }
 
 .admin-cat-wizard__sub-tile:disabled {
@@ -5608,11 +5680,11 @@ span.listing-seller__name--plain {
 .admin-listing-stats__tile:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);
-  border-color: color-mix(in srgb, var(--accent, #3b82f6) 40%, var(--border));
+  border-color: color-mix(in srgb, #14b8a6 42%, var(--vitrin-orange) 18%);
 }
 
 .admin-listing-stats__tile:focus-visible {
-  outline: 2px solid var(--accent, #3b82f6);
+  outline: 2px solid #0d9488;
   outline-offset: 2px;
 }
 
@@ -5624,8 +5696,9 @@ span.listing-seller__name--plain {
   padding: 14px 16px;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--accent, #3b82f6) 14%, transparent) 0%,
-    color-mix(in srgb, var(--panel-bg, #fff) 95%, transparent) 100%
+    color-mix(in srgb, #14b8a6 16%, transparent) 0%,
+    color-mix(in srgb, var(--vitrin-orange) 8%, transparent) 52%,
+    color-mix(in srgb, var(--panel-bg, #fff) 94%, transparent) 100%
   );
 }
 
@@ -5916,8 +5989,8 @@ span.listing-seller__name--plain {
   }
 
   .admin-moderation-page .admin-panel-nav__btn--active {
-    border-color: rgba(37, 99, 235, 0.45);
-    box-shadow: none;
+    border-color: color-mix(in srgb, var(--vitrin-orange) 52%, #14b8a6 22%);
+    box-shadow: 0 2px 12px rgba(234, 88, 12, 0.12);
   }
 
   .admin-moderation-page
@@ -6019,9 +6092,9 @@ span.listing-seller__name--plain {
 }
 
 .admin-panel-nav__btn--active {
-  background: rgba(37, 99, 235, 0.1);
-  border-color: rgba(37, 99, 235, 0.35);
-  color: var(--primary, #2563eb);
+  background: color-mix(in srgb, var(--vitrin-orange) 11%, transparent);
+  border-color: color-mix(in srgb, var(--vitrin-orange) 45%, #14b8a6 25%);
+  color: #c2410c;
 }
 
 .admin-panel-nav__hint {
@@ -6604,9 +6677,12 @@ span.listing-seller__name--plain {
 }
 
 .account-tabs__btn--active {
-  border-color: var(--vitrin-orange);
-  color: var(--vitrin-orange);
-  box-shadow: 0 0 0 1px rgba(234, 88, 12, 0.15);
+  border-color: color-mix(in srgb, var(--vitrin-orange) 62%, #14b8a6 18%);
+  color: #c2410c;
+  background: color-mix(in srgb, var(--vitrin-orange) 9%, #fff);
+  box-shadow:
+    0 0 0 1px rgba(234, 88, 12, 0.14),
+    0 4px 14px rgba(234, 88, 12, 0.1);
 }
 
 /* Adım adım / Miller sütunları — ilan ver & düzenle kategori */

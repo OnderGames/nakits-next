@@ -40,7 +40,7 @@ export default function ProfileOwnerInboxLink({ profileId }: Props) {
 
   return (
     <p style={{ marginTop: 16 }}>
-      <Link className="btn btn-primary" href="/mesajlar">
+      <Link className="btn btn-nakits-cta" href="/mesajlar">
         Mesajlarım
       </Link>
     </p>

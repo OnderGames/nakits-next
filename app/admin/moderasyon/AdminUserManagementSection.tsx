@@ -219,7 +219,7 @@ export default function AdminUserManagementSection({
         </div>
         <button
           type="button"
-          className="btn btn-outline"
+          className="btn btn-nakits-outline"
           onClick={() => void loadUsers()}
           disabled={busyId !== null}
         >
@@ -297,7 +297,7 @@ export default function AdminUserManagementSection({
                     <div className="admin-users-card__save-del">
                       <button
                         type="button"
-                        className="btn btn-primary admin-users-card__save"
+                        className="btn btn-nakits-cta admin-users-card__save"
                         disabled={!dirty || busyId !== null}
                         onClick={() => void patchUser(r.id, d)}
                       >
@@ -306,7 +306,7 @@ export default function AdminUserManagementSection({
                       {adminPower ? (
                         <button
                           type="button"
-                          className="btn btn-outline admin-users-card__delete"
+                          className="btn btn-nakits-outline admin-users-card__delete"
                           disabled={busyId !== null || r.app_role !== "member"}
                           title={
                             r.app_role !== "member"

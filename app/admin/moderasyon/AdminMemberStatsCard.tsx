@@ -62,7 +62,7 @@ export default function AdminMemberStatsCard({
           <h2 className="admin-listing-stats__title">Üye sayacı</h2>
           <button
             type="button"
-            className="admin-listing-stats__refresh btn btn-outline"
+            className="admin-listing-stats__refresh btn btn-nakits-outline"
             disabled={loading}
             onClick={() => void load()}
           >

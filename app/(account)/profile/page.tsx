@@ -239,13 +239,14 @@ export default function ProfilePage() {
         <h1 className="section-title">Profil yönetimi</h1>
         <section className="panel auth-wall">
           <p>Profilini görmek için giriş yap.</p>
-          <Link
-            className="btn btn-primary"
-            style={{ display: "inline-block", marginTop: 14 }}
-            href="/login?next=/profile"
-          >
-            Giriş yap
-          </Link>
+          <div className="auth-wall__actions">
+            <Link
+              className="nav-pill nav-pill--login"
+              href="/login?next=/profile"
+            >
+              Giriş yap
+            </Link>
+          </div>
         </section>
       </div>
     );
@@ -335,7 +336,7 @@ export default function ProfilePage() {
             </p>
             <button
               type="submit"
-              className="btn btn-primary"
+              className="btn btn-nakits-cta"
               style={{ marginTop: 14 }}
               disabled={saving}
             >
@@ -395,7 +396,7 @@ export default function ProfilePage() {
           <p className="account-empty-panel__text">
             Henüz yayındaki ilanın yok (onay bekleyenler burada listelenmez).
           </p>
-          <Link className="btn btn-outline account-empty-panel__cta" href="/ilanlarim">
+          <Link className="btn btn-nakits-outline account-empty-panel__cta" href="/ilanlarim">
             Tüm ilanlarımı aç
           </Link>
         </section>

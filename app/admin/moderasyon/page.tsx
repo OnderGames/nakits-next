@@ -461,7 +461,7 @@ export default function AdminModerationPage() {
             kurulum için).
           </p>
           <Link
-            className="btn btn-primary"
+            className="nav-pill nav-pill--login"
             style={{ display: "inline-block", marginTop: 14 }}
             href="/login?next=/admin/moderasyon"
           >
@@ -698,7 +698,7 @@ export default function AdminModerationPage() {
             <button
               key={key}
               type="button"
-              className={filter === key ? "btn btn-primary" : "btn btn-outline"}
+              className={filter === key ? "btn btn-nakits-cta" : "btn btn-nakits-outline"}
               disabled={busyId !== null}
               onClick={() => setFilter(key)}
             >
@@ -707,7 +707,7 @@ export default function AdminModerationPage() {
           ))}
           <button
             type="button"
-            className="btn btn-outline"
+            className="btn btn-nakits-outline"
             onClick={() => void loadListings(filter)}
             disabled={busyId !== null}
           >
@@ -900,7 +900,7 @@ export default function AdminModerationPage() {
                 <div className="admin-moderation-compact__actions">
                   {row.status === "active" && (
                     <Link
-                      className="btn btn-outline"
+                      className="btn btn-nakits-outline"
                       href={listingDetailHref({
                         id: row.id,
                         listingCode: row.listingCode
@@ -915,7 +915,7 @@ export default function AdminModerationPage() {
                     <>
                       <button
                         type="button"
-                        className="btn btn-primary"
+                        className="btn btn-nakits-cta"
                         disabled={busyId !== null}
                         onClick={() => void setStatus(row.id, "active")}
                       >
@@ -923,7 +923,7 @@ export default function AdminModerationPage() {
                       </button>
                       <button
                         type="button"
-                        className="btn btn-outline"
+                        className="btn btn-nakits-outline"
                         disabled={busyId !== null}
                         onClick={() => void setStatus(row.id, "rejected")}
                         style={{ borderColor: "#b91c1c", color: "#b91c1c" }}
@@ -934,7 +934,7 @@ export default function AdminModerationPage() {
                   )}
                   <button
                     type="button"
-                    className="btn btn-outline"
+                    className="btn btn-nakits-outline"
                     disabled={busyId !== null}
                     onClick={() => void deleteListing(row.id, row.title)}
                     style={{

@@ -186,7 +186,7 @@ export default function AdminBroadcastNotificationSection({
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
         <button
           type="button"
-          className="btn btn-primary"
+          className="btn btn-nakits-cta"
           disabled={loading || saving || !adminPower || Boolean(loadError)}
           onClick={() => void save()}
         >
@@ -194,7 +194,7 @@ export default function AdminBroadcastNotificationSection({
         </button>
         <button
           type="button"
-          className="btn btn-outline"
+          className="btn btn-nakits-outline"
           disabled={loading || saving || !adminPower}
           onClick={() => void load()}
         >

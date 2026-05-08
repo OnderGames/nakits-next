@@ -77,16 +77,13 @@ export default function FavorilerPage() {
     return (
       <div className="account-page">
         <h1 className="section-title">Favorilerim</h1>
-        <section className="panel account-empty-panel">
-          <p className="account-empty-panel__text">
-            Favori ilanlarını görmek için giriş yapmalısın.
-          </p>
-          <Link
-            className="btn btn-primary account-empty-panel__cta"
-            href="/login?next=/favoriler"
-          >
-            Giriş yap
-          </Link>
+        <section className="panel auth-wall">
+          <p>Favori ilanlarını görmek için giriş yapmalısın.</p>
+          <div className="auth-wall__actions">
+            <Link className="nav-pill nav-pill--login" href="/login?next=/favoriler">
+              Giriş yap
+            </Link>
+          </div>
         </section>
       </div>
     );
@@ -101,7 +98,7 @@ export default function FavorilerPage() {
             Henüz favori ilanın yok. İlan kartlarındaki kalbe tıklayarak
             ekleyebilirsin.
           </p>
-          <Link className="btn btn-outline account-empty-panel__cta" href="/listings">
+          <Link className="btn btn-nakits-outline account-empty-panel__cta" href="/listings">
             İlanlara git
           </Link>
         </section>

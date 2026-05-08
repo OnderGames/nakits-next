@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
 import { useFavorites } from "@/components/FavoritesProvider";
 import { openHomeCategoryDrawer } from "@/lib/open-home-category-drawer";
-import { getSupabaseBrowser } from "@/lib/supabase-browser";
 
 function isProfileArea(pathname: string): boolean {
   return (
@@ -219,28 +217,11 @@ function TapItem({
 export default function MobileBottomNav() {
   const pathname = usePathname() ?? "";
   const fav = useFavorites();
-  const [loggedIn, setLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const sb = getSupabaseBrowser();
-    if (!sb) {
-      setLoggedIn(false);
-      return;
-    }
-    void sb.auth.getSession().then(({ data }) => {
-      setLoggedIn(Boolean(data.session?.user));
-    });
-    const {
-      data: { subscription }
-    } = sb.auth.onAuthStateChange((_e, session) => {
-      setLoggedIn(Boolean(session?.user));
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   if (!pathname) return null;
 
-  const accountHref = loggedIn ? "/profile" : "/login";
+  /** Hesabım: her zaman profil merkezi; oturum yoksa auth-wall + Nakits «Giriş yap» pill */
+  const accountHref = "/profile";
   const favCount =
     fav?.ready === true ? Math.min(99, fav.ids.size ?? 0) : undefined;
 

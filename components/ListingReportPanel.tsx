@@ -117,7 +117,7 @@ export default function ListingReportPanel({ listingId, sellerId }: Props) {
             <>
               <button
                 type="button"
-                className="btn btn-outline listing-report-panel__trigger"
+                className="btn btn-nakits-outline listing-report-panel__trigger"
                 onClick={() => {
                   setOpen(true);
                   setError("");
@@ -192,7 +192,7 @@ export default function ListingReportPanel({ listingId, sellerId }: Props) {
                     <div className="listing-report-modal__actions">
                       <button
                         type="button"
-                        className="btn btn-outline"
+                        className="btn btn-nakits-outline"
                         disabled={busy}
                         onClick={() => setOpen(false)}
                       >
@@ -200,7 +200,7 @@ export default function ListingReportPanel({ listingId, sellerId }: Props) {
                       </button>
                       <button
                         type="button"
-                        className="btn btn-primary"
+                        className="btn btn-nakits-cta"
                         disabled={busy}
                         onClick={() => void submit()}
                       >

@@ -247,10 +247,16 @@ export default function ConversationPage() {
     return (
       <div className="account-page">
         <h1 className="section-title">Mesaj</h1>
-        <section className="panel">
-          <Link href={`/login?next=${encodeURIComponent(`/mesajlar/${conversationId}`)}`}>
-            Giriş yap
-          </Link>
+        <section className="panel auth-wall">
+          <p>Bu görüşmeyi görmek için giriş yap.</p>
+          <div className="auth-wall__actions">
+            <Link
+              className="nav-pill nav-pill--login"
+              href={`/login?next=${encodeURIComponent(`/mesajlar/${conversationId}`)}`}
+            >
+              Giriş yap
+            </Link>
+          </div>
         </section>
       </div>
     );
@@ -410,7 +416,7 @@ export default function ConversationPage() {
           />
           <button
             type="submit"
-            className="btn btn-primary"
+            className="btn btn-nakits-cta"
             disabled={sending || !draft.trim()}
             aria-busy={sending}
           >

@@ -396,7 +396,7 @@ export default function AdminCategoriesSection({
                 </span>
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-nakits-outline"
                   disabled={busyId !== null}
                   onClick={() => resetWizard()}
                 >
@@ -604,7 +604,7 @@ export default function AdminCategoriesSection({
               </div>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-nakits-cta"
                 disabled={!wizardCanSubmit}
                 onClick={() => void createCategoryFromWizard()}
               >
@@ -651,7 +651,7 @@ export default function AdminCategoriesSection({
               <div className="admin-categories-add__btn">
                 <button
                   type="button"
-                  className="btn btn-outline"
+                  className="btn btn-nakits-outline"
                   disabled={
                     busyId !== null || !manualSlug.trim() || !manualName.trim()
                   }
@@ -683,7 +683,7 @@ export default function AdminCategoriesSection({
       <div className="admin-categories-toolbar">
         <button
           type="button"
-          className="btn btn-outline"
+          className="btn btn-nakits-outline"
           disabled={busyId !== null}
           onClick={() => void load()}
         >
@@ -769,7 +769,7 @@ export default function AdminCategoriesSection({
                             <>
                               <button
                                 type="button"
-                                className="btn btn-primary"
+                                className="btn btn-nakits-cta"
                                 disabled={busyId !== null || !editName.trim()}
                                 onClick={() => void saveEdit(row.id)}
                               >
@@ -777,7 +777,7 @@ export default function AdminCategoriesSection({
                               </button>
                               <button
                                 type="button"
-                                className="btn btn-outline"
+                                className="btn btn-nakits-outline"
                                 disabled={busyId !== null}
                                 onClick={cancelEdit}
                               >
@@ -788,7 +788,7 @@ export default function AdminCategoriesSection({
                             <>
                               <button
                                 type="button"
-                                className="btn btn-outline"
+                                className="btn btn-nakits-outline"
                                 disabled={busyId !== null}
                                 onClick={() => startEdit(row)}
                               >
@@ -796,7 +796,7 @@ export default function AdminCategoriesSection({
                               </button>
                               <button
                                 type="button"
-                                className="btn btn-outline"
+                                className="btn btn-nakits-outline"
                                 style={{
                                   borderColor: "#991b1b",
                                   color: "#991b1b",

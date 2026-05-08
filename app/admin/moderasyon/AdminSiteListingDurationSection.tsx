@@ -168,7 +168,7 @@ export default function AdminSiteListingDurationSection({
         </div>
         <button
           type="button"
-          className="btn btn-primary"
+          className="btn btn-nakits-cta"
           disabled={loading || saving || Boolean(loadError)}
           onClick={() => void save()}
         >
@@ -176,7 +176,7 @@ export default function AdminSiteListingDurationSection({
         </button>
         <button
           type="button"
-          className="btn btn-outline"
+          className="btn btn-nakits-outline"
           disabled={loading || saving}
           onClick={() => void load()}
         >

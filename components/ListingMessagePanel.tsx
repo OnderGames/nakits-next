@@ -180,7 +180,7 @@ export default function ListingMessagePanel({
             Satıcıya ilk mesajını yazmak için giriş yap.
           </p>
           <Link
-            className="btn btn-primary listing-contact-cta__btn"
+            className="nav-pill nav-pill--login listing-contact-cta__btn"
             href={`/login?next=${encodeURIComponent(`/listings/${listingId}`)}`}
           >
             Giriş yap
@@ -259,7 +259,7 @@ export default function ListingMessagePanel({
         </div>
 
         <button
-          className="btn btn-primary listing-contact-submit"
+          className="btn btn-nakits-cta listing-contact-submit"
           type="submit"
           disabled={!canSend || sending || sendSuccess}
           aria-busy={sending}

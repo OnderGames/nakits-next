@@ -127,7 +127,7 @@ export default function MessagesInboxPage() {
             Mesajlarını görmek için giriş yap.
           </p>
           <Link
-            className="btn btn-primary account-empty-panel__cta"
+            className="nav-pill nav-pill--login account-empty-panel__cta"
             href="/login?next=/mesajlar"
           >
             Giriş yap
@@ -155,7 +155,7 @@ export default function MessagesInboxPage() {
           <p className="account-empty-panel__text">
             Henüz mesajın yok. Bir ilan sayfasından satıcıya yazabilirsin.
           </p>
-          <Link className="btn btn-primary account-empty-panel__cta" href="/listings">
+          <Link className="btn btn-nakits-cta account-empty-panel__cta" href="/listings">
             İlanlara git
           </Link>
         </section>
@@ -248,7 +248,7 @@ export default function MessagesInboxPage() {
                   >
                     <button
                       type="button"
-                      className="btn btn-outline"
+                      className="btn btn-nakits-outline"
                       style={{
                         whiteSpace: "nowrap",
                         fontSize: 13,

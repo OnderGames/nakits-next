@@ -230,7 +230,7 @@ export default function AdminLegalPagesSection({
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
         <button
           type="button"
-          className="btn btn-primary"
+          className="btn btn-nakits-cta"
           disabled={loading || saving || !adminPower}
           onClick={() => void save()}
         >
@@ -238,7 +238,7 @@ export default function AdminLegalPagesSection({
         </button>
         <button
           type="button"
-          className="btn btn-outline"
+          className="btn btn-nakits-outline"
           disabled={
             loading ||
             saving ||
@@ -251,7 +251,7 @@ export default function AdminLegalPagesSection({
         </button>
         <button
           type="button"
-          className="btn btn-outline"
+          className="btn btn-nakits-outline"
           disabled={loading || saving}
           onClick={() => void loadOne()}
         >

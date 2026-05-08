@@ -141,7 +141,7 @@ export default function AdminListingReportsSection({
           <button
             key={key}
             type="button"
-            className={filter === key ? "btn btn-primary" : "btn btn-outline"}
+            className={filter === key ? "btn btn-nakits-cta" : "btn btn-nakits-outline"}
             disabled={busyId !== null}
             onClick={() => setFilter(key)}
           >
@@ -150,7 +150,7 @@ export default function AdminListingReportsSection({
         ))}
         <button
           type="button"
-          className="btn btn-outline"
+          className="btn btn-nakits-outline"
           disabled={busyId !== null}
           onClick={() => void load()}
         >
@@ -250,7 +250,7 @@ export default function AdminListingReportsSection({
                 <div className="admin-listing-reports__actions">
                   <button
                     type="button"
-                    className="btn btn-primary"
+                    className="btn btn-nakits-cta"
                     disabled={busyId !== null}
                     onClick={() => void patchStatus(r.id, "reviewed")}
                   >
@@ -258,7 +258,7 @@ export default function AdminListingReportsSection({
                   </button>
                   <button
                     type="button"
-                    className="btn btn-outline"
+                    className="btn btn-nakits-outline"
                     disabled={busyId !== null}
                     onClick={() => void patchStatus(r.id, "dismissed")}
                   >

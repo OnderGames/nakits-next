@@ -242,14 +242,14 @@ export default function ListingCard({
           <div className="listing-card-owner-toolbar__row">
             <Link
               href={ownerToolbar.editHref}
-              className="btn btn-outline listing-card-owner-toolbar__action"
+              className="btn btn-nakits-outline listing-card-owner-toolbar__action"
             >
               Düzenle
             </Link>
             {listing.status === "active" && ownerToolbar.onMarkSold && (
               <button
                 type="button"
-                className="btn btn-outline listing-card-owner-toolbar__action"
+                className="btn btn-nakits-outline listing-card-owner-toolbar__action"
                 style={{
                   borderColor: "#bbf7d0",
                   color: "#166534"
@@ -268,7 +268,7 @@ export default function ListingCard({
               listingCanRepublishFromSold(listing.expiresAt) && (
                 <button
                   type="button"
-                  className="btn btn-primary listing-card-owner-toolbar__action"
+                  className="btn btn-nakits-cta listing-card-owner-toolbar__action"
                   disabled={Boolean(
                     ownerToolbar.busy ||
                       ownerToolbar.markSoldBusy ||
@@ -285,7 +285,7 @@ export default function ListingCard({
             {ownerToolbar.onDelete && (
               <button
                 type="button"
-                className="btn btn-outline listing-card-owner-toolbar__action"
+                className="btn btn-nakits-outline listing-card-owner-toolbar__action"
                 style={{
                   color: "#b91c1c",
                   borderColor: "#fecaca"
@@ -345,7 +345,7 @@ export default function ListingCard({
             />
             <button
               type="button"
-              className="btn btn-primary"
+              className="btn btn-nakits-cta"
               style={{ fontSize: 14, padding: "8px 16px" }}
               disabled={Boolean(
                 ownerToolbar.busy ||
