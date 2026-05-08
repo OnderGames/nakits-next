@@ -23,6 +23,26 @@ function displayWelcomeName(fullName: string, email: string | null) {
   return "Üye";
 }
 
+function getInitialsFromName(name: string): string {
+  const cleaned = name
+    .trim()
+    .replace(/[^\p{L}\p{N}\s-]/gu, " ")
+    .replace(/\s+/g, " ");
+  if (!cleaned) return "Ü";
+
+  const parts = cleaned.split(" ").filter(Boolean);
+  if (parts.length === 1) {
+    const w = parts[0]!;
+    return (w.slice(0, 2) || w[0] || "Ü").toUpperCase();
+  }
+
+  const first = parts[0] ?? "";
+  const last = parts[parts.length - 1] ?? "";
+  const i1 = first[0] ?? "";
+  const i2 = last[0] ?? "";
+  return `${i1}${i2}`.toUpperCase() || "Ü";
+}
+
 export default function ProfilePage() {
   const [email, setEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -258,23 +278,33 @@ export default function ProfilePage() {
       : mockListings.slice(0, 2);
 
   const welcome = displayWelcomeName(fullName, email);
+  const initials = getInitialsFromName(fullName || email || "");
+  const badgeText = publicCode
+    ? `Üye #${publicCode}`
+    : email
+      ? email.split("@")[0]
+      : "Üye";
 
   return (
     <div className="account-page">
       <h1 className="section-title">Profil yönetimi</h1>
-      <section className="panel">
-        <p style={{ fontSize: 20, fontWeight: 700, margin: "0 0 6px" }}>
-          Hoş geldin, {welcome}
-        </p>
-        <p className="meta" style={{ marginBottom: 10 }}>
-          {email ?? "—"}
-        </p>
+      <section className="panel profile-card">
+        <div className="profile-card__top">
+          <div className="profile-card__avatar" aria-hidden>
+            {initials}
+          </div>
+          <div className="profile-card__topText">
+            <p className="profile-card__welcome">Hoş geldin, {welcome}</p>
+            <div className="profile-card__badge">{badgeText}</div>
+          </div>
+        </div>
+
         {hasSupabaseConfig &&
           userId &&
           profileChecked &&
           !publicCode &&
           !profileLoadError && (
-            <p className="notice" style={{ marginBottom: 16 }}>
+            <p className="notice profile-card__notice">
               Üye numaran veritabanında henüz yok. Supabase → SQL Editor&apos;da
               önce{" "}
               <code style={{ fontSize: 13 }}>
@@ -288,70 +318,86 @@ export default function ProfilePage() {
             </p>
           )}
 
-        {hasSupabaseConfig && userId && publicCode && (
-          <p className="meta" style={{ marginBottom: 16 }}>
-            Üye numaran:{" "}
-            <Link
-              href={`/kullanici/${publicCode}`}
-              style={{ color: "var(--primary)", fontWeight: 700 }}
-            >
-              {publicCode}
-            </Link>
-            <span style={{ display: "block", marginTop: 6, fontSize: 13 }}>
-              Paylaşılabilir adres:{" "}
-              <strong style={{ wordBreak: "break-all" }}>
-                …/kullanici/{publicCode}
-              </strong>
-            </span>
-          </p>
-        )}
+        {hasSupabaseConfig && userId ? (
+          <form className="profile-card__form" onSubmit={(e) => void handleSaveProfile(e)}>
+            <div className="profile-card__grid">
+              <div className="profile-card__field">
+                <label htmlFor="profile-fullname">Ad soyad</label>
+                <input
+                  id="profile-fullname"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Örn: Murat Güneş"
+                  disabled={saving}
+                  autoComplete="name"
+                />
+              </div>
 
-        {hasSupabaseConfig && userId && (
-          <form onSubmit={(e) => void handleSaveProfile(e)}>
-            <label htmlFor="profile-fullname">Ad soyad</label>
-            <input
-              id="profile-fullname"
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Örn: Murat Güneş"
-              disabled={saving}
-              autoComplete="name"
-            />
-            <label htmlFor="profile-phone" style={{ marginTop: 12 }}>
-              Telefon
-            </label>
-            <input
-              id="profile-phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Örn: 05xx xxx xx xx"
-              disabled={saving}
-              autoComplete="tel"
-            />
-            <p className="meta" style={{ marginTop: 8 }}>
+              <div className="profile-card__field">
+                <label htmlFor="profile-phone">Telefon</label>
+                <input
+                  id="profile-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Örn: 05xx xxx xx xx"
+                  disabled={saving}
+                  autoComplete="tel"
+                />
+              </div>
+
+              <div className="profile-card__field profile-card__field--static">
+                <span className="profile-card__label">E-posta</span>
+                <span className="profile-card__value">
+                  {email ?? "—"}
+                </span>
+              </div>
+
+              <div className="profile-card__field profile-card__field--static">
+                <span className="profile-card__label">Üye numarası</span>
+                {publicCode ? (
+                  <span className="profile-card__member">
+                    <Link
+                      href={`/kullanici/${publicCode}`}
+                      className="profile-card__member-link"
+                    >
+                      {publicCode}
+                    </Link>
+                    <span className="profile-card__member-sub">
+                      Paylaşılabilir adres:{" "}
+                      <strong className="profile-card__member-url">
+                        …/kullanici/{publicCode}
+                      </strong>
+                    </span>
+                  </span>
+                ) : (
+                  <span className="profile-card__value profile-card__value--muted">—</span>
+                )}
+              </div>
+            </div>
+
+            <p className="profile-card__hint meta">
               İsteğe bağlı. İlanlarda telefon gösterilmez; alıcılar satıcıyla yalnızca
               mesaj kutusu üzerinden iletişir.
             </p>
-            <button
-              type="submit"
-              className="btn btn-nakits-cta"
-              style={{ marginTop: 14 }}
-              disabled={saving}
-            >
-              {saving ? "Kaydediliyor…" : "Profili kaydet"}
-            </button>
-            {saveNotice && (
-              <p className="notice" style={{ marginTop: 12 }}>
-                {saveNotice}
-              </p>
-            )}
+
+            <div className="profile-card__actions">
+              <button
+                type="submit"
+                className="btn btn-nakits-cta"
+                disabled={saving}
+              >
+                {saving ? "Kaydediliyor…" : "Profili kaydet"}
+              </button>
+            </div>
+
+            {saveNotice && <p className="notice profile-card__notice">{saveNotice}</p>}
+
             {profileLoadError && (
               <p
-                className="notice"
+                className="notice profile-card__notice"
                 style={{
-                  marginTop: 12,
                   background: "#fee2e2",
                   borderColor: "#fecaca",
                   color: "#7f1d1d"
@@ -361,6 +407,31 @@ export default function ProfilePage() {
               </p>
             )}
           </form>
+        ) : (
+          <div className="profile-card__grid profile-card__grid--static">
+            <div className="profile-card__field profile-card__field--static">
+              <span className="profile-card__label">Ad soyad</span>
+              <span className="profile-card__value">
+                {fullName.trim() || "—"}
+              </span>
+            </div>
+            <div className="profile-card__field profile-card__field--static">
+              <span className="profile-card__label">Telefon</span>
+              <span className="profile-card__value">
+                {phone.trim() || "—"}
+              </span>
+            </div>
+            <div className="profile-card__field profile-card__field--static">
+              <span className="profile-card__label">E-posta</span>
+              <span className="profile-card__value">{email ?? "—"}</span>
+            </div>
+            <div className="profile-card__field profile-card__field--static">
+              <span className="profile-card__label">Üye numarası</span>
+              <span className="profile-card__value profile-card__value--muted">
+                {publicCode ?? "—"}
+              </span>
+            </div>
+          </div>
         )}
       </section>
 
