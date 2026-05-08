@@ -147,6 +147,7 @@ export default function EditListingPage() {
   const [phase, setPhase] = useState<EditListingPhase>("main");
   const skipSubAutoAdvanceRef = useRef(false);
   const prevCategoryReadyRef = useRef(false);
+  const categoryEditBaselineRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (phase !== "sub") {
@@ -155,13 +156,18 @@ export default function EditListingPage() {
       return;
     }
     const ready = isReadyListingCategoryKey(detailCategoryKey);
+    const baseline = categoryEditBaselineRef.current;
+    const keyChangedFromEditBaseline =
+      baseline !== null && detailCategoryKey !== baseline;
+
     if (skipSubAutoAdvanceRef.current) {
       skipSubAutoAdvanceRef.current = false;
       prevCategoryReadyRef.current = ready;
       return;
     }
-    if (ready && !prevCategoryReadyRef.current) {
+    if (ready && (!prevCategoryReadyRef.current || keyChangedFromEditBaseline)) {
       setPhase("details");
+      categoryEditBaselineRef.current = null;
     }
     prevCategoryReadyRef.current = ready;
   }, [phase, detailCategoryKey]);
@@ -610,10 +616,12 @@ export default function EditListingPage() {
     setGroupSlug("");
     setDetailCategoryKey("");
     setPhase("main");
+    categoryEditBaselineRef.current = null;
     prevCategoryReadyRef.current = false;
   }
 
   function goEditCategoryFromDetails() {
+    categoryEditBaselineRef.current = detailCategoryKey;
     skipSubAutoAdvanceRef.current = true;
     setPhase("sub");
   }
@@ -706,6 +714,7 @@ export default function EditListingPage() {
             onSelectMain={(slug) => {
               setGroupSlug(slug);
               setDetailCategoryKey("");
+              categoryEditBaselineRef.current = null;
               setPhase("sub");
               prevCategoryReadyRef.current = false;
             }}

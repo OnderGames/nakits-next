@@ -152,6 +152,7 @@ export default function AddListingPage() {
   const [phase, setPhase] = useState<AddListingPhase>("main");
   const skipSubAutoAdvanceRef = useRef(false);
   const prevCategoryReadyRef = useRef(false);
+  const categoryEditBaselineRef = useRef<string | null>(null);
   const galleryPhotoInputRef = useRef<HTMLInputElement>(null);
   const cameraPhotoInputRef = useRef<HTMLInputElement>(null);
 
@@ -161,13 +162,18 @@ export default function AddListingPage() {
       return;
     }
     const ready = isReadyListingCategoryKey(detailCategoryKey);
+    const baseline = categoryEditBaselineRef.current;
+    const keyChangedFromEditBaseline =
+      baseline !== null && detailCategoryKey !== baseline;
+
     if (skipSubAutoAdvanceRef.current) {
       skipSubAutoAdvanceRef.current = false;
       prevCategoryReadyRef.current = ready;
       return;
     }
-    if (ready && !prevCategoryReadyRef.current) {
+    if (ready && (!prevCategoryReadyRef.current || keyChangedFromEditBaseline)) {
       setPhase("details");
+      categoryEditBaselineRef.current = null;
     }
     prevCategoryReadyRef.current = ready;
   }, [phase, detailCategoryKey]);
@@ -528,6 +534,7 @@ export default function AddListingPage() {
     setGroupSlug("");
     setDetailCategoryKey("");
     setPhase("main");
+    categoryEditBaselineRef.current = null;
     prevCategoryReadyRef.current = false;
     setListingCity("");
     setListingDistrict("");
@@ -570,10 +577,12 @@ export default function AddListingPage() {
     setGroupSlug("");
     setDetailCategoryKey("");
     setPhase("main");
+    categoryEditBaselineRef.current = null;
     prevCategoryReadyRef.current = false;
   }
 
   function goEditCategoryFromDetails() {
+    categoryEditBaselineRef.current = detailCategoryKey;
     skipSubAutoAdvanceRef.current = true;
     setPhase("sub");
   }
@@ -651,6 +660,7 @@ export default function AddListingPage() {
             onSelectMain={(slug) => {
               setGroupSlug(slug);
               setDetailCategoryKey("");
+              categoryEditBaselineRef.current = null;
               setPhase("sub");
               prevCategoryReadyRef.current = false;
             }}
