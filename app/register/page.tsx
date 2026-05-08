@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -137,15 +138,26 @@ export default function RegisterPage() {
           <label htmlFor="reg-password" style={{ marginTop: 12 }}>
             Şifre (en az 6 karakter)
           </label>
-          <input
-            id="reg-password"
-            required
-            type="password"
-            autoComplete="new-password"
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="auth-password-field">
+            <input
+              id="reg-password"
+              required
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className="auth-password-toggle"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+              title={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+            >
+              {showPassword ? "Gizle" : "Göster"}
+            </button>
+          </div>
 
           <div
             style={{

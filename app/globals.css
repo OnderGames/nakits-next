@@ -2329,6 +2329,34 @@ form .row {
   cursor: not-allowed;
 }
 
+.auth-password-field {
+  position: relative;
+}
+
+.auth-password-field input {
+  padding-right: 84px;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 92%, #fff);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-password-toggle:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  color: var(--primary);
+}
+
 @media (max-width: 920px) {
   .auth-split {
     grid-template-columns: 1fr;
@@ -6844,6 +6872,33 @@ span.listing-seller__name--plain {
   font-size: 13px;
 }
 
+.profile-card__password {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+
+.profile-card__password-title {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.profile-card__password-form {
+  margin: 0;
+}
+
+.profile-card__password-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profile-card__password-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .profile-card__actions {
   margin-top: 14px;
   display: flex;
@@ -6864,6 +6919,10 @@ span.listing-seller__name--plain {
   }
 
   .profile-card__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-card__password-grid {
     grid-template-columns: 1fr;
   }
 

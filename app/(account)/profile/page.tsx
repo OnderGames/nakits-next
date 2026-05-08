@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import ListingCard from "@/components/ListingCard";
+import { mapAuthErrorToTurkish } from "@/lib/auth-errors";
 import {
   fetchListingDurationDaysPublic,
   LISTING_DURATION_DEFAULT_DAYS
@@ -53,6 +54,13 @@ export default function ProfilePage() {
   const [profileLoadError, setProfileLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveNotice, setSaveNotice] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordNotice, setPasswordNotice] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showNewPasswordRepeat, setShowNewPasswordRepeat] = useState(false);
   const [publicCode, setPublicCode] = useState<string | null>(null);
   const [profileChecked, setProfileChecked] = useState(false);
   const [markingSoldId, setMarkingSoldId] = useState<string | null>(null);
@@ -180,6 +188,39 @@ export default function ProfilePage() {
     }
     setSaveNotice("Profilin kaydedildi.");
     void fetchSellerActiveListings(sb, userId, 6).then(setActiveListings);
+  }
+
+  async function handleChangePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPasswordNotice("");
+    setPasswordError("");
+    const sb = getSupabaseBrowser();
+    if (!sb || !userId) return;
+
+    const pw = newPassword.trim();
+    const pw2 = newPasswordRepeat.trim();
+    if (pw.length < 6) {
+      setPasswordError("Yeni şifre en az 6 karakter olmalıdır.");
+      return;
+    }
+    if (pw !== pw2) {
+      setPasswordError("Şifre tekrarı eşleşmiyor.");
+      return;
+    }
+
+    setPasswordSaving(true);
+    const { error } = await sb.auth.updateUser({ password: pw });
+    setPasswordSaving(false);
+    if (error) {
+      setPasswordError(mapAuthErrorToTurkish(error));
+      return;
+    }
+
+    setNewPassword("");
+    setNewPasswordRepeat("");
+    setShowNewPassword(false);
+    setShowNewPasswordRepeat(false);
+    setPasswordNotice("Şifren başarıyla güncellendi.");
   }
 
   const handleMarkSoldFromProfile = useCallback(
@@ -381,6 +422,95 @@ export default function ProfilePage() {
               İsteğe bağlı. İlanlarda telefon gösterilmez; alıcılar satıcıyla yalnızca
               mesaj kutusu üzerinden iletişir.
             </p>
+
+            <section className="profile-card__password">
+              <h3 className="profile-card__password-title">Şifre değiştir</h3>
+              <form
+                className="profile-card__password-form"
+                onSubmit={(e) => void handleChangePassword(e)}
+              >
+                <div className="profile-card__password-grid">
+                  <div className="profile-card__field">
+                    <label htmlFor="profile-new-password">
+                      Yeni şifre (en az 6 karakter)
+                    </label>
+                    <div className="auth-password-field">
+                      <input
+                        id="profile-new-password"
+                        type={showNewPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        minLength={6}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Yeni şifre"
+                        disabled={passwordSaving}
+                      />
+                      <button
+                        type="button"
+                        className="auth-password-toggle"
+                        onClick={() => setShowNewPassword((v) => !v)}
+                        aria-label={showNewPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                        title={showNewPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                      >
+                        {showNewPassword ? "Gizle" : "Göster"}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="profile-card__field">
+                    <label htmlFor="profile-new-password-repeat">Yeni şifre (tekrar)</label>
+                    <div className="auth-password-field">
+                      <input
+                        id="profile-new-password-repeat"
+                        type={showNewPasswordRepeat ? "text" : "password"}
+                        autoComplete="new-password"
+                        minLength={6}
+                        value={newPasswordRepeat}
+                        onChange={(e) => setNewPasswordRepeat(e.target.value)}
+                        placeholder="Yeni şifreyi tekrar yaz"
+                        disabled={passwordSaving}
+                      />
+                      <button
+                        type="button"
+                        className="auth-password-toggle"
+                        onClick={() => setShowNewPasswordRepeat((v) => !v)}
+                        aria-label={
+                          showNewPasswordRepeat ? "Şifreyi gizle" : "Şifreyi göster"
+                        }
+                        title={
+                          showNewPasswordRepeat ? "Şifreyi gizle" : "Şifreyi göster"
+                        }
+                      >
+                        {showNewPasswordRepeat ? "Gizle" : "Göster"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="profile-card__password-actions">
+                  <button
+                    type="submit"
+                    className="btn btn-nakits-outline"
+                    disabled={passwordSaving}
+                  >
+                    {passwordSaving ? "Güncelleniyor…" : "Şifreyi güncelle"}
+                  </button>
+                </div>
+              </form>
+              {passwordNotice ? (
+                <p className="notice profile-card__notice">{passwordNotice}</p>
+              ) : null}
+              {passwordError ? (
+                <p
+                  className="notice profile-card__notice"
+                  style={{
+                    background: "#fee2e2",
+                    borderColor: "#fecaca",
+                    color: "#7f1d1d"
+                  }}
+                >
+                  {passwordError}
+                </p>
+              ) : null}
+            </section>
 
             <div className="profile-card__actions">
               <button

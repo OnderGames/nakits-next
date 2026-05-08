@@ -24,6 +24,7 @@ function LoginForm() {
   const registered = searchParams.get("registered");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -85,13 +86,24 @@ function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <label style={{ marginTop: 12 }}>Şifre</label>
-        <input
-          required
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="auth-password-field">
+          <input
+            required
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button
+            type="button"
+            className="auth-password-toggle"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+            title={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+          >
+            {showPassword ? "Gizle" : "Göster"}
+          </button>
+        </div>
         {error && (
           <p className="notice" style={{ marginTop: 10 }}>
             {error}
