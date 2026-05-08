@@ -1329,12 +1329,34 @@ export function listingsCategoryFilterMatches(
   const F = filterCategoryKey.trim();
   if (!F) return true;
   if (L === F) return true;
+
+  /** Tam grup seçimi: tüm Vasıta → `tasitlar.*`, tüm Elektronik → `elektronik.*` */
+  if (CATEGORY_GROUPS.some((g) => g.slug === F)) {
+    return L.startsWith(`${F}.`);
+  }
+
   if (
     F.startsWith("tasitlar.") ||
     F.startsWith("gayrimenkul.")
   ) {
     return L.startsWith(`${F}-`);
   }
+
+  const dotIdx = F.indexOf(".");
+  if (dotIdx > 0) {
+    const groupSlug = F.slice(0, dotIdx);
+    if (
+      CATEGORY_GROUPS.some(
+        (g) =>
+          g.slug === groupSlug &&
+          g.slug !== "tasitlar" &&
+          g.slug !== "gayrimenkul"
+      )
+    ) {
+      return L === F || L.startsWith(`${F}-`);
+    }
+  }
+
   return false;
 }
 

@@ -10,7 +10,9 @@ import {
   leafRowsForCategoryGroup,
   getOtomobilModelsForBrand,
   OTOMOBIL_MARKALARI,
-  parseCategoryKey
+  otomobilListingsGateCategoryKey,
+  parseCategoryKey,
+  TASITLAR_OTOMOBIL_INTERMEDIATE_KEY
 } from "@/lib/categories";
 import CategoryGroupIcon from "@/components/CategoryGroupIcon";
 import {
@@ -22,7 +24,8 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState
+  useState,
+  type ReactNode
 } from "react";
 
 type Props = {
@@ -57,6 +60,79 @@ function buildCategoryHref(
   }
   const qs = sp.toString();
   return qs ? `/listings?${qs}` : "/listings";
+}
+
+function commonSlugPrefixSegments(slugs: string[]): string {
+  if (slugs.length === 0) return "";
+  const parts = slugs.map((s) => s.split("-").filter(Boolean));
+  const minLen = Math.min(...parts.map((p) => p.length));
+  const out: string[] = [];
+  for (let i = 0; i < minLen; i++) {
+    const seg = parts[0][i];
+    if (!parts.every((p) => p[i] === seg)) break;
+    out.push(seg);
+  }
+  return out.join("-");
+}
+
+function otomobilSeriesGateSubSlug(
+  seriesLabel: string,
+  catalogModels: readonly { slug: string; name: string }[],
+  seriesSlugs: string[]
+): string {
+  const catalogForSeries = catalogModels.filter((cm) =>
+    seriesSlugs.includes(cm.slug)
+  );
+  const trimmedLabel = seriesLabel.trim();
+  if (trimmedLabel.length > 0) {
+    const umbrella = catalogForSeries.find(
+      (m) => !m.name.includes("›") && m.name.trim() === trimmedLabel
+    );
+    if (umbrella) return umbrella.slug;
+  }
+  return commonSlugPrefixSegments(seriesSlugs);
+}
+
+function CategorySummaryNav({
+  href,
+  navClassName,
+  onNavigate,
+  expandLabel = "Alt kategorileri aç/kapat",
+  children
+}: {
+  href: string;
+  navClassName: string;
+  onNavigate?: () => void;
+  expandLabel?: string;
+  children: ReactNode;
+}) {
+  return (
+    <>
+      <Link
+        href={href}
+        className={navClassName}
+        onClick={(e) => {
+          e.stopPropagation();
+          onNavigate?.();
+        }}
+      >
+        {children}
+      </Link>
+      <button
+        type="button"
+        className="home-category-sidebar__summary-expand"
+        aria-label={expandLabel}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const det = (e.currentTarget as HTMLElement).closest("details");
+          if (det) det.open = !det.open;
+        }}
+      >
+        <span aria-hidden>▼</span>
+      </button>
+    </>
+  );
 }
 
 const GM = "gayrimenkul";
@@ -300,10 +376,19 @@ export default function HomeCategorySidebar({
           className="home-category-sidebar__nest-details"
         >
           <summary className="home-category-sidebar__nest-summary">
-            <span className="home-category-sidebar__nest-summary-label">
-              Konut
-            </span>
-            <SummaryCount n={gmTotals.konut} />
+            <CategorySummaryNav
+              href={buildCategoryHref(
+                compositeCategoryKey(GM, "konut"),
+                preserveParams
+              )}
+              navClassName="home-category-sidebar__nest-summary-hit"
+              onNavigate={onCategoryNavigate}
+            >
+              <span className="home-category-sidebar__nest-summary-label">
+                Konut
+              </span>
+              <SummaryCount n={gmTotals.konut} />
+            </CategorySummaryNav>
           </summary>
           <ul className="home-category-sidebar__nest-list">
             {KONUT_LISTING_KINDS.map((txn) => {
@@ -316,16 +401,25 @@ export default function HomeCategorySidebar({
                     className="home-category-sidebar__nest-details"
                   >
                     <summary className="home-category-sidebar__nest-summary">
-                      <span className="home-category-sidebar__nest-summary-label">
-                        {txn.name}
-                      </span>
-                      <SummaryCount
-                        n={
-                          txn.slug === "satilik"
-                            ? gmTotals.konutSatilik
-                            : gmTotals.konutKiralik
-                        }
-                      />
+                      <CategorySummaryNav
+                        href={buildCategoryHref(
+                          compositeCategoryKey(GM, `konut-${txn.slug}`),
+                          preserveParams
+                        )}
+                        navClassName="home-category-sidebar__nest-summary-hit"
+                        onNavigate={onCategoryNavigate}
+                      >
+                        <span className="home-category-sidebar__nest-summary-label">
+                          {txn.name}
+                        </span>
+                        <SummaryCount
+                          n={
+                            txn.slug === "satilik"
+                              ? gmTotals.konutSatilik
+                              : gmTotals.konutKiralik
+                          }
+                        />
+                      </CategorySummaryNav>
                     </summary>
                     <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
                       {KONUT_PROPERTY_TYPES.map((prop) => {
@@ -352,10 +446,19 @@ export default function HomeCategorySidebar({
           className="home-category-sidebar__nest-details"
         >
           <summary className="home-category-sidebar__nest-summary">
-            <span className="home-category-sidebar__nest-summary-label">
-              İş yeri
-            </span>
-            <SummaryCount n={gmTotals.isyeri} />
+            <CategorySummaryNav
+              href={buildCategoryHref(
+                compositeCategoryKey(GM, "isyeri-ofis"),
+                preserveParams
+              )}
+              navClassName="home-category-sidebar__nest-summary-hit"
+              onNavigate={onCategoryNavigate}
+            >
+              <span className="home-category-sidebar__nest-summary-label">
+                İş yeri
+              </span>
+              <SummaryCount n={gmTotals.isyeri} />
+            </CategorySummaryNav>
           </summary>
           <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
             {KONUT_LISTING_KINDS.map((txn) => {
@@ -371,10 +474,19 @@ export default function HomeCategorySidebar({
       <li>
         <details ref={arsaRef} className="home-category-sidebar__nest-details">
           <summary className="home-category-sidebar__nest-summary">
-            <span className="home-category-sidebar__nest-summary-label">
-              Arsa
-            </span>
-            <SummaryCount n={gmTotals.arsa} />
+            <CategorySummaryNav
+              href={buildCategoryHref(
+                compositeCategoryKey(GM, "arsa"),
+                preserveParams
+              )}
+              navClassName="home-category-sidebar__nest-summary-hit"
+              onNavigate={onCategoryNavigate}
+            >
+              <span className="home-category-sidebar__nest-summary-label">
+                Arsa
+              </span>
+              <SummaryCount n={gmTotals.arsa} />
+            </CategorySummaryNav>
           </summary>
           <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
             {KONUT_LISTING_KINDS.map((txn) => {
@@ -393,10 +505,19 @@ export default function HomeCategorySidebar({
           className="home-category-sidebar__nest-details"
         >
           <summary className="home-category-sidebar__nest-summary">
-            <span className="home-category-sidebar__nest-summary-label">
-              Toprak & tarla
-            </span>
-            <SummaryCount n={gmTotals.toprak} />
+            <CategorySummaryNav
+              href={buildCategoryHref(
+                compositeCategoryKey(GM, "toprak"),
+                preserveParams
+              )}
+              navClassName="home-category-sidebar__nest-summary-hit"
+              onNavigate={onCategoryNavigate}
+            >
+              <span className="home-category-sidebar__nest-summary-label">
+                Toprak & tarla
+              </span>
+              <SummaryCount n={gmTotals.toprak} />
+            </CategorySummaryNav>
           </summary>
           <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
             {KONUT_LISTING_KINDS.map((txn) => {
@@ -412,10 +533,19 @@ export default function HomeCategorySidebar({
       <li>
         <details ref={depoRef} className="home-category-sidebar__nest-details">
           <summary className="home-category-sidebar__nest-summary">
-            <span className="home-category-sidebar__nest-summary-label">
-              Depo & garaj
-            </span>
-            <SummaryCount n={gmTotals.depo} />
+            <CategorySummaryNav
+              href={buildCategoryHref(
+                compositeCategoryKey(GM, "depo-garaj"),
+                preserveParams
+              )}
+              navClassName="home-category-sidebar__nest-summary-hit"
+              onNavigate={onCategoryNavigate}
+            >
+              <span className="home-category-sidebar__nest-summary-label">
+                Depo & garaj
+              </span>
+              <SummaryCount n={gmTotals.depo} />
+            </CategorySummaryNav>
           </summary>
           <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
             {KONUT_LISTING_KINDS.map((txn) => {
@@ -442,10 +572,19 @@ export default function HomeCategorySidebar({
             className="home-category-sidebar__nest-details"
           >
             <summary className="home-category-sidebar__nest-summary">
-              <span className="home-category-sidebar__nest-summary-label">
-                Otomobil
-              </span>
-              <SummaryCount n={tasitlarTotals.otomobil} />
+              <CategorySummaryNav
+                href={buildCategoryHref(
+                  TASITLAR_OTOMOBIL_INTERMEDIATE_KEY,
+                  preserveParams
+                )}
+                navClassName="home-category-sidebar__nest-summary-hit"
+                onNavigate={onCategoryNavigate}
+              >
+                <span className="home-category-sidebar__nest-summary-label">
+                  Otomobil
+                </span>
+                <SummaryCount n={tasitlarTotals.otomobil} />
+              </CategorySummaryNav>
             </summary>
             <ul className="home-category-sidebar__nest-list">
               {OTOMOBIL_MARKALARI.map((m) => {
@@ -466,39 +605,61 @@ export default function HomeCategorySidebar({
                         className="home-category-sidebar__nest-details"
                       >
                         <summary className="home-category-sidebar__nest-summary">
-                          <span className="home-category-sidebar__nest-summary-label">
-                            {m.name}
-                          </span>
-                          <SummaryCount n={brandTotal} />
+                          <CategorySummaryNav
+                            href={buildCategoryHref(
+                              otomobilListingsGateCategoryKey(m.slug),
+                              preserveParams
+                            )}
+                            navClassName="home-category-sidebar__nest-summary-hit"
+                            onNavigate={onCategoryNavigate}
+                          >
+                            <span className="home-category-sidebar__nest-summary-label">
+                              {m.name}
+                            </span>
+                            <SummaryCount n={brandTotal} />
+                          </CategorySummaryNav>
                         </summary>
                         <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
                           {groupOtomobilModelsBySeries(models).map((series) => {
+                            const seriesGateSub = `otomobil-${m.slug}-${otomobilSeriesGateSubSlug(
+                              series.seriesLabel,
+                              models,
+                              series.models.map((x) => x.slug)
+                            )}`;
+                            const seriesGateKey = compositeCategoryKey(
+                              "tasitlar",
+                              seriesGateSub
+                            );
                             const seriesCount = sumListingCountsWhere(
                               counts,
                               (k) =>
-                                series.models.some(
-                                  (mod) =>
-                                    k ===
-                                    compositeCategoryKey(
-                                      "tasitlar",
-                                      `otomobil-${m.slug}-${mod.slug}`
-                                    )
-                                )
+                                k === seriesGateKey ||
+                                k.startsWith(`${seriesGateKey}-`)
                             );
+                            const seriesRowKey = `${m.slug}-${series.seriesLabel || commonSlugPrefixSegments(series.models.map((x) => x.slug))}`;
                             return (
-                              <li key={series.seriesLabel}>
+                              <li key={seriesRowKey}>
                                 <details className="home-category-sidebar__nest-details">
                                   <summary className="home-category-sidebar__nest-summary">
-                                    {series.seriesLabel ? (
-                                      <span className="home-category-sidebar__nest-summary-label">
-                                        {series.seriesLabel}
-                                      </span>
-                                    ) : (
-                                      <span className="home-category-sidebar__nest-summary-label">
-                                        Modeller
-                                      </span>
-                                    )}
-                                    <SummaryCount n={seriesCount} />
+                                    <CategorySummaryNav
+                                      href={buildCategoryHref(
+                                        seriesGateKey,
+                                        preserveParams
+                                      )}
+                                      navClassName="home-category-sidebar__nest-summary-hit"
+                                      onNavigate={onCategoryNavigate}
+                                    >
+                                      {series.seriesLabel ? (
+                                        <span className="home-category-sidebar__nest-summary-label">
+                                          {series.seriesLabel}
+                                        </span>
+                                      ) : (
+                                        <span className="home-category-sidebar__nest-summary-label">
+                                          Modeller
+                                        </span>
+                                      )}
+                                      <SummaryCount n={seriesCount} />
+                                    </CategorySummaryNav>
                                   </summary>
                                   <ul className="home-category-sidebar__nest-list home-category-sidebar__nest-list--leaves">
                                     {series.models.map((mod) => {
@@ -568,16 +729,22 @@ export default function HomeCategorySidebar({
               }}
             >
               <summary className="home-category-sidebar__summary">
-                <span
-                  className="home-category-sidebar__group-icon-wrap"
-                  aria-hidden
+                <CategorySummaryNav
+                  href={buildCategoryHref(group.slug, preserveParams)}
+                  navClassName="home-category-sidebar__summary-nav"
+                  onNavigate={onCategoryNavigate}
                 >
-                  <CategoryGroupIcon slug={group.slug} />
-                </span>
-                <span className="home-category-sidebar__group-name">
-                  {group.name}
-                </span>
-                <SummaryCount n={groupTotals[group.slug] ?? 0} />
+                  <span
+                    className="home-category-sidebar__group-icon-wrap"
+                    aria-hidden
+                  >
+                    <CategoryGroupIcon slug={group.slug} />
+                  </span>
+                  <span className="home-category-sidebar__group-name">
+                    {group.name}
+                  </span>
+                  <SummaryCount n={groupTotals[group.slug] ?? 0} />
+                </CategorySummaryNav>
               </summary>
               {group.slug === "gayrimenkul" ? (
                 renderGayrimenkulNested()
