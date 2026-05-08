@@ -19,6 +19,8 @@ import {
   formatListingCountTr,
   sumListingCountsWhere
 } from "@/lib/category-counts";
+import { getDistrictsForProvince } from "@/lib/turkish-districts";
+import { TURKEY_PROVINCES } from "@/lib/turkish-provinces";
 import {
   useCallback,
   useEffect,
@@ -44,6 +46,18 @@ type Props = {
   embedded?: boolean;
   /** Mobil çekmece vb.: bir kategori linkine tıklanınca (sayfa geçişinden önce) çağrılır */
   onCategoryNavigate?: () => void;
+  /**
+   * Konum filtresi (şehir + ilçe): kategori ağacının altına eklenir.
+   * Not: Mobilde `home-category-sidebar-wrap` gizli olduğu için bu UI genelde sadece desktop'ta görülür.
+   */
+  geoFilters?: {
+    city: string;
+    district: string;
+    onCityChange: (nextCity: string) => void;
+    onDistrictChange: (nextDistrict: string) => void;
+    onApply?: () => void;
+    applyLabel?: string;
+  };
 };
 
 function buildCategoryHref(
@@ -198,7 +212,8 @@ export default function HomeCategorySidebar({
   selectedCategoryKey = null,
   preserveParams = null,
   embedded = false,
-  onCategoryNavigate = undefined
+  onCategoryNavigate = undefined,
+  geoFilters = undefined
 }: Props) {
   const groupSlugFromSelection = useMemo(() => {
     if (!selectedCategoryKey?.trim()) return null;
@@ -792,6 +807,64 @@ export default function HomeCategorySidebar({
           </li>
         ))}
       </ul>
+
+      {geoFilters ? (
+        <div className="home-category-geo-filters" aria-label="Konum filtreleri">
+          <p className="home-category-geo-filters__title">İl · İlçe Filtrele</p>
+
+          <div className="home-category-geo-filters__field">
+            <label>İl</label>
+            <select
+              value={geoFilters.city}
+              onChange={(e) => {
+                geoFilters.onCityChange(e.target.value);
+              }}
+            >
+              <option value="">Tüm iller</option>
+              {TURKEY_PROVINCES.map((il) => (
+                <option key={il} value={il}>
+                  {il}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="home-category-geo-filters__field">
+            <label>İlçe</label>
+            <select
+              value={geoFilters.district}
+              disabled={!geoFilters.city}
+              onChange={(e) => {
+                geoFilters.onDistrictChange(e.target.value);
+              }}
+              title={!geoFilters.city ? "Önce il seçin" : "İlçe"}
+            >
+              <option value="">
+                {!geoFilters.city ? "Önce il seçin" : "Tüm ilçeler"}
+              </option>
+              {geoFilters.city
+                ? getDistrictsForProvince(geoFilters.city).map((ilce) => (
+                    <option key={ilce} value={ilce}>
+                      {ilce}
+                    </option>
+                  ))
+                : null}
+            </select>
+          </div>
+
+          {geoFilters.onApply ? (
+            <div className="home-category-geo-filters__actions">
+              <button
+                type="button"
+                className="btn btn-nakits-cta home-category-geo-filters__apply"
+                onClick={() => geoFilters.onApply?.()}
+              >
+                {geoFilters.applyLabel ?? "Filtrele"}
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </aside>
   );
 }

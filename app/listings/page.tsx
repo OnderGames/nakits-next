@@ -106,6 +106,10 @@ type FilterFieldsProps = {
   city: string;
   district: string;
   category: string;
+  /** Masaüstü: il/ilçe selectlerini kategori ağacının altına taşıyoruz */
+  hideCityDistrict?: boolean;
+  /** Mobil/masaüstü: uygulanma aksiyonu dışarıdaki footer/button ile yapılıyor */
+  hideApplyButton?: boolean;
   /** Arama yazısı: anında güncellenir */
   setQ: (v: string) => void;
   onQControlledChange: (v: string) => void;
@@ -125,6 +129,8 @@ function ListingsFilterFields({
   city,
   district,
   category,
+  hideCityDistrict = false,
+  hideApplyButton = false,
   setQ,
   onQControlledChange,
   onCityChange,
@@ -178,50 +184,6 @@ function ListingsFilterFields({
           }}
           placeholder="Başlık, satıcı adı veya ilan no (6–9 hane)…"
         />
-      </div>
-      <div className="filter-field">
-        <label htmlFor={idCity}>İl</label>
-        <select
-          id={idCity}
-          value={city}
-          onChange={(event) => {
-            const v = event.target.value;
-            onCityChange(v);
-            syncUrlFromSelectsNow({ city: v, district: "" });
-          }}
-        >
-          <option value="">Tüm iller</option>
-          {TURKEY_PROVINCES.map((il) => (
-            <option key={il} value={il}>
-              {il}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="filter-field">
-        <label htmlFor={idDistrict}>İlçe</label>
-        <select
-          id={idDistrict}
-          value={district}
-          disabled={!city}
-          onChange={(event) => {
-            const v = event.target.value;
-            onDistrictChange(v);
-            syncUrlFromSelectsNow({ district: v });
-          }}
-          title={!city ? "Önce il seçin" : "İlçe"}
-        >
-          <option value="">
-            {!city ? "Önce il seçin" : "Tüm ilçeler"}
-          </option>
-          {city
-            ? getDistrictsForProvince(city).map((ilce) => (
-                <option key={ilce} value={ilce}>
-                  {ilce}
-                </option>
-              ))
-            : null}
-        </select>
       </div>
       <div className="filter-field">
         <label htmlFor={idCat}>Kategori</label>
@@ -487,15 +449,68 @@ function ListingsFilterFields({
           </div>
         </div>
       ) : null}
-      <div className="filter-field filter-field--action">
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={onDesktopFilterClick}
-        >
-          Filtrele
-        </button>
-      </div>
+
+      {!hideCityDistrict ? (
+        <>
+          <div className="filter-field">
+            <label htmlFor={idCity}>İl</label>
+            <select
+              id={idCity}
+              value={city}
+              onChange={(event) => {
+                const v = event.target.value;
+                onCityChange(v);
+                syncUrlFromSelectsNow({ city: v, district: "" });
+              }}
+            >
+              <option value="">Tüm iller</option>
+              {TURKEY_PROVINCES.map((il) => (
+                <option key={il} value={il}>
+                  {il}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-field">
+            <label htmlFor={idDistrict}>İlçe</label>
+            <select
+              id={idDistrict}
+              value={district}
+              disabled={!city}
+              onChange={(event) => {
+                const v = event.target.value;
+                onDistrictChange(v);
+                syncUrlFromSelectsNow({ district: v });
+              }}
+              title={!city ? "Önce il seçin" : "İlçe"}
+            >
+              <option value="">
+                {!city ? "Önce il seçin" : "Tüm ilçeler"}
+              </option>
+              {city
+                ? getDistrictsForProvince(city).map((ilce) => (
+                    <option key={ilce} value={ilce}>
+                      {ilce}
+                    </option>
+                  ))
+                : null}
+            </select>
+          </div>
+        </>
+      ) : null}
+
+      {!hideApplyButton ? (
+        <div className="filter-field filter-field--action">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={onDesktopFilterClick}
+          >
+            Filtrele
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -706,6 +721,8 @@ function ListingsPageInner() {
       city={city}
       district={district}
       category={category}
+      hideCityDistrict={true}
+      hideApplyButton={true}
       setQ={setQ}
       onQControlledChange={(v) => scheduleSearchUrl(v)}
       onCityChange={(v) => {
@@ -726,6 +743,7 @@ function ListingsPageInner() {
       city={city}
       district={district}
       category={category}
+      hideApplyButton={true}
       setQ={setQ}
       onQControlledChange={(v) => scheduleSearchUrl(v)}
       onCityChange={(v) => {
@@ -765,6 +783,19 @@ function ListingsPageInner() {
             counts={categoryCounts}
             selectedCategoryKey={category || null}
             preserveParams={{ q, city, district }}
+            geoFilters={{
+              city,
+              district,
+              onCityChange: (v) => {
+                setCity(v);
+                setDistrict("");
+              },
+              onDistrictChange: (v) => {
+                setDistrict(v);
+              },
+              onApply: applyDesktopFilterClick,
+              applyLabel: "Filtrele"
+            }}
           />
         </div>
         <div className="home-satariz-main">
