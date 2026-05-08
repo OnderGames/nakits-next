@@ -1312,29 +1312,62 @@ main.container {
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, var(--vitrin-orange) 24%);
+  background: linear-gradient(
+    165deg,
+    #ffffff 0%,
+    color-mix(in srgb, var(--vitrin-orange) 4%, #f8fafc) 100%
+  );
   font-size: 14px;
-  font-weight: 600;
-  color: #475569;
+  font-weight: 700;
+  color: #334155;
   text-decoration: none;
   transition:
+    border-color 0.14s ease,
+    box-shadow 0.14s ease,
     background 0.14s ease,
     color 0.14s ease;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.92) inset,
+    0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
 .nav-account__link:hover {
-  background: rgba(234, 88, 12, 0.07);
+  border-color: color-mix(in srgb, var(--vitrin-orange) 42%, var(--border));
+  background: linear-gradient(
+    165deg,
+    #ffffff 0%,
+    color-mix(in srgb, var(--vitrin-orange) 8%, #f8fafc) 100%
+  );
   color: var(--vitrin-orange);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 4px 12px rgba(234, 88, 12, 0.08);
 }
 
 .nav-account__link--active {
-  background: rgba(234, 88, 12, 0.11);
+  border-color: color-mix(in srgb, var(--vitrin-orange) 58%, #cbd5e1);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--vitrin-orange) 9%, #fff) 0%,
+    color-mix(in srgb, var(--vitrin-orange) 14%, #fff) 100%
+  );
   color: var(--vitrin-orange);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 0 0 1px rgba(234, 88, 12, 0.1);
 }
 
 .nav-account__link-icon {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--vitrin-orange) 10%, #fff);
   color: inherit;
 }
 
@@ -1344,18 +1377,18 @@ main.container {
   justify-content: flex-start;
   gap: 10px;
   width: 100%;
-  margin-top: 4px;
-  padding: 10px 14px;
-  border: 1px solid color-mix(in srgb, var(--vitrin-orange) 22%, var(--border));
+  margin-top: 8px;
+  padding: 11px 14px;
+  border: 1px solid color-mix(in srgb, #ef4444 44%, var(--border));
   border-radius: 12px;
   background: linear-gradient(
     165deg,
-    #ffffff 0%,
-    color-mix(in srgb, var(--vitrin-orange) 4%, #f8fafc) 100%
+    color-mix(in srgb, #ef4444 8%, #fff) 0%,
+    color-mix(in srgb, #ef4444 12%, #fff) 100%
   );
   font-size: 14px;
   font-weight: 700;
-  color: #64748b;
+  color: #b91c1c;
   cursor: pointer;
   transition:
     border-color 0.14s ease,
@@ -1368,12 +1401,12 @@ main.container {
 }
 
 .nav-account__signout-btn:hover {
-  border-color: color-mix(in srgb, var(--vitrin-orange) 42%, #cbd5e1);
+  border-color: color-mix(in srgb, #ef4444 62%, #cbd5e1);
   background: #fff;
-  color: var(--text);
+  color: #991b1b;
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.95) inset,
-    0 4px 14px rgba(234, 88, 12, 0.08);
+    0 4px 14px rgba(239, 68, 68, 0.12);
 }
 
 .nav-account__signout-btn--dropdown {
