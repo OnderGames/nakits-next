@@ -44,6 +44,7 @@ import { parseModelYearInput } from "@/lib/vehicle-fields";
 import { MAX_LISTING_PHOTOS } from "@/lib/listing-photos";
 import { countSellerOpenListings } from "@/lib/listings-data";
 import { resizeListingImageForUpload } from "@/lib/resize-listing-image";
+import { getAuthRedirectBase } from "@/lib/site-url";
 
 function mapListingInsertError(message: string | undefined): string {
   if (!message) return "İlan kaydedilemedi.";
@@ -119,6 +120,12 @@ function uploadContentType(file: File): string {
   return map[ext] ?? "image/jpeg";
 }
 
+function isEmailVerified(user: User | null): boolean {
+  if (!user) return false;
+  const maybeUser = user as User & { confirmed_at?: string | null };
+  return Boolean(user.email_confirmed_at || maybeUser.confirmed_at);
+}
+
 type PhotoPick = { file: File; url: string };
 
 type AddListingPhase = "main" | "sub" | "details";
@@ -137,6 +144,9 @@ export default function AddListingPage() {
   const [detailCategoryKey, setDetailCategoryKey] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [resendingVerify, setResendingVerify] = useState(false);
+  const [verifyNotice, setVerifyNotice] = useState("");
+  const [verifyError, setVerifyError] = useState("");
   const [categoryRowCount, setCategoryRowCount] = useState<number | null>(null);
   const [listingCity, setListingCity] = useState("");
   const [listingDistrict, setListingDistrict] = useState("");
@@ -308,6 +318,10 @@ export default function AddListingPage() {
     const sb = getSupabaseBrowser();
     if (!sb || !user) {
       setError("Oturum gerekli. Lütfen giriş yapın.");
+      return;
+    }
+    if (!isEmailVerified(user)) {
+      setError("İlan verebilmek için önce e-posta adresinizi onaylamalısınız.");
       return;
     }
     if (!detailCategoryKey) {
@@ -568,6 +582,74 @@ export default function AddListingPage() {
               Üye ol
             </Link>
           </div>
+        </section>
+      </main>
+    );
+  }
+
+  async function handleResendVerificationEmail() {
+    setVerifyNotice("");
+    setVerifyError("");
+    const sb = getSupabaseBrowser();
+    if (!sb || !user?.email) {
+      setVerifyError("Doğrulama e-postası gönderilemedi. Oturumunuzu yenileyin.");
+      return;
+    }
+    setResendingVerify(true);
+    const base = getAuthRedirectBase();
+    const afterConfirm = "/add-listing";
+    const { error: resendError } = await sb.auth.resend({
+      type: "signup",
+      email: user.email,
+      options: {
+        emailRedirectTo: base
+          ? `${base}/auth/callback?next=${encodeURIComponent(afterConfirm)}`
+          : undefined
+      }
+    });
+    setResendingVerify(false);
+    if (resendError) {
+      setVerifyError(resendError.message);
+      return;
+    }
+    setVerifyNotice("Doğrulama e-postası yeniden gönderildi.");
+  }
+
+  if (hasSupabaseConfig && user && !isEmailVerified(user)) {
+    return (
+      <main className="container">
+        <h1 className="section-title">İlan ver</h1>
+        <section className="panel auth-wall">
+          <p>
+            İlan verebilmek için e-posta adresini doğrulamalısın. Doğruladıktan sonra
+            tekrar bu sayfadan ilan oluşturabilirsin.
+          </p>
+          <div className="auth-wall__actions">
+            <button
+              type="button"
+              className="btn btn-nakits-outline"
+              onClick={() => void handleResendVerificationEmail()}
+              disabled={resendingVerify}
+            >
+              {resendingVerify ? "Gönderiliyor…" : "Doğrulama e-postasını tekrar gönder"}
+            </button>
+            <button
+              type="button"
+              className="btn btn-nakits-cta"
+              onClick={() => void router.refresh()}
+            >
+              Doğruladım, yeniden kontrol et
+            </button>
+          </div>
+          {verifyNotice ? <p className="notice">{verifyNotice}</p> : null}
+          {verifyError ? (
+            <p
+              className="notice"
+              style={{ background: "#fee2e2", borderColor: "#fecaca", color: "#7f1d1d" }}
+            >
+              {verifyError}
+            </p>
+          ) : null}
         </section>
       </main>
     );

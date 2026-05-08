@@ -6,7 +6,6 @@ import { FormEvent, useState } from "react";
 import { mapAuthErrorToTurkish } from "@/lib/auth-errors";
 import { getSupabaseBrowser } from "@/lib/supabase-browser";
 import { hasSupabaseConfig } from "@/lib/supabase";
-import { getAuthRedirectBase } from "@/lib/site-url";
 import AuthSplitShell from "@/components/auth/AuthSplitShell";
 
 const termsLinkStyle = { color: "var(--primary)", textDecoration: "underline" as const };
@@ -59,15 +58,10 @@ export default function RegisterPage() {
       return;
     }
     setLoading(true);
-    const base = getAuthRedirectBase();
-    const afterConfirm = "/eposta-onaylandi";
     const { error: signError } = await sb.auth.signUp({
       email: emailTrim,
       password,
       options: {
-        emailRedirectTo: base
-          ? `${base}/auth/callback?next=${encodeURIComponent(afterConfirm)}`
-          : undefined,
         data: { full_name: nameTrim, phone: phoneTrim }
       }
     });
