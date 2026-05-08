@@ -6907,6 +6907,77 @@ span.listing-seller__name--plain {
   margin-top: 0.65rem;
 }
 
+/* Hesap sayfası üst özet kartı */
+.account-hero {
+  margin: 2px 0 14px;
+  padding: 16px 16px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--card) 93%, #fff) 0%,
+    color-mix(in srgb, var(--vitrin-orange) 8%, var(--card)) 100%
+  );
+}
+
+.account-hero--messages {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--card) 90%, #fff) 0%,
+    color-mix(in srgb, #0ea5e9 9%, var(--card)) 100%
+  );
+}
+
+.account-hero__eyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.account-hero__title {
+  margin: 0;
+  font-size: 1.06rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.account-hero__desc {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.account-hero__stats {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.account-hero__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--vitrin-orange) 28%, var(--border));
+  background: color-mix(in srgb, #fff 74%, var(--card));
+  font-size: 12px;
+  color: var(--text);
+}
+
+.account-hero__stat strong {
+  font-size: 13px;
+}
+
+.account-favorites-grid {
+  margin-top: 14px;
+}
+
 /* Mesajlarım kutusu · satıcı / alıcı satırı (okunabilir isim, alt çizgi yok) */
 .messages-inbox-card__party {
   display: flex;
@@ -6961,6 +7032,112 @@ span.listing-seller__name--plain {
 .messages-inbox-card__party--bare {
   border-top: none;
   padding: 0 0 12px;
+}
+
+.messages-inbox__error {
+  margin-bottom: 12px;
+}
+
+.messages-inbox-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.messages-inbox-list__item {
+  margin-bottom: 12px;
+}
+
+.messages-inbox-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.messages-inbox-card__row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.messages-inbox-card__main-link {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  padding: 14px;
+}
+
+.messages-inbox-card__main-link:hover {
+  background: rgba(59, 91, 255, 0.04);
+}
+
+.messages-inbox-card__image {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.messages-inbox-card__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.messages-inbox-card__title-row {
+  margin: 0 0 4px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.messages-inbox-card__unread-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+}
+
+.messages-inbox-card__time {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+.messages-inbox-card__actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px 12px;
+  border-left: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.messages-inbox-card__delete-btn {
+  white-space: nowrap;
+  font-size: 13px;
+  padding: 8px 12px;
+  align-self: center;
+}
+
+@media (max-width: 720px) {
+  .messages-inbox-card__row {
+    display: block;
+  }
+
+  .messages-inbox-card__actions {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding: 10px 14px 12px;
+    align-items: flex-end;
+  }
 }
 
 /* İlan yönetimi sekmeleri */

@@ -92,6 +92,18 @@ export default function FavorilerPage() {
   return (
     <div className="account-page">
       <h1 className="section-title">Favorilerim</h1>
+      <section className="panel account-hero account-hero--favorites">
+        <p className="account-hero__eyebrow">Takip Listen</p>
+        <h2 className="account-hero__title">Beğendiğin ilanlar burada</h2>
+        <p className="account-hero__desc">
+          Fiyat değişimi bildirimlerini kaçırmamak için favorilerini düzenli kontrol et.
+        </p>
+        <div className="account-hero__stats">
+          <span className="account-hero__stat">
+            <strong>{listings.length}</strong> favori ilan
+          </span>
+        </div>
+      </section>
       {listings.length === 0 ? (
         <section className="panel account-empty-panel">
           <p className="account-empty-panel__text">
@@ -103,7 +115,7 @@ export default function FavorilerPage() {
           </Link>
         </section>
       ) : (
-        <section className="cards cards--browse" style={{ marginTop: 14 }}>
+        <section className="cards cards--browse account-favorites-grid">
           {listings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} />
           ))}

@@ -140,13 +140,20 @@ export default function MessagesInboxPage() {
   return (
     <div className="account-page">
       <h1 className="section-title">Mesajlarım</h1>
-      <p className="meta" style={{ marginBottom: 14 }}>
-        Bu hesaba ait yazışmaların özeti aşağıdadır.
-      </p>
-      {inboxError ? (
-        <p className="notice" style={{ marginBottom: 12 }}>
-          {inboxError}
+      <section className="panel account-hero account-hero--messages">
+        <p className="account-hero__eyebrow">Gelen Kutusu</p>
+        <h2 className="account-hero__title">Tüm yazışmaların tek yerde</h2>
+        <p className="account-hero__desc">
+          Son mesaj zamanına göre sıralanır. Okunmamış mesajlar kırmızı rozet ile görünür.
         </p>
+        <div className="account-hero__stats">
+          <span className="account-hero__stat">
+            <strong>{items.length}</strong> aktif görüşme
+          </span>
+        </div>
+      </section>
+      {inboxError ? (
+        <p className="notice messages-inbox__error">{inboxError}</p>
       ) : null}
       {loading ? (
         <p className="meta">Yükleniyor…</p>
@@ -160,101 +167,40 @@ export default function MessagesInboxPage() {
           </Link>
         </section>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        <ul className="messages-inbox-list">
           {items.map((c) => (
-            <li key={c.id} style={{ marginBottom: 12 }}>
-              <div
-                className="panel"
-                style={{
-                  padding: 0,
-                  overflow: "hidden"
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "stretch",
-                    gap: 0,
-                    flexWrap: "nowrap"
-                  }}
-                >
+            <li key={c.id} className="messages-inbox-list__item">
+              <div className="panel messages-inbox-card">
+                <div className="messages-inbox-card__row">
                   <Link
                     href={`/mesajlar/${c.id}`}
-                    style={{
-                      flex: "1 1 auto",
-                      minWidth: 0,
-                      display: "flex",
-                      gap: 14,
-                      alignItems: "center",
-                      textDecoration: "none",
-                      color: "inherit",
-                      padding: 14
-                    }}
+                    className="messages-inbox-card__main-link"
                   >
                     <Image
                       src={c.listingImage}
                       alt=""
                       width={72}
                       height={72}
-                      style={{
-                        width: 72,
-                        height: 72,
-                        objectFit: "cover",
-                        borderRadius: 10,
-                        flexShrink: 0
-                      }}
+                      className="messages-inbox-card__image"
                     />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p
-                        style={{
-                          margin: "0 0 4px",
-                          fontWeight: 700,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          flexWrap: "wrap"
-                        }}
-                      >
+                    <div className="messages-inbox-card__content">
+                      <p className="messages-inbox-card__title-row">
                         <span>{c.listingTitle}</span>
                         {c.unreadCount ? (
-                          <span
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 700,
-                              padding: "2px 8px",
-                              borderRadius: 999,
-                              background: "#dc2626",
-                              color: "#fff"
-                            }}
-                          >
+                          <span className="messages-inbox-card__unread-pill">
                             {c.unreadCount > 99 ? "99+" : c.unreadCount}
                           </span>
                         ) : null}
                       </p>
-                      <p className="meta" style={{ margin: "6px 0 0", fontSize: 12 }}>
+                      <p className="meta messages-inbox-card__time">
                         {formatRelativeTimeTr(c.sortAt)}
                       </p>
                     </div>
                   </Link>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      padding: "8px 12px",
-                      borderLeft: "1px solid var(--border)",
-                      flexShrink: 0
-                    }}
-                  >
+                  <div className="messages-inbox-card__actions">
                     <button
                       type="button"
-                      className="btn btn-nakits-outline"
-                      style={{
-                        whiteSpace: "nowrap",
-                        fontSize: 13,
-                        padding: "8px 12px",
-                        alignSelf: "center"
-                      }}
+                      className="btn btn-nakits-outline messages-inbox-card__delete-btn"
                       disabled={deletingId !== null}
                       aria-label="Görüşmeyi sil"
                       title="Bu görüşmedeki mesajların tamamını sil"
