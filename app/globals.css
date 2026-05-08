@@ -2082,41 +2082,13 @@ form .row {
   color: rgba(15, 23, 42, 0.86);
 }
 
-.auth-split__hero-brand {
-  position: relative;
+/* Auth sol panel: alttaki logo = üst çubukla aynı brand-mark wordmark */
+.auth-split__hero-brand.brand-mark {
   margin-top: clamp(36px, 8vh, 80px);
+  margin-left: 0;
+  margin-right: 0;
+  align-self: center;
   text-decoration: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  background: linear-gradient(
-    165deg,
-    #0f172a 0%,
-    rgba(30, 41, 59, 0.98) 100%
-  );
-  box-shadow:
-    0 22px 50px rgba(15, 23, 42, 0.18),
-    0 1px 0 rgba(255, 255, 255, 0.07) inset;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.auth-split__hero-brand-inner {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0;
-  white-space: nowrap;
-}
-
-.auth-split__hero-brand-word {
-  font-size: 1.375rem;
-  font-weight: 800;
-  color: #f8fafc;
-  letter-spacing: -0.02em;
-}
-
-.auth-split__hero-brand-com {
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--vitrin-orange);
 }
 
 .auth-split__main {
@@ -2220,7 +2192,7 @@ form .row {
     font-size: clamp(1.5rem, 7vw, 2.15rem);
   }
 
-  .auth-split__hero-brand {
+  .auth-split__hero-brand.brand-mark {
     margin-top: 20px;
   }
 

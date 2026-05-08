@@ -29,10 +29,14 @@ export default function AuthSplitShell({
             Türkiye&apos;nin ilan vitrinine hoş geldiniz.
           </p>
         </div>
-        <Link href="/" className="auth-split__hero-brand" aria-label="Nakits.com ana sayfa">
-          <span className="auth-split__hero-brand-inner">
-            <span className="auth-split__hero-brand-word">Nakits</span>
-            <span className="auth-split__hero-brand-com">.com</span>
+        <Link
+          href="/"
+          className="auth-split__hero-brand brand-mark"
+          aria-label="Nakits.com ana sayfa"
+        >
+          <span className="brand-mark__text">
+            <span className="brand-mark__nakits">Nakits</span>
+            <span className="brand-mark__domain">.com</span>
           </span>
         </Link>
       </aside>
