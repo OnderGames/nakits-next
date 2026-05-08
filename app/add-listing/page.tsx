@@ -144,6 +144,7 @@ export default function AddListingPage() {
   const [detailCategoryKey, setDetailCategoryKey] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
   const [resendingVerify, setResendingVerify] = useState(false);
   const [verifyNotice, setVerifyNotice] = useState("");
   const [verifyError, setVerifyError] = useState("");
@@ -207,21 +208,40 @@ export default function AddListingPage() {
   useEffect(() => {
     if (!hasSupabaseConfig) {
       setAuthReady(true);
+      setEmailVerified(true);
       return;
     }
     const sb = getSupabaseBrowser();
     if (!sb) {
       setAuthReady(true);
+      setEmailVerified(null);
       return;
     }
-    void sb.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
+    void sb.auth.getSession().then(async ({ data }) => {
+      const sessionUser = data.session?.user ?? null;
+      setUser(sessionUser);
+      if (!sessionUser) {
+        setEmailVerified(null);
+        setAuthReady(true);
+        return;
+      }
+      const { data: userData } = await sb.auth.getUser();
+      const u = userData.user ?? sessionUser;
+      setEmailVerified(isEmailVerified(u));
       setAuthReady(true);
     });
     const {
       data: { subscription }
     } = sb.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
+      const nextUser = session?.user ?? null;
+      setUser(nextUser);
+      if (!nextUser) {
+        setEmailVerified(null);
+        return;
+      }
+      void sb.auth.getUser().then(({ data: userData }) => {
+        setEmailVerified(isEmailVerified(userData.user ?? nextUser));
+      });
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -320,7 +340,10 @@ export default function AddListingPage() {
       setError("Oturum gerekli. Lütfen giriş yapın.");
       return;
     }
-    if (!isEmailVerified(user)) {
+    const { data: authUserData } = await sb.auth.getUser();
+    const verifiedNow = isEmailVerified(authUserData.user ?? user);
+    setEmailVerified(verifiedNow);
+    if (!verifiedNow) {
       setError("İlan verebilmek için önce e-posta adresinizi onaylamalısınız.");
       return;
     }
@@ -615,7 +638,7 @@ export default function AddListingPage() {
     setVerifyNotice("Doğrulama e-postası yeniden gönderildi.");
   }
 
-  if (hasSupabaseConfig && user && !isEmailVerified(user)) {
+  if (hasSupabaseConfig && user && emailVerified === false) {
     return (
       <main className="container">
         <h1 className="section-title">İlan ver</h1>
