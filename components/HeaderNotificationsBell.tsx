@@ -37,6 +37,54 @@ type Props = {
   onCloseDrawer?: () => void;
 };
 
+function renderPriceChangeIcon(type: string) {
+  if (type === "price_increased") {
+    return (
+      <span
+        className="nav-notif__price-chip nav-notif__price-chip--up"
+        aria-label="Fiyat yükseldi"
+        title="Fiyat yükseldi"
+      >
+        <span className="nav-notif__price-chip-icon" aria-hidden>
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="none">
+            <path
+              d="M3.5 11.5 11.5 3.5M7.5 3.5h4v4"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <span>Yükseliş</span>
+      </span>
+    );
+  }
+  if (type === "price_dropped") {
+    return (
+      <span
+        className="nav-notif__price-chip nav-notif__price-chip--down"
+        aria-label="Fiyat düştü"
+        title="Fiyat düştü"
+      >
+        <span className="nav-notif__price-chip-icon" aria-hidden>
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="none">
+            <path
+              d="M3.5 4.5 11.5 12.5M7.5 12.5h4v-4"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <span>Düşüş</span>
+      </span>
+    );
+  }
+  return null;
+}
+
 export default function HeaderNotificationsBell({
   userId,
   onCloseDrawer
@@ -326,6 +374,7 @@ export default function HeaderNotificationsBell({
                       {isBroadcast ? (
                         <span className="nav-notif__broadcast-pill">Site duyurusu</span>
                       ) : null}
+                      {renderPriceChangeIcon(n.type)}
                       <p
                         className={
                           unread

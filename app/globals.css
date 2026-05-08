@@ -972,6 +972,49 @@ main.container {
   background: rgba(251, 191, 36, 0.35);
 }
 
+.nav-notif__price-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.nav-notif__price-chip-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+  line-height: 1;
+}
+
+.nav-notif__price-chip-icon svg {
+  display: block;
+}
+
+.nav-notif__price-chip--up {
+  color: #14532d;
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.24), rgba(34, 197, 94, 0.14));
+  border: 1px solid rgba(34, 197, 94, 0.34);
+}
+
+.nav-notif__price-chip--down {
+  color: #7f1d1d;
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.12));
+  border: 1px solid rgba(239, 68, 68, 0.34);
+}
+
 .nav-notif__item-time {
   display: block;
   margin-top: 6px;
