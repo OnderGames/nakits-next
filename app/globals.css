@@ -1422,46 +1422,55 @@ button.nav-pill {
     0 0 0 1px rgba(255, 255, 255, 0.55) inset;
 }
 
-/* Ana CTA: + İlan ver — tek güçlü mavi */
+/* Ana CTA: İlan Ver — mobil alt bardaki FAB ile aynı teal → turuncu kimlik */
 .nav-cta {
-  background: linear-gradient(180deg, #5c6fff 0%, var(--primary) 55%, #2a45d4 100%) !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  box-sizing: border-box;
+  background: linear-gradient(
+    152deg,
+    #5eead4 0%,
+    #14b8a6 28%,
+    var(--vitrin-orange, #ea580c) 78%,
+    #c2410c 100%
+  ) !important;
   color: #fff !important;
-  padding: 10px 20px !important;
-  border-radius: 999px;
+  padding: 10px 18px !important;
+  border-radius: 12px !important;
   font-weight: 700;
   font-size: 15px;
-  letter-spacing: 0.03em;
-  border: 2px solid rgba(255, 255, 255, 0.35) !important;
+  letter-spacing: -0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.38) !important;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.25) inset,
-    0 6px 22px rgba(59, 91, 255, 0.55),
-    0 2px 8px rgba(30, 58, 180, 0.35);
+    0 1px 0 rgba(255, 255, 255, 0.22) inset,
+    0 4px 14px rgba(13, 148, 136, 0.35),
+    0 6px 18px rgba(234, 88, 12, 0.26),
+    0 1px 2px rgba(15, 23, 42, 0.1);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .nav-cta:hover {
   color: #fff !important;
-  filter: brightness(1.06);
+  filter: brightness(1.05);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.35) inset,
-    0 8px 28px rgba(59, 91, 255, 0.65);
+    0 1px 0 rgba(255, 255, 255, 0.3) inset,
+    0 5px 18px rgba(13, 148, 136, 0.38),
+    0 8px 22px rgba(234, 88, 12, 0.3),
+    0 2px 5px rgba(15, 23, 42, 0.1);
   transform: translateY(-1px);
 }
 
-/* İlan ver — turuncu CTA (Satariz) */
-.nav-cta.nav-cta--orange {
-  background: linear-gradient(180deg, #fb923c 0%, #ea580c 100%) !important;
-  border: 2px solid rgba(255, 255, 255, 0.38) !important;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.28) inset,
-    0 6px 22px rgba(234, 88, 12, 0.48),
-    0 2px 8px rgba(180, 83, 9, 0.35);
-}
-
-.nav-cta.nav-cta--orange:hover {
-  filter: brightness(1.05);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.35) inset,
-    0 8px 28px rgba(234, 88, 12, 0.58);
+@media (prefers-reduced-motion: reduce) {
+  .nav-cta:hover {
+    transform: none;
+  }
 }
 
 /* Çıkış — sade çerçeve */
