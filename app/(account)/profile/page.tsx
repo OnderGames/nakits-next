@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import ListingCard from "@/components/ListingCard";
 import { mapAuthErrorToTurkish } from "@/lib/auth-errors";
+import { getAuthRedirectBase } from "@/lib/site-url";
 import {
   fetchListingDurationDaysPublic,
   LISTING_DURATION_DEFAULT_DAYS
@@ -47,6 +48,10 @@ function getInitialsFromName(name: string): string {
 export default function ProfilePage() {
   const [email, setEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [verifySending, setVerifySending] = useState(false);
+  const [verifyNotice, setVerifyNotice] = useState("");
+  const [verifyError, setVerifyError] = useState("");
   const [ready, setReady] = useState(false);
   const [activeListings, setActiveListings] = useState<Listing[]>([]);
   const [fullName, setFullName] = useState("");
@@ -90,6 +95,7 @@ export default function ProfilePage() {
     void sb.auth.getSession().then(({ data }) => {
       setEmail(data.session?.user?.email ?? null);
       setUserId(data.session?.user?.id ?? null);
+      setEmailVerified(Boolean(data.session?.user?.email_confirmed_at));
       setReady(true);
     });
     const {
@@ -97,9 +103,37 @@ export default function ProfilePage() {
     } = sb.auth.onAuthStateChange((_e, session) => {
       setEmail(session?.user?.email ?? null);
       setUserId(session?.user?.id ?? null);
+      setEmailVerified(Boolean(session?.user?.email_confirmed_at));
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  async function handleResendEmailVerification() {
+    setVerifyNotice("");
+    setVerifyError("");
+    const sb = getSupabaseBrowser();
+    if (!sb || !email) {
+      setVerifyError("Doğrulama e-postası gönderilemedi. Lütfen tekrar deneyin.");
+      return;
+    }
+    setVerifySending(true);
+    const base = getAuthRedirectBase();
+    const { error } = await sb.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: base
+          ? `${base}/auth/callback?next=${encodeURIComponent("/profile")}`
+          : undefined
+      }
+    });
+    setVerifySending(false);
+    if (error) {
+      setVerifyError(mapAuthErrorToTurkish(error));
+      return;
+    }
+    setVerifyNotice("Doğrulama e-postası gönderildi.");
+  }
 
   useEffect(() => {
     if (!hasSupabaseConfig || !userId) {
@@ -393,6 +427,37 @@ export default function ProfilePage() {
                 <span className="profile-card__value">
                   {email ?? "—"}
                 </span>
+                {email ? (
+                  <div className="profile-card__email-verify-row">
+                    {emailVerified ? (
+                      <span className="profile-card__email-verify-ok">✓ Doğrulandı</span>
+                    ) : (
+                      <>
+                        <span className="profile-card__email-verify-no">
+                          ✗ Doğrulanmadı
+                        </span>
+                        <button
+                          type="button"
+                          className="btn btn-nakits-outline profile-card__verify-btn"
+                          onClick={() => void handleResendEmailVerification()}
+                          disabled={verifySending}
+                        >
+                          {verifySending ? "Gönderiliyor…" : "Doğrula"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ) : null}
+                {verifyNotice ? (
+                  <p className="meta" style={{ marginTop: 8, color: "#166534" }}>
+                    {verifyNotice}
+                  </p>
+                ) : null}
+                {verifyError ? (
+                  <p className="meta" style={{ marginTop: 8, color: "#991b1b" }}>
+                    {verifyError}
+                  </p>
+                ) : null}
               </div>
 
               <div className="profile-card__field profile-card__field--static">

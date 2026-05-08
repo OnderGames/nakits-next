@@ -6840,6 +6840,31 @@ span.listing-seller__name--plain {
   font-weight: 800;
 }
 
+.profile-card__email-verify-row {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-card__email-verify-ok {
+  font-size: 12px;
+  font-weight: 700;
+  color: #166534;
+}
+
+.profile-card__email-verify-no {
+  font-size: 12px;
+  font-weight: 700;
+  color: #991b1b;
+}
+
+.profile-card__verify-btn {
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
 .profile-card__member {
   display: block;
 }
