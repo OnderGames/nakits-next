@@ -472,7 +472,7 @@ export default function ProfilePage() {
           </Link>
         </section>
       )}
-      <section className="cards">
+      <section className="cards cards--account">
         {shown.map((listing) => (
           <ListingCard
             key={listing.id}

@@ -310,6 +310,7 @@ export default function ListingCard({
       )}
       {ownerToolbar?.priceQuickEdit && (
         <div
+          className="listing-card-quick-price"
           style={{
             padding: "12px 12px 14px",
             borderTop: "1px solid var(--border)",

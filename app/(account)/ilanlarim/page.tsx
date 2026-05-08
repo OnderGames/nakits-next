@@ -353,7 +353,7 @@ export default function MyListingsPage() {
               ) : null}
             </section>
           ) : (
-        <section className="cards">
+        <section className="cards cards--account">
           {displayedListings.map((listing) => (
             <ListingCard
               key={listing.id}
