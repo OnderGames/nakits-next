@@ -1,7 +1,7 @@
 "use client";
 
 import CategoryGroupIcon from "@/components/CategoryGroupIcon";
-import { CATEGORY_GROUPS } from "@/lib/categories";
+import { categoryGroupsVisibleInUi } from "@/lib/categories";
 
 type Props = {
   disabled?: boolean;
@@ -15,11 +15,10 @@ export default function AddListingMainCategoryGrid({
   return (
     <section className="add-listing-main-cat" aria-label="Ana kategori seçimi">
       <p className="add-listing-main-cat__lead">
-        Önce ana grubu seç; ardından alt türü (örneğin Vasıta → Otomobil → marka /
-        model) adım adım netleştireceğiz.
+        Önce ana grubu seç; ardından alt türü adım adım netleştireceğiz.
       </p>
       <ul className="add-listing-main-cat__grid">
-        {CATEGORY_GROUPS.map((g) => (
+        {categoryGroupsVisibleInUi().map((g) => (
           <li key={g.slug} className="add-listing-main-cat__cell">
             <button
               type="button"

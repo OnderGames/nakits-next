@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   CATEGORY_GROUPS,
+  categoryGroupsVisibleInUi,
   compositeCategoryKey,
   KONUT_LISTING_KINDS,
   KONUT_PROPERTY_TYPES,
@@ -247,7 +248,7 @@ export default function HomeCategorySidebar({
   /** Ana grup başlığı: o gruba ait tüm ilanlar */
   const groupTotals = useMemo(() => {
     const m: Record<string, number> = {};
-    for (const g of CATEGORY_GROUPS) {
+    for (const g of categoryGroupsVisibleInUi()) {
       m[g.slug] = sumListingCountsWhere(counts, (k) =>
         k.startsWith(`${g.slug}.`)
       );
@@ -734,7 +735,7 @@ export default function HomeCategorySidebar({
         </h2>
       ) : null}
       <ul className="home-category-sidebar__list">
-        {CATEGORY_GROUPS.map((group) => (
+        {categoryGroupsVisibleInUi().map((group) => (
           <li key={group.slug}>
             <details
               className="home-category-sidebar__details"

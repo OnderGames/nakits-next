@@ -1151,6 +1151,31 @@ export const CATEGORY_GROUPS: CategoryGroupDef[] = [
   }
 ];
 
+/** Vitrin / ilan ver: gizli; mevcut ilanlar ve ayrıştırma mantığı aynı kalır */
+export const HIDDEN_PUBLIC_CATEGORY_GROUP_SLUGS: readonly string[] = [
+  "tasitlar",
+  "gayrimenkul"
+];
+
+export function isHiddenPublicCategoryGroupSlug(slug: string): boolean {
+  return HIDDEN_PUBLIC_CATEGORY_GROUP_SLUGS.includes(slug);
+}
+
+export function categoryGroupsVisibleInUi(): CategoryGroupDef[] {
+  return CATEGORY_GROUPS.filter((g) => !isHiddenPublicCategoryGroupSlug(g.slug));
+}
+
+/** Uzantıdaki `…?category=tasitlar.…` ve yeni ilan kısıtı için */
+export function isListingCategoryKeyInHiddenPublicGroup(
+  categoryKey: string
+): boolean {
+  const k = categoryKey.trim();
+  if (!k) return false;
+  const dot = k.indexOf(".");
+  const group = dot > 0 ? k.slice(0, dot) : k;
+  return isHiddenPublicCategoryGroupSlug(group);
+}
+
 /**
  * `isyeri-ofis-satilik`, `depo-garaj-kiralik` vb. (Konut dallarıyla çakışmaz).
  */

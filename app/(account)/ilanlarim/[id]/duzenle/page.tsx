@@ -8,15 +8,19 @@ import {
   ChangeEvent,
   FormEvent,
   useEffect,
+  useMemo,
   useRef,
   useState
 } from "react";
 import {
+  CATEGORY_GROUPS,
+  categoryGroupsVisibleInUi,
   formatCategoryDisplay,
   formatPriceInputDisplay,
   getTasitlarOtomobilBrandSlugAwaitingModel,
   isIntermediateGayrimenkulListingKey,
   isIntermediateTasitlarOtomobilListingKey,
+  isListingCategoryKeyInHiddenPublicGroup,
   isOtomobilSeriesLeafAwaitingBodyVariant,
   isReadyListingCategoryKey,
   parseCategoryKey,
@@ -148,6 +152,13 @@ export default function EditListingPage() {
   const skipSubAutoAdvanceRef = useRef(false);
   const prevCategoryReadyRef = useRef(false);
   const categoryEditBaselineRef = useRef<string | null>(null);
+
+  const categoryMillerGroups = useMemo(() => {
+    if (!listing?.categoryKey) return categoryGroupsVisibleInUi();
+    return isListingCategoryKeyInHiddenPublicGroup(listing.categoryKey)
+      ? CATEGORY_GROUPS
+      : categoryGroupsVisibleInUi();
+  }, [listing?.categoryKey]);
 
   useEffect(() => {
     if (phase !== "sub") {
@@ -351,6 +362,13 @@ export default function EditListingPage() {
     }
     if (!detailCategoryKey) {
       setError("Ana ve alt kategori seçin.");
+      return;
+    }
+    if (
+      isListingCategoryKeyInHiddenPublicGroup(detailCategoryKey) &&
+      !isListingCategoryKeyInHiddenPublicGroup(listing.categoryKey)
+    ) {
+      setError("Vasıta ve Emlak kategorilerine geçiş yapılamaz.");
       return;
     }
     if (isIntermediateGayrimenkulListingKey(detailCategoryKey)) {
@@ -728,6 +746,7 @@ export default function EditListingPage() {
             groupSlug={groupSlug}
             detailCategoryKey={detailCategoryKey}
             disabled={submitting}
+            groups={categoryMillerGroups}
             hideMainGroupColumn
             onRequestChangeMainCategory={goBackToMainCategory}
             onGroupChange={setGroupSlug}

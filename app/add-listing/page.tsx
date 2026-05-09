@@ -12,6 +12,7 @@ import {
 } from "react";
 import {
   formatCategoryDisplay,
+  isListingCategoryKeyInHiddenPublicGroup,
   isIntermediateGayrimenkulListingKey,
   getTasitlarOtomobilBrandSlugAwaitingModel,
   isIntermediateTasitlarOtomobilListingKey,
@@ -349,6 +350,10 @@ export default function AddListingPage() {
     }
     if (!detailCategoryKey) {
       setError("Ana ve alt kategori seçin.");
+      return;
+    }
+    if (isListingCategoryKeyInHiddenPublicGroup(detailCategoryKey)) {
+      setError("Vasıta ve Emlak kategorilerinde ilan verilemez.");
       return;
     }
     if (isIntermediateGayrimenkulListingKey(detailCategoryKey)) {

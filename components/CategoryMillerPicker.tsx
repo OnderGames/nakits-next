@@ -10,7 +10,6 @@ import {
 } from "react";
 import CategoryGroupIcon from "@/components/CategoryGroupIcon";
 import {
-  CATEGORY_GROUPS,
   GAYRIMENKUL_KONUT_INTERMEDIATE_KEY,
   KONUT_LISTING_KINDS,
   KONUT_PROPERTY_TYPES,
@@ -32,6 +31,7 @@ import {
   tryParseGayrimenkulSatKirLeafSubSlug,
   tryParseKonutLeafSubSlug,
   tryParseOtomobilModelLeafSubSlug,
+  categoryGroupsVisibleInUi,
   type CategoryGroupDef,
   type SubcategoryDef
 } from "@/lib/categories";
@@ -46,6 +46,8 @@ export type CategoryMillerPickerProps = {
   hideMainGroupColumn?: boolean;
   /** Sol üst: ana kategori seçimine dön */
   onRequestChangeMainCategory?: () => void;
+  /** Varsayılan: sitede açık kategoriler (Vasıta / Emlak dışı) */
+  groups?: CategoryGroupDef[];
 };
 
 /** @deprecated isim uyumu için — `isIntermediateGayrimenkulListingKey` kullanın */
@@ -106,9 +108,14 @@ export default function CategoryMillerPicker({
   onCategoryKeyChange,
   disabled = false,
   hideMainGroupColumn = false,
-  onRequestChangeMainCategory
+  onRequestChangeMainCategory,
+  groups: groupsProp
 }: CategoryMillerPickerProps) {
-  const selectedGroup = CATEGORY_GROUPS.find((g) => g.slug === groupSlug);
+  const groups = useMemo(
+    () => groupsProp ?? categoryGroupsVisibleInUi(),
+    [groupsProp]
+  );
+  const selectedGroup = groups.find((g) => g.slug === groupSlug);
 
   const [konutFlow, setKonutFlow] = useState(false);
   const [satKirFlowBase, setSatKirFlowBase] = useState<string | null>(null);
@@ -153,7 +160,7 @@ export default function CategoryMillerPicker({
       return;
     }
 
-    const gm = CATEGORY_GROUPS.find((g) => g.slug === "gayrimenkul");
+    const gm = groups.find((g) => g.slug === "gayrimenkul");
     const mid = gm?.subs.find((s) => s.slug === rest && s.drilldown);
     if (mid?.drilldown === "emlak-listing-kind") {
       setKonutFlow(false);
@@ -165,7 +172,7 @@ export default function CategoryMillerPicker({
     setKonutFlow(false);
     setSatKirFlowBase(null);
     setTxnDraft("");
-  }, [detailCategoryKey]);
+  }, [detailCategoryKey, groups]);
 
   const konutLeafParsed = detailCategoryKey.startsWith("gayrimenkul.")
     ? tryParseKonutLeafSubSlug(detailCategoryKey.slice("gayrimenkul.".length))
@@ -530,7 +537,7 @@ export default function CategoryMillerPicker({
               role="listbox"
               aria-label="Ana kategoriler"
             >
-              {CATEGORY_GROUPS.map((group) => {
+              {groups.map((group) => {
                 const sel = groupSlug === group.slug;
                 return (
                   <li key={group.slug} className="category-miller__item">

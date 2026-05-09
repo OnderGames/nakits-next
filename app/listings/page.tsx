@@ -21,7 +21,7 @@ import {
   buildGayrimenkulKonutListingsCategoryKey,
   buildOtomobilListingsCategoryKey,
   canonicalListingsCategorySelectValue,
-  CATEGORY_GROUPS,
+  categoryGroupsVisibleInUi,
   categoryKeyMatchesListingSearch,
   gayrimenkulListingsFilterRows,
   getSortedFlatOtomobilModelsForListingsFilter,
@@ -35,7 +35,9 @@ import {
   parseGayrimenkulEmlakKindListingsDrilldown,
   parseGayrimenkulKonutListingsParts,
   parseOtomobilListingsDrilldown,
-  tasitlarFilterOptgroups
+  tasitlarFilterOptgroups,
+  isListingCategoryKeyInHiddenPublicGroup,
+  isHiddenPublicCategoryGroupSlug
 } from "@/lib/categories";
 import { listingPlaceMatchesFreeTextQuery } from "@/lib/listing-place-search";
 import { isListingCodeQuery } from "@/lib/listing-code";
@@ -197,7 +199,7 @@ function ListingsFilterFields({
           }}
         >
           <option value="">Tüm kategoriler</option>
-          {CATEGORY_GROUPS.map((group) =>
+          {categoryGroupsVisibleInUi().map((group) =>
             group.slug === "tasitlar" ? (
               <Fragment key={group.slug}>
                 {(() => {
@@ -540,8 +542,21 @@ function ListingsPageInner() {
     setQ(searchParams.get("q") ?? "");
     setCity(searchParams.get("city") ?? "");
     setDistrict(searchParams.get("district") ?? "");
-    setCategory(searchParams.get("category") ?? "");
-  }, [searchParams]);
+    const rawCat = searchParams.get("category")?.trim() ?? "";
+    if (
+      rawCat &&
+      (isListingCategoryKeyInHiddenPublicGroup(rawCat) ||
+        isHiddenPublicCategoryGroupSlug(rawCat))
+    ) {
+      setCategory("");
+      const sp = new URLSearchParams(searchParams.toString());
+      sp.delete("category");
+      const qs = sp.toString();
+      router.replace(qs ? `/listings?${qs}` : "/listings", { scroll: false });
+      return;
+    }
+    setCategory(rawCat);
+  }, [searchParams, router]);
 
   const sortKey = useMemo((): ListingsSortKey | null => {
     const s = searchParams.get("sort")?.trim();
